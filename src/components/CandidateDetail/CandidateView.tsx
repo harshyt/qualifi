@@ -186,7 +186,7 @@ export default function CandidateView({ candidate }: CandidateViewProps) {
                 Key Strengths
               </Typography>
               <ul style={{ paddingLeft: 20, margin: 0 }}>
-                {candidate.analysis?.strengths.map((str, i) => (
+                {candidate.analysis?.strengths.map((str: string, i: number) => (
                   <li key={i} style={{ color: "#37474F", marginBottom: 8 }}>
                     {str}
                   </li>
