@@ -1,8 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/lib/supabase";
 
-export const useCandidates = () => {
-  return useQuery({
+import { supabase } from "@/lib/supabase";
+import type { Candidate } from "@/components/Dashboard/DashboardTable";
+
+export const useCandidates = () =>
+  useQuery<Candidate[]>({
     queryKey: ["candidates"],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -14,7 +16,6 @@ export const useCandidates = () => {
         throw new Error(error.message);
       }
 
-      return data as unknown;
+      return (data ?? []) as Candidate[];
     },
   });
-};

@@ -2,10 +2,13 @@
 import { Box, Typography, Paper, Grid, CircularProgress } from "@mui/material";
 import DashboardTable from "@/components/Dashboard/DashboardTable";
 import UploadResume from "@/components/Dashboard/UploadResume";
+
 import { useCandidates } from "@/hooks/useCandidates";
+import type { Candidate } from "@/components/Dashboard/DashboardTable";
 
 export default function DashboardPage() {
-  const { data: candidates, isLoading, error } = useCandidates();
+  const { data, isLoading, error } = useCandidates();
+  const candidates: Candidate[] = Array.isArray(data) ? data : [];
 
   if (isLoading)
     return (
@@ -20,11 +23,16 @@ export default function DashboardPage() {
       </Typography>
     );
 
-  const total = candidates?.length || 0;
-  const shortlisted =
-    candidates?.filter((c) => c.status === "SHORTLIST").length || 0;
-  const rejected = candidates?.filter((c) => c.status === "REJECT").length || 0;
-  const pending = candidates?.filter((c) => c.status === "PENDING").length || 0;
+  const total = candidates.length;
+  const shortlisted = candidates.filter(
+    (c: Candidate) => c.status === "SHORTLIST",
+  ).length;
+  const rejected = candidates.filter(
+    (c: Candidate) => c.status === "REJECT",
+  ).length;
+  const pending = candidates.filter(
+    (c: Candidate) => c.status === "PENDING",
+  ).length;
 
   return (
     <Box>
@@ -81,7 +89,7 @@ export default function DashboardPage() {
       >
         Recent Applications
       </Typography>
-      <DashboardTable candidates={candidates || []} />
+      <DashboardTable candidates={candidates} />
     </Box>
   );
 }
