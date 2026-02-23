@@ -8,7 +8,7 @@ export const useAnalyzeResume = () => {
     mutationFn: async (formData: FormData) => {
       const result = await analyzeCandidateResume(formData);
       if (result.error) {
-        throw new Error(result.error);
+        throw new Error(JSON.stringify(result.error));
       }
       return result;
     },

@@ -89,14 +89,106 @@ export default function CandidateView({ candidate }: CandidateViewProps) {
               variant="h6"
               sx={{ mb: 2, fontWeight: 600, color: "#37474F" }}
             >
-              Resume Preview
+              Resume Details
+            </Typography>
+
+            {candidate.analysis?.skills && (
+              <Box sx={{ mb: 3 }}>
+                <Typography
+                  variant="subtitle2"
+                  sx={{ mb: 1, color: "#78909C" }}
+                >
+                  SKILLS
+                </Typography>
+                <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
+                  {candidate.analysis.skills.map((skill: string, i: number) => (
+                    <Chip
+                      key={i}
+                      label={skill}
+                      size="small"
+                      sx={{ bgcolor: "#ECEFF1", color: "#455A64" }}
+                    />
+                  ))}
+                </Box>
+              </Box>
+            )}
+
+            {candidate.analysis?.workExperience && (
+              <Box sx={{ mb: 3 }}>
+                <Typography
+                  variant="subtitle2"
+                  sx={{ mb: 1, color: "#78909C" }}
+                >
+                  EXPERIENCE
+                </Typography>
+                {candidate.analysis.workExperience.map(
+                  (exp: any, i: number) => (
+                    <Box
+                      key={i}
+                      sx={{ mb: 2, pl: 2, borderLeft: "2px solid #ECEFF1" }}
+                    >
+                      <Typography
+                        variant="subtitle1"
+                        sx={{ fontWeight: 600, color: "#37474F" }}
+                      >
+                        {exp.role}
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        {exp.company} • {exp.duration}
+                      </Typography>
+                      <Typography
+                        variant="body2"
+                        sx={{ mt: 0.5, color: "#546E7A" }}
+                      >
+                        {exp.description}
+                      </Typography>
+                    </Box>
+                  ),
+                )}
+              </Box>
+            )}
+
+            {candidate.analysis?.education && (
+              <Box sx={{ mb: 3 }}>
+                <Typography
+                  variant="subtitle2"
+                  sx={{ mb: 1, color: "#78909C" }}
+                >
+                  EDUCATION
+                </Typography>
+                {candidate.analysis.education.map((edu: any, i: number) => (
+                  <Box key={i} sx={{ mb: 1 }}>
+                    <Typography
+                      variant="subtitle1"
+                      sx={{ fontWeight: 600, color: "#37474F" }}
+                    >
+                      {edu.degree}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      {edu.institution} • {edu.year}
+                    </Typography>
+                  </Box>
+                ))}
+              </Box>
+            )}
+
+            <Divider sx={{ my: 2 }} />
+
+            <Typography
+              variant="caption"
+              sx={{ color: "#90A4AE", display: "block", mb: 1 }}
+            >
+              RAW TEXT EXTRACT
             </Typography>
             <Box
               sx={{
                 whiteSpace: "pre-wrap",
                 fontFamily: "monospace",
-                fontSize: 14,
-                color: "#455A64",
+                fontSize: 12,
+                color: "#78909C",
+                bgcolor: "#F5F5F5",
+                p: 2,
+                borderRadius: 1,
               }}
             >
               {candidate.resumeText || "No resume text available."}

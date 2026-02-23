@@ -7,7 +7,7 @@ export async function analyzeResume(
   jobDescription: string,
 ) {
   const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
-  console.log({ model });
+
   const prompt = `
     Act as a Senior Software Engineer. Compare the Resume vs Job Description.
     
@@ -19,6 +19,13 @@ export async function analyzeResume(
 
     Return ONLY JSON (no markdown formatting) with the following structure:
     {
+      "name": string (candidate's full name),
+      "email": string (candidate's email address),
+      "phone": string (candidate's phone number, if available, otherwise empty string),
+      "role": string (the role they are applying for or their current role),
+      "workExperience": { "role": string, "company": string, "duration": string, "description": string }[],
+      "education": { "degree": string, "institution": string, "year": string }[],
+      "skills": string[],
       "score": number (0-100),
       "summary": string (brief executive summary),
       "strengths": string[] (list of key matching strengths),

@@ -1,9 +1,11 @@
 "use client";
+import { useRef } from "react";
 import { Button, CircularProgress, Box } from "@mui/material";
 import { CloudUpload } from "lucide-react";
 import { useAnalyzeResume } from "@/hooks/useAnalyzeResume";
 
 export default function UploadResume() {
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const { mutate, isPending } = useAnalyzeResume();
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -12,7 +14,14 @@ export default function UploadResume() {
     const formData = new FormData();
     formData.append("resume", e.target.files[0]);
     formData.append("jobId", "mock-job-id"); // In real app, select from list
-    mutate(formData);
+
+    mutate(formData, {
+      onSettled: () => {
+        if (fileInputRef.current) {
+          fileInputRef.current.value = "";
+        }
+      },
+    });
   };
 
   return (
@@ -26,7 +35,13 @@ export default function UploadResume() {
         disabled={isPending}
       >
         {isPending ? "Analyzing..." : "Upload Resume"}
-        <input type="file" hidden accept=".pdf" onChange={handleFileUpload} />
+        <input
+          ref={fileInputRef}
+          type="file"
+          hidden
+          accept=".pdf"
+          onChange={handleFileUpload}
+        />
       </Button>
     </Box>
   );

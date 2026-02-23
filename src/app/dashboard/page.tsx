@@ -1,16 +1,8 @@
 "use client";
-import {
-  Box,
-  Button,
-  Typography,
-  Paper,
-  Grid,
-  CircularProgress,
-} from "@mui/material";
+import { Box, Typography, Paper, Grid, CircularProgress } from "@mui/material";
 import DashboardTable from "@/components/Dashboard/DashboardTable";
 import UploadResume from "@/components/Dashboard/UploadResume";
 import { useCandidates } from "@/hooks/useCandidates";
-import { Plus } from "lucide-react";
 
 export default function DashboardPage() {
   const { data: candidates, isLoading, error } = useCandidates();
@@ -57,9 +49,6 @@ export default function DashboardPage() {
         </Box>
         <Box sx={{ display: "flex", gap: 2 }}>
           <UploadResume />
-          <Button variant="contained" startIcon={<Plus size={18} />}>
-            New Job
-          </Button>
         </Box>
       </Box>
 

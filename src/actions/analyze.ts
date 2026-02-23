@@ -3,9 +3,6 @@ import { extractTextFromPDF } from "@/lib/pdf";
 import { analyzeResume } from "@/lib/gemini";
 import { supabase } from "@/lib/supabase";
 
-// This is a simplified action. In a real scenario, you'd upload the file to Supabase Storage first,
-// then process it. For this MVP, we process in memory if possible, or assume file is passed as FormData.
-
 export async function analyzeCandidateResume(formData: FormData) {
   const file = formData.get("resume") as File;
   const jobId = formData.get("jobId") as string;
@@ -15,33 +12,26 @@ export async function analyzeCandidateResume(formData: FormData) {
   }
 
   try {
-    // 1. Convert File to Buffer
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
-    // 2. Extract Text
     const text = await extractTextFromPDF(buffer);
 
-    // 3. Get Job Description (Mocked or fetched from Supabase)
-    // For now, let's use a mock JD if not found, or fetch from DB
-    // const { data: job } = await supabase.from('jobs').select('description').eq('id', jobId).single();
-    // const jd = job?.description || "Generic Job Description...";
-    const jd = "Software Engineer. Requirements: React, Node.js, TypeScript."; // Mock JD
+    const jd =
+      "EXP. range - 4.5 to 8 years Proficient in React Native, JavaScript (ES6+), and TypeScript. Expertise in state management libraries (Redux, Zustand, etc.). Experience with React Query. Hands-on experience with react-navigation and deep linking. Solid understanding of Expo (both managed and bare workflows). Knowledge of native development (Swift/Objective-C for iOS, Java/Kotlin for Android). Experience with custom native module bridging and native UI integration. Strong debugging skills using tools like Flipper and Chrome DevTools. Familiarity with Jest, React Native Testing Library and E2E testing. Experience with REST APIs, GraphQL, and real-time data (WebSockets). Ability to manage OTA updates with EAS Update and configure EAS Build. Experience in app publishing and release lifecycle on both Play Store and App Store. Knowledge of secure storage, token handling, and app-level security practices."; // Mock JD
 
-    // 4. Analyze
     const analysis = await analyzeResume(text, jd);
-
     if (!analysis) {
       return { error: "Analysis failed" };
     }
 
-    // 5. Save results to Supabase
     const { data: candidate, error: dbError } = await supabase
       .from("candidates")
       .insert({
-        name: "Candidate (Upload)", // Parsing name from resume is harder without dedicated extraction, using placeholder or filename
-        email: "placeholder@example.com", // Parsing email is also complex, using placeholder
-        role: "Unknown",
+        name: analysis.name,
+        email: analysis.email,
+        phone: analysis.phone,
+        role: analysis.role,
         status: "PENDING",
         score: analysis.score,
         resume_text: text,
@@ -51,13 +41,11 @@ export async function analyzeCandidateResume(formData: FormData) {
       .single();
 
     if (dbError) {
-      console.error("Supabase Error:", dbError);
       return { error: "Failed to save candidate to database" };
     }
 
     return { success: true, analysis, candidate };
   } catch (error) {
-    console.error("Analysis Action Error:", error);
-    return { error: "Internal Server Error" };
+    return { error };
   }
 }

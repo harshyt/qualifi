@@ -14,7 +14,7 @@ export const useCandidates = () => {
         throw new Error(error.message);
       }
 
-      return data as any[]; // Cast to any for now until we define proper Supabase types
+      return data as unknown;
     },
   });
 };
