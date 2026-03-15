@@ -46,8 +46,8 @@ export async function middleware(request: NextRequest) {
     return target;
   };
 
-  // Redirect unauthenticated users away from dashboard
-  if (!user && pathname.startsWith("/dashboard")) {
+  // Redirect unauthenticated users away from protected routes
+  if (!user && (pathname.startsWith("/dashboard") || pathname.startsWith("/jobs"))) {
     const redirectUrl = request.nextUrl.clone();
     redirectUrl.pathname = "/login";
     return copySetCookieHeaders(

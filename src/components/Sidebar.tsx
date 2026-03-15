@@ -12,7 +12,7 @@ import {
   Avatar,
   Tooltip,
 } from "@mui/material";
-import { Inbox, Briefcase, Settings, LogOut } from "lucide-react";
+import { Inbox, Briefcase, LogOut } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { useAuth } from "@/components/Providers/AuthContext";
@@ -22,16 +22,11 @@ import { useTransition } from "react";
 const drawerWidth = 240;
 
 const menuItems = [
-  { text: "Inbox", icon: <Inbox size={20} />, path: "/dashboard" },
+  { text: "Dashboard", icon: <Inbox size={20} />, path: "/dashboard" },
   {
     text: "Job Library",
     icon: <Briefcase size={20} />,
-    path: "/dashboard/jobs",
-  },
-  {
-    text: "Settings",
-    icon: <Settings size={20} />,
-    path: "/dashboard/settings",
+    path: "/jobs",
   },
 ];
 
