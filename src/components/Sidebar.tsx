@@ -80,7 +80,7 @@ export default function Sidebar() {
           component="div"
           sx={{ fontWeight: 700, color: "#2196F3" }}
         >
-          Screener.ai
+          Qualiphy
         </Typography>
       </Box>
       <Box sx={{ overflow: "auto", flexGrow: 1 }}>
@@ -134,8 +134,18 @@ export default function Sidebar() {
       <Box sx={{ p: 2, borderTop: "1px solid #E0E0E0" }}>
         {user && (
           <>
-            <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 1.5, px: 1 }}>
-              <Avatar sx={{ width: 32, height: 32, bgcolor: "#2196F3", fontSize: 14 }}>
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                gap: 1.5,
+                mb: 1.5,
+                px: 1,
+              }}
+            >
+              <Avatar
+                sx={{ width: 32, height: 32, bgcolor: "#2196F3", fontSize: 14 }}
+              >
                 {userInitial}
               </Avatar>
               <Tooltip title={userEmail}>

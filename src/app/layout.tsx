@@ -4,7 +4,7 @@ import QueryProvider from "@/components/Providers/QueryProvider";
 import { Toaster } from "sonner";
 
 export const metadata: Metadata = {
-  title: "Resume Screener",
+  title: "Qualiphy - AI-powered resume screening tool",
   description: "AI-powered resume screening tool",
 };
 
