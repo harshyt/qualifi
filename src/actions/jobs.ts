@@ -14,9 +14,19 @@ export async function createJob(formData: FormData) {
   let clients: string[] = [];
   try {
     if (clientsJson) {
-      clients = JSON.parse(clientsJson);
+      const parsed: unknown = JSON.parse(clientsJson);
+      if (
+        Array.isArray(parsed) &&
+        parsed.every((item: unknown) => typeof item === "string")
+      ) {
+        clients = parsed as string[];
+      } else {
+        console.warn("Invalid clients format, expected string[]. Defaulting to [].");
+        clients = [];
+      }
     }
   } catch {
+    console.warn("Failed to parse clients JSON. Defaulting to [].");
     clients = [];
   }
 
@@ -30,7 +40,7 @@ export async function createJob(formData: FormData) {
       return { error: "Not authenticated" };
     }
 
-    if (user.user_metadata?.role !== "ADMIN") {
+    if (user.app_metadata?.role !== "ADMIN") {
       return { error: "Unauthorized: Only ADMIN users can add jobs." };
     }
 

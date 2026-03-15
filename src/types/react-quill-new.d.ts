@@ -15,9 +15,10 @@ declare module 'react-quill-new' {
     onChangeSelection?: (range: unknown, source: string, editor: unknown) => void;
     onFocus?: (range: unknown, source: string, editor: unknown) => void;
     onBlur?: (previousRange: unknown, source: string, editor: unknown) => void;
-    onKeyDown?: React.EventHandler<unknown>;
-    onKeyPress?: React.EventHandler<unknown>;
-    onKeyUp?: React.EventHandler<unknown>;
+    onKeyDown?: React.KeyboardEventHandler<HTMLElement>;
+    /** @deprecated Use onKeyDown instead. React 17+ deprecates onKeyPress. */
+    onKeyPress?: React.KeyboardEventHandler<HTMLElement>;
+    onKeyUp?: React.KeyboardEventHandler<HTMLElement>;
     style?: React.CSSProperties;
     className?: string;
     id?: string;
@@ -26,3 +27,5 @@ declare module 'react-quill-new' {
 
   export default class ReactQuill extends React.Component<ReactQuillProps> {}
 }
+
+declare module 'react-quill-new/dist/quill.snow.css';

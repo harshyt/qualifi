@@ -35,6 +35,13 @@ const MenuProps = {
 
 const CLIENTS = ["StoneX"];
 
+/** Strips HTML tags and checks if the remaining text content is empty. */
+function isEmptyRichText(html: string): boolean {
+  if (!html) return true;
+  const doc = new DOMParser().parseFromString(html, "text/html");
+  return (doc.body.textContent ?? "").trim() === "";
+}
+
 interface AddJobFormProps {
   onSuccess?: () => void;
 }
@@ -57,7 +64,7 @@ export default function AddJobForm({ onSuccess }: AddJobFormProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!title || !description || description === "<p><br></p>") {
+    if (!title.trim() || isEmptyRichText(description)) {
       toast.error("Please fill in the Job Title and Description.");
       return;
     }

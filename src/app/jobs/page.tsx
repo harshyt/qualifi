@@ -16,6 +16,7 @@ import { Plus, X } from "lucide-react";
 import AddJobForm from "@/components/Dashboard/AddJobForm";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
 import { User } from "@supabase/supabase-js";
+import DOMPurify from "isomorphic-dompurify";
 
 interface Job {
   id: string;
@@ -40,8 +41,17 @@ export default function JobLibraryPage() {
 
   const fetchUser = async () => {
     const supabase = createSupabaseBrowserClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    setUser(user);
+    const {
+      data: { user },
+      error,
+    } = await supabase.auth.getUser();
+    if (error) {
+      console.error("Failed to fetch user:", error.message);
+      return;
+    }
+    if (user) {
+      setUser(user);
+    }
   };
 
   const fetchJobs = async () => {
@@ -114,7 +124,8 @@ export default function JobLibraryPage() {
             Error loading jobs: {error}
           </Typography>
           <Typography color="text.secondary" variant="body2" sx={{ mt: 1 }}>
-            Ensure you have run the Supabase migration provided in the plan to create the jobs table.
+            Ensure you have run the Supabase migration provided in the plan to
+            create the jobs table.
           </Typography>
         </Box>
       ) : isLoading ? (
@@ -139,37 +150,47 @@ export default function JobLibraryPage() {
           </Typography>
         </Box>
       ) : (
-        <Grid container spacing={3}>
+        <Grid container spacing={3} columns={3} size={{ xs: 12, md: 6, lg: 3 }}>
           {jobs.map((job) => (
-            <Grid size={{ xs: 12, md: 6, lg: 4 }} key={job.id}>
-              <Card sx={{ height: "100%", borderRadius: 2, boxShadow: 1 }}>
-                <CardContent>
-                  <Typography variant="h6" sx={{ fontWeight: 600, mb: 1 }}>
-                    {job.title}
-                  </Typography>
-                  {job.client && job.client.length > 0 && (
-                    <Box sx={{ mb: 2, display: "flex", flexWrap: "wrap", gap: 0.5 }}>
-                      {job.client.map((c: string) => (
-                        <Chip key={c} label={c} size="small" variant="outlined" />
-                      ))}
-                    </Box>
-                  )}
+            <Card
+              sx={{ height: "100%", borderRadius: 2, boxShadow: 1 }}
+              key={job.id}
+            >
+              <CardContent>
+                <Typography variant="h6" sx={{ fontWeight: 600, mb: 1 }}>
+                  {job.title}
+                </Typography>
+                {job.client && job.client.length > 0 && (
                   <Box
                     sx={{
-                      color: "text.secondary",
-                      display: "-webkit-box",
-                      WebkitLineClamp: 3,
-                      WebkitBoxOrient: "vertical",
-                      overflow: "hidden",
-                      textOverflow: "ellipsis",
-                      typography: "body2",
-                      "& p": { m: 0 } 
+                      mb: 2,
+                      display: "flex",
+                      flexWrap: "wrap",
+                      gap: 0.5,
                     }}
-                    dangerouslySetInnerHTML={{ __html: job.description }}
-                  />
-                </CardContent>
-              </Card>
-            </Grid>
+                  >
+                    {job.client.map((c: string) => (
+                      <Chip key={c} label={c} size="small" variant="outlined" />
+                    ))}
+                  </Box>
+                )}
+                <Box
+                  sx={{
+                    color: "text.secondary",
+                    display: "-webkit-box",
+                    WebkitLineClamp: 3,
+                    WebkitBoxOrient: "vertical",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    typography: "body2",
+                    "& p": { m: 0 },
+                  }}
+                  dangerouslySetInnerHTML={{
+                    __html: DOMPurify.sanitize(job.description),
+                  }}
+                />
+              </CardContent>
+            </Card>
           ))}
         </Grid>
       )}
@@ -199,8 +220,8 @@ export default function JobLibraryPage() {
             <X size={20} />
           </IconButton>
         </Box>
-        
-        {user?.user_metadata?.role !== "ADMIN" ? (
+
+        {user?.app_metadata?.role !== "ADMIN" ? (
           <Box
             sx={{
               textAlign: "center",
@@ -211,11 +232,17 @@ export default function JobLibraryPage() {
               border: "1px solid #ffcdd2",
             }}
           >
-            <Typography variant="h6" color="error" gutterBottom sx={{ fontWeight: 600 }}>
+            <Typography
+              variant="h6"
+              color="error"
+              gutterBottom
+              sx={{ fontWeight: 600 }}
+            >
               Access Denied
             </Typography>
             <Typography variant="body1" color="text.secondary">
-              You do not have permission to add jobs. Please ask an ADMIN to do so.
+              You do not have permission to add jobs. Please ask an ADMIN to do
+              so.
             </Typography>
           </Box>
         ) : (
