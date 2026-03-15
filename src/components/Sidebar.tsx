@@ -14,6 +14,7 @@ import {
 } from "@mui/material";
 import { Inbox, Briefcase, Settings, LogOut } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { useAuth } from "@/components/Providers/AuthContext";
 import { logoutAction } from "@/actions/auth";
 import { useTransition } from "react";
@@ -42,7 +43,12 @@ export default function Sidebar() {
 
   const handleLogout = () => {
     startTransition(async () => {
-      await logoutAction();
+      try {
+        await logoutAction();
+      } catch (error) {
+        console.error("Logout failed:", error);
+        toast.error("Logout failed. Please try again.");
+      }
     });
   };
 
@@ -124,40 +130,42 @@ export default function Sidebar() {
       {/* User info + Logout */}
       <Box sx={{ p: 2, borderTop: "1px solid #E0E0E0" }}>
         {user && (
-          <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 1.5, px: 1 }}>
-            <Avatar sx={{ width: 32, height: 32, bgcolor: "#2196F3", fontSize: 14 }}>
-              {userInitial}
-            </Avatar>
-            <Tooltip title={userEmail}>
-              <Typography
-                variant="body2"
-                sx={{
-                  fontSize: 12,
-                  color: "#546E7A",
-                  overflow: "hidden",
-                  textOverflow: "ellipsis",
-                  whiteSpace: "nowrap",
-                  maxWidth: 140,
-                }}
-              >
-                {userEmail}
-              </Typography>
-            </Tooltip>
-          </Box>
+          <>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 1.5, px: 1 }}>
+              <Avatar sx={{ width: 32, height: 32, bgcolor: "#2196F3", fontSize: 14 }}>
+                {userInitial}
+              </Avatar>
+              <Tooltip title={userEmail}>
+                <Typography
+                  variant="body2"
+                  sx={{
+                    fontSize: 12,
+                    color: "#546E7A",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    whiteSpace: "nowrap",
+                    maxWidth: 140,
+                  }}
+                >
+                  {userEmail}
+                </Typography>
+              </Tooltip>
+            </Box>
+            <ListItemButton
+              onClick={handleLogout}
+              disabled={isPending}
+              sx={{ borderRadius: 2 }}
+            >
+              <ListItemIcon sx={{ minWidth: 40, color: "#78909C" }}>
+                <LogOut size={20} />
+              </ListItemIcon>
+              <ListItemText
+                primary={isPending ? "Logging out…" : "Logout"}
+                primaryTypographyProps={{ fontSize: 14 }}
+              />
+            </ListItemButton>
+          </>
         )}
-        <ListItemButton
-          onClick={handleLogout}
-          disabled={isPending}
-          sx={{ borderRadius: 2 }}
-        >
-          <ListItemIcon sx={{ minWidth: 40, color: "#78909C" }}>
-            <LogOut size={20} />
-          </ListItemIcon>
-          <ListItemText
-            primary={isPending ? "Logging out…" : "Logout"}
-            primaryTypographyProps={{ fontSize: 14 }}
-          />
-        </ListItemButton>
       </Box>
     </Drawer>
   );

@@ -16,6 +16,10 @@ export async function loginAction(email: string, password: string) {
 
 export async function logoutAction() {
   const supabase = await createSupabaseServerClient();
-  await supabase.auth.signOut();
+  try {
+    await supabase.auth.signOut();
+  } catch (error) {
+    console.error("logoutAction: signOut failed", error);
+  }
   redirect("/login");
 }

@@ -20,9 +20,18 @@ export default function LoginPage() {
   const handleLogin = () => {
     setError(null);
     startTransition(async () => {
-      const result = await loginAction(email, password);
-      if (result?.error) {
-        setError(result.error);
+      try {
+        const result = await loginAction(email, password);
+        if (result?.error) {
+          setError(result.error);
+        }
+      } catch (error) {
+        console.error("Login failed unexpectedly:", error);
+        setError(
+          error instanceof Error
+            ? error.message
+            : "An unexpected error occurred during login."
+        );
       }
     });
   };
