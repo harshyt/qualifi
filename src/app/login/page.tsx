@@ -1,4 +1,5 @@
 "use client";
+import React, { useState, useTransition } from "react";
 import {
   Box,
   Button,
@@ -6,14 +7,24 @@ import {
   CardContent,
   TextField,
   Typography,
+  Alert,
 } from "@mui/material";
-import { useRouter } from "next/navigation";
+import { loginAction } from "@/actions/auth";
 
 export default function LoginPage() {
-  const router = useRouter();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [isPending, startTransition] = useTransition();
 
   const handleLogin = () => {
-    router.push("/dashboard");
+    setError(null);
+    startTransition(async () => {
+      const result = await loginAction(email, password);
+      if (result?.error) {
+        setError(result.error);
+      }
+    });
   };
 
   return (
@@ -38,7 +49,7 @@ export default function LoginPage() {
               textAlign: "center",
             }}
           >
-            Screener.ai
+            Qualiphy
           </Typography>
           <Typography
             variant="body2"
@@ -48,12 +59,19 @@ export default function LoginPage() {
             Sign in to access your dashboard
           </Typography>
 
+          {error && (
+            <Alert severity="error" sx={{ mb: 2 }}>
+              {error}
+            </Alert>
+          )}
+
           <TextField
             fullWidth
             label="Email"
             variant="outlined"
             margin="normal"
-            defaultValue="recruiter@example.com"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
           />
           <TextField
             fullWidth
@@ -61,7 +79,9 @@ export default function LoginPage() {
             type="password"
             variant="outlined"
             margin="normal"
-            defaultValue="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && handleLogin()}
           />
 
           <Button
@@ -69,9 +89,10 @@ export default function LoginPage() {
             variant="contained"
             size="large"
             onClick={handleLogin}
+            disabled={isPending}
             sx={{ mt: 3 }}
           >
-            Sign In
+            {isPending ? "Signing in…" : "Sign In"}
           </Button>
         </CardContent>
       </Card>

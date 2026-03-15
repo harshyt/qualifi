@@ -1,15 +1,20 @@
 import { useQuery } from "@tanstack/react-query";
-
-import { supabase } from "@/lib/supabase";
+import { createSupabaseBrowserClient } from "@/lib/supabase";
+import { useAuth } from "@/components/Providers/AuthContext";
 import type { Candidate } from "@/components/Dashboard/DashboardTable";
 
-export const useCandidates = () =>
-  useQuery<Candidate[]>({
-    queryKey: ["candidates"],
+export const useCandidates = () => {
+  const { user } = useAuth();
+
+  return useQuery<Candidate[]>({
+    queryKey: ["candidates", user?.id],
+    enabled: !!user,
     queryFn: async () => {
+      const supabase = createSupabaseBrowserClient();
       const { data, error } = await supabase
         .from("candidates")
         .select("*")
+        .eq("user_id", user!.id)
         .order("created_at", { ascending: false });
 
       if (error) {
@@ -19,3 +24,4 @@ export const useCandidates = () =>
       return (data ?? []) as Candidate[];
     },
   });
+};

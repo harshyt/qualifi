@@ -9,9 +9,14 @@ import {
   ListItemIcon,
   ListItemText,
   Typography,
+  Avatar,
+  Tooltip,
 } from "@mui/material";
 import { Inbox, Briefcase, Settings, LogOut } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
+import { useAuth } from "@/components/Providers/AuthContext";
+import { logoutAction } from "@/actions/auth";
+import { useTransition } from "react";
 
 const drawerWidth = 240;
 
@@ -32,6 +37,17 @@ const menuItems = [
 export default function Sidebar() {
   const router = useRouter();
   const pathname = usePathname();
+  const { user } = useAuth();
+  const [isPending, startTransition] = useTransition();
+
+  const handleLogout = () => {
+    startTransition(async () => {
+      await logoutAction();
+    });
+  };
+
+  const userInitial = user?.email?.charAt(0).toUpperCase() ?? "U";
+  const userEmail = user?.email ?? "";
 
   return (
     <Drawer
@@ -44,6 +60,8 @@ export default function Sidebar() {
           boxSizing: "border-box",
           borderRight: "1px solid #E0E0E0",
           backgroundColor: "#F9FAFB",
+          display: "flex",
+          flexDirection: "column",
         },
       }}
     >
@@ -56,7 +74,7 @@ export default function Sidebar() {
           Screener.ai
         </Typography>
       </Box>
-      <Box sx={{ overflow: "auto" }}>
+      <Box sx={{ overflow: "auto", flexGrow: 1 }}>
         <List>
           {menuItems.map((item) => (
             <ListItem key={item.text} disablePadding>
@@ -102,14 +120,41 @@ export default function Sidebar() {
           ))}
         </List>
       </Box>
-      <Box sx={{ flexGrow: 1 }} />
-      <Box sx={{ p: 2 }}>
-        <ListItemButton sx={{ borderRadius: 2 }}>
+
+      {/* User info + Logout */}
+      <Box sx={{ p: 2, borderTop: "1px solid #E0E0E0" }}>
+        {user && (
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 1.5, px: 1 }}>
+            <Avatar sx={{ width: 32, height: 32, bgcolor: "#2196F3", fontSize: 14 }}>
+              {userInitial}
+            </Avatar>
+            <Tooltip title={userEmail}>
+              <Typography
+                variant="body2"
+                sx={{
+                  fontSize: 12,
+                  color: "#546E7A",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  whiteSpace: "nowrap",
+                  maxWidth: 140,
+                }}
+              >
+                {userEmail}
+              </Typography>
+            </Tooltip>
+          </Box>
+        )}
+        <ListItemButton
+          onClick={handleLogout}
+          disabled={isPending}
+          sx={{ borderRadius: 2 }}
+        >
           <ListItemIcon sx={{ minWidth: 40, color: "#78909C" }}>
             <LogOut size={20} />
           </ListItemIcon>
           <ListItemText
-            primary="Logout"
+            primary={isPending ? "Logging out…" : "Logout"}
             primaryTypographyProps={{ fontSize: 14 }}
           />
         </ListItemButton>

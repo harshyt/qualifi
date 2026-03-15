@@ -1,7 +1,7 @@
 "use server";
 import { extractTextFromPDF } from "@/lib/pdf";
 import { analyzeResume } from "@/lib/gemini";
-import { supabase } from "@/lib/supabase";
+import { createSupabaseServerClient } from "@/lib/supabase-server";
 
 export async function analyzeCandidateResume(formData: FormData) {
   const file = formData.get("resume") as File;
@@ -12,6 +12,16 @@ export async function analyzeCandidateResume(formData: FormData) {
   }
 
   try {
+    // Get authenticated user
+    const supabase = await createSupabaseServerClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      return { error: "Not authenticated" };
+    }
+
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
@@ -36,6 +46,7 @@ export async function analyzeCandidateResume(formData: FormData) {
         score: analysis.score,
         resume_text: text,
         analysis: analysis,
+        user_id: user.id,
       })
       .select()
       .single();
