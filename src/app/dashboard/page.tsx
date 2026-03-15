@@ -12,7 +12,7 @@ export default function DashboardPage() {
 
   if (isLoading)
     return (
-      <Box sx={{ display: "flex", justifyContent: "center", p: 4 }}>
+      <Box sx={{ display: "flex", justifyContent: "center", p: 2 }}>
         <CircularProgress />
       </Box>
     );
@@ -41,7 +41,7 @@ export default function DashboardPage() {
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
-          mb: 4,
+          mb: 1,
         }}
       >
         <Box>
@@ -55,12 +55,12 @@ export default function DashboardPage() {
             Overview of recent applications and AI analysis.
           </Typography>
         </Box>
-        <Box sx={{ display: "flex", gap: 2 }}>
+        <Box sx={{ display: "flex", gap: 1 }}>
           <UploadResume />
         </Box>
       </Box>
 
-      <Grid container spacing={3} sx={{ mb: 4 }}>
+      <Grid container spacing={3} sx={{ mb: 1 }}>
         {[
           { label: "Total Candidates", value: total },
           { label: "Shortlisted", value: shortlisted },
@@ -68,7 +68,7 @@ export default function DashboardPage() {
           { label: "Pending Review", value: pending },
         ].map((stat) => (
           <Grid size={{ xs: 12, sm: 6, md: 3 }} key={stat.label}>
-            <Paper sx={{ p: 3, borderRadius: 2 }}>
+            <Paper sx={{ p: 2, borderRadius: 2 }}>
               <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
                 {stat.label}
               </Typography>
@@ -85,7 +85,7 @@ export default function DashboardPage() {
 
       <Typography
         variant="h6"
-        sx={{ fontWeight: 600, color: "#37474F", mb: 2 }}
+        sx={{ fontWeight: 600, color: "#37474F", mb: 1 }}
       >
         Recent Applications
       </Typography>
