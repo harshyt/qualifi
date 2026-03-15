@@ -27,7 +27,6 @@ import { Eye, MoreHorizontal, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { useDeleteCandidate } from "@/hooks/useDeleteCandidate";
 import { useRouter } from "next/navigation";
-// import { Candidate } from '@/lib/mockData'; // Removing dependency
 
 // Define minimal interface matching Supabase
 export interface Candidate {

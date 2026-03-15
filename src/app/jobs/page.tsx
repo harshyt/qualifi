@@ -6,13 +6,23 @@ import {
   Button,
   Drawer,
   IconButton,
-  Card,
-  CardContent,
-  Grid,
   Chip,
   CircularProgress,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+  TextField,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  InputAdornment,
 } from "@mui/material";
-import { Plus, X } from "lucide-react";
+import { Plus, X, Search, MoreHorizontal } from "lucide-react";
 import AddJobForm from "@/components/Dashboard/AddJobForm";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
 import { User } from "@supabase/supabase-js";
@@ -33,6 +43,9 @@ export default function JobLibraryPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [user, setUser] = useState<User | null>(null);
+
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedClientFilter, setSelectedClientFilter] = useState("All");
 
   useEffect(() => {
     fetchJobs();
@@ -80,6 +93,27 @@ export default function JobLibraryPage() {
     setIsDrawerOpen(false);
     fetchJobs(); // Refresh the list
   };
+
+  const allClients = Array.from(
+    new Set(jobs.flatMap((job) => job.client || [])),
+  ).sort();
+
+  const filteredJobs = jobs.filter((job) => {
+    const searchLower = searchTerm.toLowerCase();
+    const titleMatch = job.title.toLowerCase().includes(searchLower);
+    const descMatch = job.description.toLowerCase().includes(searchLower);
+    const clientMatch = job.client?.some((c) =>
+      c.toLowerCase().includes(searchLower),
+    );
+
+    const matchesSearch = titleMatch || descMatch || clientMatch;
+
+    const matchesClient =
+      selectedClientFilter === "All" ||
+      (job.client && job.client.includes(selectedClientFilter));
+
+    return matchesSearch && matchesClient;
+  });
 
   return (
     <Box>
@@ -150,49 +184,136 @@ export default function JobLibraryPage() {
           </Typography>
         </Box>
       ) : (
-        <Grid container spacing={3} columns={3} size={{ xs: 12, md: 6, lg: 3 }}>
-          {jobs.map((job) => (
-            <Card
-              sx={{ height: "100%", borderRadius: 2, boxShadow: 1 }}
-              key={job.id}
-            >
-              <CardContent>
-                <Typography variant="h6" sx={{ fontWeight: 600, mb: 1 }}>
-                  {job.title}
-                </Typography>
-                {job.client && job.client.length > 0 && (
-                  <Box
-                    sx={{
-                      mb: 2,
-                      display: "flex",
-                      flexWrap: "wrap",
-                      gap: 0.5,
-                    }}
+        <Box>
+          <Box sx={{ display: "flex", gap: 2, mb: 3 }}>
+            <TextField
+              placeholder="Search jobs..."
+              variant="outlined"
+              size="small"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              sx={{ flexGrow: 1, bgcolor: "white" }}
+              slotProps={{
+                input: {
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <Search size={20} color="#9e9e9e" />
+                    </InputAdornment>
+                  ),
+                },
+              }}
+            />
+            <FormControl size="small" sx={{ minWidth: 200, bgcolor: "white" }}>
+              <InputLabel>Filter by Client</InputLabel>
+              <Select
+                value={selectedClientFilter}
+                label="Filter by Client"
+                onChange={(e) => setSelectedClientFilter(e.target.value)}
+              >
+                <MenuItem value="All">All Clients</MenuItem>
+                {allClients.map((client) => (
+                  <MenuItem key={client} value={client}>
+                    {client}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </Box>
+
+          <TableContainer
+            component={Paper}
+            sx={{ borderRadius: 2, boxShadow: 1 }}
+          >
+            <Table>
+              <TableHead sx={{ bgcolor: "#F9FAFB" }}>
+                <TableRow>
+                  <TableCell sx={{ fontWeight: 600, width: "25%" }}>
+                    Job Title
+                  </TableCell>
+                  <TableCell sx={{ fontWeight: 600, width: "20%" }}>
+                    Clients
+                  </TableCell>
+                  <TableCell sx={{ fontWeight: 600, width: "45%" }}>
+                    Description
+                  </TableCell>
+                  <TableCell
+                    sx={{ fontWeight: 600, width: "10%" }}
+                    align="right"
                   >
-                    {job.client.map((c: string) => (
-                      <Chip key={c} label={c} size="small" variant="outlined" />
-                    ))}
-                  </Box>
+                    Actions
+                  </TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {filteredJobs.length === 0 ? (
+                  <TableRow>
+                    <TableCell
+                      colSpan={4}
+                      align="center"
+                      sx={{ py: 4, color: "text.secondary" }}
+                    >
+                      No jobs match your search criteria.
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  filteredJobs.map((job) => (
+                    <TableRow key={job.id} hover>
+                      <TableCell sx={{ fontWeight: 500 }}>
+                        {job.title}
+                      </TableCell>
+                      <TableCell>
+                        {job.client && job.client.length > 0 ? (
+                          <Box
+                            sx={{
+                              display: "flex",
+                              flexWrap: "wrap",
+                              gap: 0.5,
+                            }}
+                          >
+                            {job.client.map((c: string) => (
+                              <Chip
+                                key={c}
+                                label={c}
+                                size="small"
+                                variant="outlined"
+                              />
+                            ))}
+                          </Box>
+                        ) : (
+                          <Typography variant="body2" color="text.disabled">
+                            None
+                          </Typography>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        <Box
+                          sx={{
+                            color: "text.secondary",
+                            display: "-webkit-box",
+                            WebkitLineClamp: 2,
+                            WebkitBoxOrient: "vertical",
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                            typography: "body2",
+                            "& p": { m: 0 },
+                          }}
+                          dangerouslySetInnerHTML={{
+                            __html: DOMPurify.sanitize(job.description),
+                          }}
+                        />
+                      </TableCell>
+                      <TableCell align="right">
+                        <IconButton size="small" onClick={(e) => e}>
+                          <MoreHorizontal size={18} color="#78909C" />
+                        </IconButton>
+                      </TableCell>
+                    </TableRow>
+                  ))
                 )}
-                <Box
-                  sx={{
-                    color: "text.secondary",
-                    display: "-webkit-box",
-                    WebkitLineClamp: 3,
-                    WebkitBoxOrient: "vertical",
-                    overflow: "hidden",
-                    textOverflow: "ellipsis",
-                    typography: "body2",
-                    "& p": { m: 0 },
-                  }}
-                  dangerouslySetInnerHTML={{
-                    __html: DOMPurify.sanitize(job.description),
-                  }}
-                />
-              </CardContent>
-            </Card>
-          ))}
-        </Grid>
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </Box>
       )}
 
       <Drawer
