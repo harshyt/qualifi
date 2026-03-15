@@ -16,7 +16,7 @@ import { Inbox, Briefcase, Settings, LogOut } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { useAuth } from "@/components/Providers/AuthContext";
-import { logoutAction } from "@/actions/auth";
+import { createSupabaseBrowserClient } from "@/lib/supabase";
 import { useTransition } from "react";
 
 const drawerWidth = 240;
@@ -44,7 +44,10 @@ export default function Sidebar() {
   const handleLogout = () => {
     startTransition(async () => {
       try {
-        await logoutAction();
+        const supabase = createSupabaseBrowserClient();
+        await supabase.auth.signOut();
+        router.push("/login");
+        router.refresh();
       } catch (error) {
         console.error("Logout failed:", error);
         toast.error("Logout failed. Please try again.");

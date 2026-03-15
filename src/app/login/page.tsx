@@ -9,9 +9,11 @@ import {
   Typography,
   Alert,
 } from "@mui/material";
-import { loginAction } from "@/actions/auth";
+import { useRouter } from "next/navigation";
+import { createSupabaseBrowserClient } from "@/lib/supabase";
 
 export default function LoginPage() {
+  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -21,9 +23,16 @@ export default function LoginPage() {
     setError(null);
     startTransition(async () => {
       try {
-        const result = await loginAction(email, password);
-        if (result?.error) {
-          setError(result.error);
+        const supabase = createSupabaseBrowserClient();
+        const { error: signInError } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+        if (signInError) {
+          setError(signInError.message);
+        } else {
+          router.push("/dashboard");
+          router.refresh();
         }
       } catch (error) {
         console.error("Login failed unexpectedly:", error);
