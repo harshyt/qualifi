@@ -50,10 +50,19 @@ export default function SelectJobModal({
     let active = true;
     const fetchJobs = async () => {
       setLoading(true);
-      const result = await fetchJobsForSelect();
-      if (active) {
-        if (result.jobs) setJobs(result.jobs);
-        setLoading(false);
+      try {
+        const result = await fetchJobsForSelect();
+        if (active && result.jobs) {
+          setJobs(result.jobs);
+        }
+      } catch (error) {
+        if (active) {
+          console.error("Error fetching jobs:", error);
+        }
+      } finally {
+        if (active) {
+          setLoading(false);
+        }
       }
     };
 

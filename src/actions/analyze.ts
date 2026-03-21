@@ -60,6 +60,6 @@ export async function analyzeCandidateResume(formData: FormData) {
     return { success: true, analysis, candidate };
   } catch (error) {
     console.error("Analysis Error:", error);
-    return { error };
+    return { error: error instanceof Error ? error.message : "Analysis failed" };
   }
 }
