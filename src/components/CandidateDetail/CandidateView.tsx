@@ -1,5 +1,4 @@
 "use client";
-import * as React from "react";
 import {
   Box,
   Paper,
@@ -11,10 +10,36 @@ import {
 } from "@mui/material";
 import { ArrowLeft, Check, X } from "lucide-react";
 import { useRouter } from "next/navigation";
-// import { Candidate } from '@/lib/mockData';
+
+interface WorkExperience {
+  role: string;
+  company: string;
+  duration: string;
+  description: string;
+}
+
+interface Education {
+  degree: string;
+  institution: string;
+  year: string;
+}
 
 interface CandidateViewProps {
-  candidate: any; // Using any for flexibility with real Supabase data
+  candidate: {
+    name: string;
+    role: string;
+    created_at: string;
+    analysis: {
+      skills: string[];
+      workExperience: WorkExperience[];
+      education: Education[];
+      summary: string;
+      strengths: string[];
+      gaps: string[];
+    };
+    resumeText: string;
+    score: number;
+  };
 }
 
 export default function CandidateView({ candidate }: CandidateViewProps) {
@@ -30,7 +55,6 @@ export default function CandidateView({ candidate }: CandidateViewProps) {
         flexDirection: "column",
       }}
     >
-      {/* Header */}
       <Box
         sx={{
           mb: 3,
@@ -122,7 +146,7 @@ export default function CandidateView({ candidate }: CandidateViewProps) {
                   EXPERIENCE
                 </Typography>
                 {candidate.analysis.workExperience.map(
-                  (exp: any, i: number) => (
+                  (exp: WorkExperience, i: number) => (
                     <Box
                       key={i}
                       sx={{ mb: 2, pl: 2, borderLeft: "2px solid #ECEFF1" }}
@@ -156,19 +180,21 @@ export default function CandidateView({ candidate }: CandidateViewProps) {
                 >
                   EDUCATION
                 </Typography>
-                {candidate.analysis.education.map((edu: any, i: number) => (
-                  <Box key={i} sx={{ mb: 1 }}>
-                    <Typography
-                      variant="subtitle1"
-                      sx={{ fontWeight: 600, color: "#37474F" }}
-                    >
-                      {edu.degree}
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      {edu.institution} • {edu.year}
-                    </Typography>
-                  </Box>
-                ))}
+                {candidate.analysis.education.map(
+                  (edu: Education, i: number) => (
+                    <Box key={i} sx={{ mb: 1 }}>
+                      <Typography
+                        variant="subtitle1"
+                        sx={{ fontWeight: 600, color: "#37474F" }}
+                      >
+                        {edu.degree}
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        {edu.institution} • {edu.year}
+                      </Typography>
+                    </Box>
+                  ),
+                )}
               </Box>
             )}
 

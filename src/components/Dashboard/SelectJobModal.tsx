@@ -84,8 +84,8 @@ export default function SelectJobModal({
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-      <DialogTitle>
-        <Typography variant="h6" fontWeight={600}>
+      <DialogTitle component="div">
+        <Typography variant="h6" component="h2" fontWeight={600}>
           Select Job for Analysis
         </Typography>
         <Typography variant="body2" color="text.secondary">

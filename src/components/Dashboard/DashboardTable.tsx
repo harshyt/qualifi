@@ -44,7 +44,7 @@ function getStatusColor(status: string) {
     case "SHORTLIST":
       return { bg: "#E8F5E9", color: "#2E7D32", label: "Shortlisted" };
     case "REJECT":
-      return { bg: "#FBE9E7", color: "#C62828", label: "Rejected" }; // Using a slightly different red for better contrast if needed, or stick to guideline
+      return { bg: "#FBE9E7", color: "#C62828", label: "Rejected" };
     default:
       return { bg: "#FFF3E0", color: "#E65100", label: "Pending" };
   }
