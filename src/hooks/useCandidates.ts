@@ -13,7 +13,9 @@ export const useCandidates = () => {
       const supabase = createSupabaseBrowserClient();
       const { data, error } = await supabase
         .from("candidates")
-        .select("*")
+        .select(
+          "id, name, role, score, status, created_at, email, job_id, user_id",
+        )
         .eq("user_id", user!.id)
         .order("created_at", { ascending: false });
 

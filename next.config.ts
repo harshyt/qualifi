@@ -6,6 +6,7 @@ const nextConfig: NextConfig = {
       bodySizeLimit: "4mb",
     },
   },
+  serverExternalPackages: ["pdf2json"], // sometimes needed for node packages
 };
 
 export default nextConfig;

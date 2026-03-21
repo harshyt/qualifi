@@ -101,7 +101,7 @@ export default function JobLibraryPage() {
       const supabase = createSupabaseBrowserClient();
       const { data, error } = await supabase
         .from("jobs")
-        .select("*")
+        .select("id, title, description, client, user_id, created_at")
         .order("created_at", { ascending: false });
 
       if (error) {
