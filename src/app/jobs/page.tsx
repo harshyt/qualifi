@@ -21,12 +21,29 @@ import {
   Select,
   MenuItem,
   InputAdornment,
+  Divider,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions,
+  Tooltip,
 } from "@mui/material";
-import { Plus, X, Search, MoreHorizontal } from "lucide-react";
+import {
+  Plus,
+  X,
+  Search,
+  Eye,
+  Trash2,
+  Briefcase,
+  Calendar,
+  Users,
+} from "lucide-react";
 import AddJobForm from "@/components/Dashboard/AddJobForm";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
 import { User } from "@supabase/supabase-js";
 import DOMPurify from "isomorphic-dompurify";
+import { useDeleteJob } from "@/hooks/useDeleteJob";
 
 interface Job {
   id: string;
@@ -39,6 +56,8 @@ interface Job {
 
 export default function JobLibraryPage() {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [isViewDrawerOpen, setIsViewDrawerOpen] = useState(false);
+  const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [jobs, setJobs] = useState<Job[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -46,6 +65,14 @@ export default function JobLibraryPage() {
 
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedClientFilter, setSelectedClientFilter] = useState("All");
+
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [jobToDelete, setJobToDelete] = useState<Job | null>(null);
+  const { mutate: deleteJob, isPending: isDeleting } = useDeleteJob(() => {
+    fetchJobs();
+  });
+
+  const isAdmin = user?.app_metadata?.role === "ADMIN";
 
   useEffect(() => {
     fetchJobs();
@@ -91,7 +118,31 @@ export default function JobLibraryPage() {
 
   const handleSuccess = () => {
     setIsDrawerOpen(false);
-    fetchJobs(); // Refresh the list
+    fetchJobs();
+  };
+
+  const handleViewJob = (job: Job) => {
+    setSelectedJob(job);
+    setIsViewDrawerOpen(true);
+  };
+
+  const handleDeleteClick = (e: React.MouseEvent, job: Job) => {
+    e.stopPropagation();
+    setJobToDelete(job);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const handleConfirmDelete = () => {
+    if (jobToDelete) {
+      deleteJob(jobToDelete.id);
+      setIsDeleteDialogOpen(false);
+      setJobToDelete(null);
+    }
+  };
+
+  const handleDeleteDialogClose = () => {
+    setIsDeleteDialogOpen(false);
+    setJobToDelete(null);
   };
 
   const allClients = Array.from(
@@ -303,9 +354,35 @@ export default function JobLibraryPage() {
                         />
                       </TableCell>
                       <TableCell align="right">
-                        <IconButton size="small" onClick={(e) => e}>
-                          <MoreHorizontal size={18} color="#78909C" />
-                        </IconButton>
+                        <Box
+                          sx={{
+                            display: "flex",
+                            justifyContent: "flex-end",
+                            gap: 0.5,
+                          }}
+                        >
+                          <Tooltip title="View Job">
+                            <IconButton
+                              size="small"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleViewJob(job);
+                              }}
+                            >
+                              <Eye size={18} color="#78909C" />
+                            </IconButton>
+                          </Tooltip>
+                          {isAdmin && (
+                            <Tooltip title="Delete Job">
+                              <IconButton
+                                size="small"
+                                onClick={(e) => handleDeleteClick(e, job)}
+                              >
+                                <Trash2 size={18} color="#d32f2f" />
+                              </IconButton>
+                            </Tooltip>
+                          )}
+                        </Box>
                       </TableCell>
                     </TableRow>
                   ))
@@ -370,6 +447,189 @@ export default function JobLibraryPage() {
           <AddJobForm onSuccess={handleSuccess} />
         )}
       </Drawer>
+
+      <Drawer
+        anchor="right"
+        open={isViewDrawerOpen}
+        onClose={() => setIsViewDrawerOpen(false)}
+        PaperProps={{
+          sx: { width: { xs: "100%", sm: 600 }, p: 0 },
+        }}
+      >
+        {selectedJob && (
+          <Box
+            sx={{ display: "flex", flexDirection: "column", height: "100%" }}
+          >
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "flex-start",
+                p: 3,
+                pb: 2,
+                borderBottom: "1px solid #E0E0E0",
+              }}
+            >
+              <Box sx={{ flex: 1, mr: 2 }}>
+                <Typography
+                  variant="h5"
+                  sx={{ fontWeight: 700, color: "#37474F", mb: 0.5 }}
+                >
+                  {selectedJob.title}
+                </Typography>
+                <Box
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 1,
+                    color: "#78909C",
+                  }}
+                >
+                  <Calendar size={14} />
+                  <Typography variant="body2" color="text.secondary">
+                    Created{" "}
+                    {new Date(selectedJob.created_at).toLocaleDateString(
+                      "en-US",
+                      {
+                        year: "numeric",
+                        month: "long",
+                        day: "numeric",
+                      },
+                    )}
+                  </Typography>
+                </Box>
+              </Box>
+              <IconButton onClick={() => setIsViewDrawerOpen(false)}>
+                <X size={20} />
+              </IconButton>
+            </Box>
+
+            <Box sx={{ p: 3, overflow: "auto", flexGrow: 1 }}>
+              <Box sx={{ mb: 3 }}>
+                <Box
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 1,
+                    mb: 1.5,
+                  }}
+                >
+                  <Users size={16} color="#78909C" />
+                  <Typography
+                    variant="subtitle2"
+                    sx={{
+                      fontWeight: 600,
+                      color: "#78909C",
+                      textTransform: "uppercase",
+                      fontSize: 12,
+                    }}
+                  >
+                    Clients
+                  </Typography>
+                </Box>
+                {selectedJob.client && selectedJob.client.length > 0 ? (
+                  <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
+                    {selectedJob.client.map((c: string) => (
+                      <Chip
+                        key={c}
+                        label={c}
+                        size="small"
+                        sx={{ bgcolor: "#E3F2FD", color: "#1565C0" }}
+                      />
+                    ))}
+                  </Box>
+                ) : (
+                  <Typography variant="body2" color="text.disabled">
+                    No clients assigned
+                  </Typography>
+                )}
+              </Box>
+
+              <Divider sx={{ my: 2 }} />
+
+              <Box>
+                <Box
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 1,
+                    mb: 1.5,
+                  }}
+                >
+                  <Briefcase size={16} color="#78909C" />
+                  <Typography
+                    variant="subtitle2"
+                    sx={{
+                      fontWeight: 600,
+                      color: "#78909C",
+                      textTransform: "uppercase",
+                      fontSize: 12,
+                    }}
+                  >
+                    Job Description
+                  </Typography>
+                </Box>
+                <Box
+                  sx={{
+                    color: "#37474F",
+                    lineHeight: 1.8,
+                    "& p": { mt: 0, mb: 1.5 },
+                    "& ul, & ol": { pl: 3, mb: 1.5 },
+                    "& li": { mb: 0.5 },
+                    "& h1, & h2, & h3": {
+                      color: "#37474F",
+                      fontWeight: 600,
+                      mt: 2,
+                      mb: 1,
+                    },
+                    "& strong": { fontWeight: 600 },
+                    typography: "body1",
+                  }}
+                  dangerouslySetInnerHTML={{
+                    __html: DOMPurify.sanitize(selectedJob.description),
+                  }}
+                />
+              </Box>
+            </Box>
+          </Box>
+        )}
+      </Drawer>
+
+      <Dialog
+        open={isDeleteDialogOpen}
+        onClose={handleDeleteDialogClose}
+        PaperProps={{
+          sx: { borderRadius: 3, padding: 1 },
+        }}
+      >
+        <DialogTitle sx={{ fontWeight: 700, color: "#37474F" }}>
+          Delete Job?
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Are you sure you want to delete{" "}
+            <strong>{jobToDelete?.title}</strong>? This action cannot be undone.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 3 }}>
+          <Button
+            onClick={handleDeleteDialogClose}
+            sx={{ color: "#78909C", fontWeight: 600 }}
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={handleConfirmDelete}
+            color="error"
+            variant="contained"
+            autoFocus
+            disabled={isDeleting}
+            sx={{ borderRadius: 2, fontWeight: 600, boxShadow: "none" }}
+          >
+            {isDeleting ? "Deleting..." : "Delete"}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 }
