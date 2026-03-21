@@ -18,7 +18,7 @@ export default function RootLayout({
       <body>
         <QueryProvider>
           <ThemeRegistry>{children}</ThemeRegistry>
-          <Toaster position="top-right" richColors />
+          <Toaster position="top-center" richColors closeButton />
         </QueryProvider>
       </body>
     </html>
