@@ -18,8 +18,6 @@ import {
   InputAdornment,
 } from "@mui/material";
 import { Search } from "lucide-react";
-// We need to fetch jobs. We can either do it via an API route or pass it in.
-// Since it's a client component, we'll fetch them on mount using a Server Action.
 import { fetchJobsForSelect } from "@/actions/jobList";
 
 interface JobOption {
