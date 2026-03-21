@@ -12,6 +12,7 @@ import { ArrowLeft, Check, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useUpdateCandidateStatus } from "@/hooks/useUpdateCandidateStatus";
 import { CandidateStatus } from "@/types/candidate";
+import { memo } from "react";
 
 interface WorkExperience {
   role: string;
@@ -46,7 +47,7 @@ interface CandidateViewProps {
   };
 }
 
-export default function CandidateView({ candidate }: CandidateViewProps) {
+function CandidateView({ candidate }: CandidateViewProps) {
   const router = useRouter();
   const { mutate, isPending } = useUpdateCandidateStatus();
 
@@ -360,3 +361,5 @@ export default function CandidateView({ candidate }: CandidateViewProps) {
     </Box>
   );
 }
+
+export const MemoizedCandidateView = memo(CandidateView);

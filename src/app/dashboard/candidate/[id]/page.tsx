@@ -1,5 +1,5 @@
 "use client";
-import CandidateView from "@/components/CandidateDetail/CandidateView";
+import { MemoizedCandidateView } from "@/components/CandidateDetail/CandidateView";
 import { useCandidate } from "@/hooks/useCandidate";
 import { useParams } from "next/navigation";
 import { CircularProgress, Box, Typography } from "@mui/material";
@@ -23,5 +23,5 @@ export default function CandidateDetailPage() {
     );
   if (!candidate) return <Typography>Candidate not found</Typography>;
 
-  return <CandidateView candidate={candidate} />;
+  return <MemoizedCandidateView candidate={candidate} />;
 }
