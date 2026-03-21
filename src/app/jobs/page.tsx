@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import {
   Box,
   Typography,
@@ -40,28 +40,24 @@ import {
   Users,
 } from "lucide-react";
 import AddJobForm from "@/components/Dashboard/AddJobForm";
-import { createSupabaseBrowserClient } from "@/lib/supabase";
-import { User } from "@supabase/supabase-js";
+import { useAuth } from "@/components/Providers/AuthContext";
+import { useJobs, type Job } from "@/hooks/useJobs";
 import DOMPurify from "isomorphic-dompurify";
 import { useDeleteJob } from "@/hooks/useDeleteJob";
-
-interface Job {
-  id: string;
-  title: string;
-  description: string;
-  client: string[];
-  user_id: string;
-  created_at: string;
-}
 
 export default function JobLibraryPage() {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [isViewDrawerOpen, setIsViewDrawerOpen] = useState(false);
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
-  const [jobs, setJobs] = useState<Job[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [user, setUser] = useState<User | null>(null);
+
+  const { user } = useAuth();
+  const {
+    data: jobs = [],
+    isLoading,
+    error: queryError,
+    refetch: fetchJobs,
+  } = useJobs();
+  const error = queryError?.message || null;
 
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedClientFilter, setSelectedClientFilter] = useState("All");
@@ -73,48 +69,6 @@ export default function JobLibraryPage() {
   });
 
   const isAdmin = user?.app_metadata?.role === "ADMIN";
-
-  useEffect(() => {
-    fetchJobs();
-    fetchUser();
-  }, []);
-
-  const fetchUser = async () => {
-    const supabase = createSupabaseBrowserClient();
-    const {
-      data: { user },
-      error,
-    } = await supabase.auth.getUser();
-    if (error) {
-      console.error("Failed to fetch user:", error.message);
-      return;
-    }
-    if (user) {
-      setUser(user);
-    }
-  };
-
-  const fetchJobs = async () => {
-    try {
-      setIsLoading(true);
-      setError(null);
-      const supabase = createSupabaseBrowserClient();
-      const { data, error } = await supabase
-        .from("jobs")
-        .select("id, title, description, client, user_id, created_at")
-        .order("created_at", { ascending: false });
-
-      if (error) {
-        throw error;
-      }
-      setJobs(data || []);
-    } catch (err: unknown) {
-      console.error(err);
-      setError(err instanceof Error ? err.message : "Failed to load jobs");
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   const handleSuccess = () => {
     setIsDrawerOpen(false);
