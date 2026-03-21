@@ -141,6 +141,7 @@ export default function SelectJobModal({
                 >
                   <ListItemText
                     primary={job.title}
+                    secondaryTypographyProps={{ component: "div" }}
                     secondary={
                       job.client && job.client.length > 0 ? (
                         <Box

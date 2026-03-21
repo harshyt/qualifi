@@ -42,6 +42,7 @@ interface CandidateViewProps {
     };
     resumeText: string;
     score: number;
+    status: CandidateStatus;
   };
 }
 
@@ -85,31 +86,33 @@ export default function CandidateView({ candidate }: CandidateViewProps) {
             </Typography>
           </Box>
         </Box>
-        <Box sx={{ display: "flex", gap: 2 }}>
-          <Button
-            variant="outlined"
-            color="error"
-            startIcon={<X size={18} />}
-            disabled={isPending}
-            onClick={() =>
-              mutate({ id: candidate.id, status: CandidateStatus.REJECT })
-            }
-          >
-            Reject
-          </Button>
-          <Button
-            variant="contained"
-            color="success"
-            startIcon={<Check size={18} />}
-            sx={{ color: "white" }}
-            disabled={isPending}
-            onClick={() =>
-              mutate({ id: candidate.id, status: CandidateStatus.SHORTLIST })
-            }
-          >
-            Shortlist
-          </Button>
-        </Box>
+        {candidate.status === CandidateStatus.PENDING && (
+          <Box sx={{ display: "flex", gap: 2 }}>
+            <Button
+              variant="outlined"
+              color="error"
+              startIcon={<X size={18} />}
+              disabled={isPending}
+              onClick={() =>
+                mutate({ id: candidate.id, status: CandidateStatus.REJECT })
+              }
+            >
+              Reject
+            </Button>
+            <Button
+              variant="contained"
+              color="success"
+              startIcon={<Check size={18} />}
+              sx={{ color: "white" }}
+              disabled={isPending}
+              onClick={() =>
+                mutate({ id: candidate.id, status: CandidateStatus.SHORTLIST })
+              }
+            >
+              Shortlist
+            </Button>
+          </Box>
+        )}
       </Box>
 
       <Grid container spacing={3} sx={{ flexGrow: 1, overflow: "hidden" }}>
