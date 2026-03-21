@@ -24,12 +24,13 @@ interface JobOption {
   id: string;
   title: string;
   client: string[];
+  description: string;
 }
 
 interface SelectJobModalProps {
   open: boolean;
   onClose: () => void;
-  onConfirm: (jobId: string) => void;
+  onConfirm: (jobId: string, jobDescription: string) => void;
   fileCount: number;
 }
 
@@ -176,7 +177,14 @@ export default function SelectJobModal({
           Cancel
         </Button>
         <Button
-          onClick={() => selectedJobId && onConfirm(selectedJobId)}
+          onClick={() => {
+            if (selectedJobId) {
+              const selectedJob = jobs.find((j) => j.id === selectedJobId);
+              if (selectedJob) {
+                onConfirm(selectedJobId, selectedJob.description);
+              }
+            }
+          }}
           variant="contained"
           disabled={!selectedJobId}
         >
