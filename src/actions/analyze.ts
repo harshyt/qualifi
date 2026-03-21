@@ -47,16 +47,19 @@ export async function analyzeCandidateResume(formData: FormData) {
         resume_text: text,
         analysis: analysis,
         user_id: user.id,
+        job_id: jobId,
       })
       .select()
       .single();
 
     if (dbError) {
+      console.error("DB Error inserting candidate:", dbError);
       return { error: "Failed to save candidate to database" };
     }
 
     return { success: true, analysis, candidate };
   } catch (error) {
+    console.error("Analysis Error:", error);
     return { error };
   }
 }
