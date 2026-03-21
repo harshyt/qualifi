@@ -10,10 +10,8 @@ import {
 } from "@mui/material";
 import { ArrowLeft, Check, X } from "lucide-react";
 import { useRouter } from "next/navigation";
-import {
-  useUpdateCandidateStatus,
-  CandidateStatus,
-} from "@/hooks/useUpdateCandidateStatus";
+import { useUpdateCandidateStatus } from "@/hooks/useUpdateCandidateStatus";
+import { CandidateStatus } from "@/types/candidate";
 
 interface WorkExperience {
   role: string;

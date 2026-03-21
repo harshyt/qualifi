@@ -1,11 +1,9 @@
+"use client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 
-export enum CandidateStatus {
-  SHORTLIST = "SHORTLIST",
-  REJECT = "REJECT",
-}
+import { CandidateStatus } from "@/types/candidate";
 
 export const useUpdateCandidateStatus = () => {
   const queryClient = useQueryClient();
