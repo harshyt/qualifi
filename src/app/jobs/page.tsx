@@ -134,9 +134,12 @@ export default function JobLibraryPage() {
 
   const handleConfirmDelete = () => {
     if (jobToDelete) {
-      deleteJob(jobToDelete.id);
-      setIsDeleteDialogOpen(false);
-      setJobToDelete(null);
+      deleteJob(jobToDelete.id, {
+        onSuccess: () => {
+          setIsDeleteDialogOpen(false);
+          setJobToDelete(null);
+        },
+      });
     }
   };
 
