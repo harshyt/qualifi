@@ -10,6 +10,10 @@ import {
 } from "@mui/material";
 import { ArrowLeft, Check, X } from "lucide-react";
 import { useRouter } from "next/navigation";
+import {
+  useUpdateCandidateStatus,
+  CandidateStatus,
+} from "@/hooks/useUpdateCandidateStatus";
 
 interface WorkExperience {
   role: string;
@@ -26,6 +30,7 @@ interface Education {
 
 interface CandidateViewProps {
   candidate: {
+    id: string;
     name: string;
     role: string;
     created_at: string;
@@ -44,6 +49,7 @@ interface CandidateViewProps {
 
 export default function CandidateView({ candidate }: CandidateViewProps) {
   const router = useRouter();
+  const { mutate, isPending } = useUpdateCandidateStatus();
 
   if (!candidate) return <Typography>Candidate not found</Typography>;
 
@@ -82,7 +88,15 @@ export default function CandidateView({ candidate }: CandidateViewProps) {
           </Box>
         </Box>
         <Box sx={{ display: "flex", gap: 2 }}>
-          <Button variant="outlined" color="error" startIcon={<X size={18} />}>
+          <Button
+            variant="outlined"
+            color="error"
+            startIcon={<X size={18} />}
+            disabled={isPending}
+            onClick={() =>
+              mutate({ id: candidate.id, status: CandidateStatus.REJECT })
+            }
+          >
             Reject
           </Button>
           <Button
@@ -90,15 +104,17 @@ export default function CandidateView({ candidate }: CandidateViewProps) {
             color="success"
             startIcon={<Check size={18} />}
             sx={{ color: "white" }}
+            disabled={isPending}
+            onClick={() =>
+              mutate({ id: candidate.id, status: CandidateStatus.SHORTLIST })
+            }
           >
             Shortlist
           </Button>
         </Box>
       </Box>
 
-      {/* Split Screen */}
       <Grid container spacing={3} sx={{ flexGrow: 1, overflow: "hidden" }}>
-        {/* Left: Resume */}
         <Grid size={{ xs: 12, md: 6 }} sx={{ height: "100%" }}>
           <Paper
             sx={{
@@ -222,7 +238,6 @@ export default function CandidateView({ candidate }: CandidateViewProps) {
           </Paper>
         </Grid>
 
-        {/* Right: Analysis */}
         <Grid size={{ xs: 12, md: 6 }} sx={{ height: "100%" }}>
           <Paper
             sx={{
