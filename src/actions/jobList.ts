@@ -6,7 +6,7 @@ export async function fetchJobsForSelect() {
     const supabase = await createSupabaseServerClient();
     const { data, error } = await supabase
       .from("jobs")
-      .select("id, title, client, description")
+      .select("id, title, client, description, tags")
       .order("created_at", { ascending: false });
 
     if (error) {

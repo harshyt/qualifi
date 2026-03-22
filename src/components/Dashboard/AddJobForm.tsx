@@ -17,6 +17,7 @@ import dynamic from "next/dynamic";
 import { createJob } from "@/actions/jobs";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import { ROLE_CONFIGS } from "@/constants/roles";
 
 // Dynamically import ReactQuill to avoid SSR issues
 const ReactQuill = dynamic(() => import("react-quill-new"), { ssr: false });
@@ -50,6 +51,7 @@ export default function AddJobForm({ onSuccess }: AddJobFormProps) {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [selectedClients, setSelectedClients] = useState<string[]>([]);
+  const [roleKey, setRoleKey] = useState<string>("generic");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const router = useRouter();
 
@@ -74,6 +76,7 @@ export default function AddJobForm({ onSuccess }: AddJobFormProps) {
     formData.append("title", title);
     formData.append("description", description);
     formData.append("clients", JSON.stringify(selectedClients));
+    formData.append("roleKey", roleKey);
 
     try {
       const result = await createJob(formData);
@@ -127,6 +130,34 @@ export default function AddJobForm({ onSuccess }: AddJobFormProps) {
           {CLIENTS.map((client) => (
             <MenuItem key={client} value={client}>
               {client}
+            </MenuItem>
+          ))}
+        </Select>
+      </FormControl>
+
+      <FormControl fullWidth sx={{ mb: 3 }}>
+        <InputLabel id="role-select-label">Job Role Profile</InputLabel>
+        <Select
+          labelId="role-select-label"
+          id="role-select"
+          value={roleKey}
+          label="Job Role Profile"
+          onChange={(e) => setRoleKey(e.target.value)}
+        >
+          {Object.entries(ROLE_CONFIGS).map(([key, config]) => (
+            <MenuItem key={key} value={key} sx={{ py: 1.5 }}>
+              <Box>
+                <Typography variant="body1" sx={{ fontWeight: 500 }}>
+                  {config.title}
+                </Typography>
+                <Typography
+                  variant="caption"
+                  color="text.secondary"
+                  sx={{ display: "block" }}
+                >
+                  {config.persona}
+                </Typography>
+              </Box>
             </MenuItem>
           ))}
         </Select>

@@ -6,12 +6,14 @@ export async function createJob(formData: FormData) {
   const title = formData.get("title") as string;
   const description = formData.get("description") as string;
   const clientsJson = formData.get("clients") as string;
+  const roleKey = formData.get("roleKey") as string;
 
   if (!title || !description) {
     return { error: "Missing required fields" };
   }
 
   let clients: string[] = [];
+  const tags: string[] = roleKey ? [roleKey] : [];
   try {
     if (clientsJson) {
       const parsed: unknown = JSON.parse(clientsJson);
@@ -21,7 +23,9 @@ export async function createJob(formData: FormData) {
       ) {
         clients = parsed as string[];
       } else {
-        console.warn("Invalid clients format, expected string[]. Defaulting to [].");
+        console.warn(
+          "Invalid clients format, expected string[]. Defaulting to [].",
+        );
         clients = [];
       }
     }
@@ -48,6 +52,7 @@ export async function createJob(formData: FormData) {
       title,
       description,
       client: clients,
+      tags,
       user_id: user.id,
     });
 

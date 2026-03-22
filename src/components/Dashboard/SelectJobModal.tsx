@@ -25,12 +25,13 @@ interface JobOption {
   title: string;
   client: string[];
   description: string;
+  tags?: string[];
 }
 
 interface SelectJobModalProps {
   open: boolean;
   onClose: () => void;
-  onConfirm: (jobId: string, jobDescription: string) => void;
+  onConfirm: (jobId: string, jobDescription: string, roleKey?: string) => void;
   fileCount: number;
 }
 
@@ -158,12 +159,49 @@ export default function SelectJobModal({
                               label={c}
                               size="small"
                               variant="outlined"
-                              sx={{ height: 20, fontSize: "0.7rem" }}
+                              sx={{ height: 20, fontSize: "0.7rem", mr: 0.5 }}
                             />
                           ))}
+                          {job.tags && job.tags.length > 0 && (
+                            <Chip
+                              label={`Role: ${job.tags[0]}`}
+                              size="small"
+                              color="secondary"
+                              variant="outlined"
+                              sx={{
+                                height: 20,
+                                fontSize: "0.7rem",
+                                fontWeight: 600,
+                              }}
+                            />
+                          )}
                         </Box>
                       ) : (
-                        "No client specified"
+                        <Box
+                          sx={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 1,
+                            mt: 0.5,
+                          }}
+                        >
+                          <Typography variant="caption" color="text.secondary">
+                            No client specified
+                          </Typography>
+                          {job.tags && job.tags.length > 0 && (
+                            <Chip
+                              label={`Role: ${job.tags[0]}`}
+                              size="small"
+                              color="secondary"
+                              variant="outlined"
+                              sx={{
+                                height: 20,
+                                fontSize: "0.7rem",
+                                fontWeight: 600,
+                              }}
+                            />
+                          )}
+                        </Box>
                       )
                     }
                   />
@@ -182,7 +220,11 @@ export default function SelectJobModal({
             if (selectedJobId) {
               const selectedJob = jobs.find((j) => j.id === selectedJobId);
               if (selectedJob) {
-                onConfirm(selectedJobId, selectedJob.description);
+                onConfirm(
+                  selectedJobId,
+                  selectedJob.description,
+                  selectedJob.tags?.[0],
+                );
               }
             }
           }}

@@ -2,6 +2,7 @@
 import { extractTextFromPDF } from "@/lib/pdf";
 import { analyzeResume } from "@/lib/gemini";
 import { createSupabaseServerClient } from "@/lib/supabase-server";
+import { RoleKey } from "@/constants/roles";
 
 export async function analyzeCandidateResume(formData: FormData) {
   const file = formData.get("resume") as File;
@@ -27,8 +28,9 @@ export async function analyzeCandidateResume(formData: FormData) {
     const buffer = Buffer.from(arrayBuffer);
 
     const text = await extractTextFromPDF(buffer);
+    const roleKey = (formData.get("roleKey") as RoleKey) || "generic";
 
-    const analysis = await analyzeResume(text, jobDescription);
+    const analysis = await analyzeResume(text, jobDescription, roleKey);
     if (!analysis) {
       return { error: "Analysis failed" };
     }

@@ -40,6 +40,11 @@ interface CandidateViewProps {
       summary: string;
       strengths: string[];
       gaps: string[];
+      experienceLevel?: string;
+      technologiesUsed?: { category: string; technologies: string[] }[];
+      redFlags?: string[];
+      interviewFocusAreas?: string[];
+      cultureFitIndicators?: string[];
     };
     resumeText: string;
     score: number;
@@ -82,7 +87,10 @@ function CandidateView({ candidate }: CandidateViewProps) {
               {candidate.name}
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              Applied for {candidate.role} •{" "}
+              Applied for {candidate.role}
+              {candidate.analysis?.experienceLevel &&
+                ` • ${candidate.analysis.experienceLevel} Level`}
+              {" • "}
               {new Date(candidate.created_at).toLocaleDateString()}
             </Typography>
           </Box>
@@ -133,6 +141,47 @@ function CandidateView({ candidate }: CandidateViewProps) {
             >
               Resume Details
             </Typography>
+
+            {candidate.analysis?.technologiesUsed &&
+              candidate.analysis.technologiesUsed.length > 0 && (
+                <Box sx={{ mb: 3 }}>
+                  <Typography
+                    variant="subtitle2"
+                    sx={{ mb: 1, color: "#78909C" }}
+                  >
+                    TECHNOLOGIES
+                  </Typography>
+                  {candidate.analysis.technologiesUsed.map((techGroup, i) => (
+                    <Box key={i} sx={{ mb: 1.5 }}>
+                      <Typography
+                        variant="caption"
+                        sx={{
+                          color: "#546E7A",
+                          display: "block",
+                          mb: 0.5,
+                          fontWeight: 600,
+                        }}
+                      >
+                        {techGroup.category}
+                      </Typography>
+                      <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
+                        {techGroup.technologies.map((tech, j) => (
+                          <Chip
+                            key={j}
+                            label={tech}
+                            size="small"
+                            sx={{
+                              bgcolor: "#E3F2FD",
+                              color: "#1565C0",
+                              fontWeight: 500,
+                            }}
+                          />
+                        ))}
+                      </Box>
+                    </Box>
+                  ))}
+                </Box>
+              )}
 
             {candidate.analysis?.skills && (
               <Box sx={{ mb: 3 }}>
@@ -329,6 +378,38 @@ function CandidateView({ candidate }: CandidateViewProps) {
               </ul>
             </Box>
 
+            {candidate.analysis?.redFlags &&
+              candidate.analysis.redFlags.length > 0 && (
+                <Box sx={{ mb: 4 }}>
+                  <Typography
+                    variant="subtitle2"
+                    sx={{
+                      fontWeight: 600,
+                      color: "#D32F2F",
+                      mb: 1,
+                      textTransform: "uppercase",
+                      fontSize: 12,
+                    }}
+                  >
+                    Red Flags
+                  </Typography>
+                  <ul style={{ paddingLeft: 20, margin: 0 }}>
+                    {candidate.analysis.redFlags.map(
+                      (flag: string, i: number) => (
+                        <Box key={i} sx={{ display: "flex", gap: 1.5, mb: 1 }}>
+                          <Typography
+                            variant="body2"
+                            sx={{ color: "#B71C1C", fontWeight: 500 }}
+                          >
+                            • {flag}
+                          </Typography>
+                        </Box>
+                      ),
+                    )}
+                  </ul>
+                </Box>
+              )}
+
             <Box sx={{ mb: 4 }}>
               <Typography
                 variant="subtitle2"
@@ -355,6 +436,66 @@ function CandidateView({ candidate }: CandidateViewProps) {
                 )}
               </ul>
             </Box>
+
+            {candidate.analysis?.interviewFocusAreas &&
+              candidate.analysis.interviewFocusAreas.length > 0 && (
+                <Box sx={{ mb: 4 }}>
+                  <Typography
+                    variant="subtitle2"
+                    sx={{
+                      fontWeight: 600,
+                      color: "#1976D2",
+                      mb: 1,
+                      textTransform: "uppercase",
+                      fontSize: 12,
+                    }}
+                  >
+                    Interview Focus Areas
+                  </Typography>
+                  <ul style={{ paddingLeft: 20, margin: 0 }}>
+                    {candidate.analysis.interviewFocusAreas.map(
+                      (area: string, i: number) => (
+                        <li
+                          key={i}
+                          style={{ color: "#37474F", marginBottom: 8 }}
+                        >
+                          {area}
+                        </li>
+                      ),
+                    )}
+                  </ul>
+                </Box>
+              )}
+
+            {candidate.analysis?.cultureFitIndicators &&
+              candidate.analysis.cultureFitIndicators.length > 0 && (
+                <Box sx={{ mb: 4 }}>
+                  <Typography
+                    variant="subtitle2"
+                    sx={{
+                      fontWeight: 600,
+                      color: "#F57C00",
+                      mb: 1,
+                      textTransform: "uppercase",
+                      fontSize: 12,
+                    }}
+                  >
+                    Culture Fit Indicators
+                  </Typography>
+                  <ul style={{ paddingLeft: 20, margin: 0 }}>
+                    {candidate.analysis.cultureFitIndicators.map(
+                      (indicator: string, i: number) => (
+                        <li
+                          key={i}
+                          style={{ color: "#37474F", marginBottom: 8 }}
+                        >
+                          {indicator}
+                        </li>
+                      ),
+                    )}
+                  </ul>
+                </Box>
+              )}
           </Paper>
         </Grid>
       </Grid>

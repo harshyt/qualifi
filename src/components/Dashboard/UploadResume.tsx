@@ -34,7 +34,11 @@ export default function UploadResume() {
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
-  const handleJobSelect = async (jobId: string, jobDescription: string) => {
+  const handleJobSelect = async (
+    jobId: string,
+    jobDescription: string,
+    roleKey?: string,
+  ) => {
     setIsModalOpen(false);
 
     if (!pendingFiles || pendingFiles.length === 0) return;
@@ -51,6 +55,9 @@ export default function UploadResume() {
       formData.append("resume", file);
       formData.append("jobId", jobId);
       formData.append("jobDescription", jobDescription);
+      if (roleKey) {
+        formData.append("roleKey", roleKey);
+      }
 
       try {
         await mutateAsync(formData);
