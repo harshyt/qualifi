@@ -105,7 +105,6 @@ export default function JobLibraryPage() {
   const allClients = Array.from(
     new Set(jobs.flatMap((job) => job.client || [])),
   ).sort();
-  console.log({ jobs });
   const filteredJobs = jobs.filter((job) => {
     const searchLower = searchTerm.toLowerCase();
     const titleMatch = job.title.toLowerCase().includes(searchLower);
@@ -122,7 +121,6 @@ export default function JobLibraryPage() {
 
     return matchesSearch && matchesClient;
   });
-  console.log({ selectedJob });
   return (
     <Box>
       <Box
