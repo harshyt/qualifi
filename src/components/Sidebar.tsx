@@ -17,7 +17,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { useAuth } from "@/components/Providers/AuthContext";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
-import { useTransition } from "react";
+import { useTransition, useCallback, memo } from "react";
 
 const drawerWidth = 240;
 
@@ -29,9 +29,6 @@ const menuItems = [
     path: "/jobs",
   },
 ];
-
-import { useCallback } from "react";
-import { memo } from "react";
 
 function Sidebar() {
   const router = useRouter();

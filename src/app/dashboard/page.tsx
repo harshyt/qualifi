@@ -118,7 +118,7 @@ export default function DashboardPage() {
       </Typography>
       {isLoading ? (
         <Box sx={{ display: "flex", justifyContent: "center", p: 2 }}>
-          <CircularProgress />
+          <CircularProgress aria-label="Loading dashboard" role="status" />
         </Box>
       ) : (
         <DashboardTable candidates={candidates} />

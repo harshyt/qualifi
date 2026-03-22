@@ -1,5 +1,5 @@
 "use client";
-import { useRef, useState, useCallback } from "react";
+import { useRef, useState, useCallback, useEffect } from "react";
 import {
   Button,
   CircularProgress,
@@ -97,11 +97,20 @@ function FileProgressItem({ file }: { file: FileProgress }) {
 
 export default function UploadResume() {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const uploadTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const queryClient = useQueryClient();
   const [isUploading, setIsUploading] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [pendingFiles, setPendingFiles] = useState<FileList | null>(null);
   const [fileProgress, setFileProgress] = useState<FileProgress[]>([]);
+
+  useEffect(() => {
+    return () => {
+      if (uploadTimeoutRef.current) {
+        clearTimeout(uploadTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const handleFileSelect = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -215,7 +224,7 @@ export default function UploadResume() {
       }
 
       // Clear upload state after a brief delay so user can see final status
-      setTimeout(() => {
+      uploadTimeoutRef.current = setTimeout(() => {
         setIsUploading(false);
         setFileProgress([]);
         setPendingFiles(null);
