@@ -2,7 +2,7 @@
 import { extractTextFromPDF } from "@/lib/pdf";
 import { analyzeResume } from "@/lib/gemini";
 import { createSupabaseServerClient } from "@/lib/supabase-server";
-import { RoleKey } from "@/constants/roles";
+import { RoleKey, ROLE_CONFIGS } from "@/constants/roles";
 
 export async function analyzeCandidateResume(formData: FormData) {
   const file = formData.get("resume") as File;
@@ -28,7 +28,11 @@ export async function analyzeCandidateResume(formData: FormData) {
     const buffer = Buffer.from(arrayBuffer);
 
     const text = await extractTextFromPDF(buffer);
-    const roleKey = (formData.get("roleKey") as RoleKey) || "generic";
+    const rawRoleKey = formData.get("roleKey") as string;
+    const isValidRoleKey = Object.keys(ROLE_CONFIGS).includes(rawRoleKey);
+    const roleKey: RoleKey = isValidRoleKey
+      ? (rawRoleKey as RoleKey)
+      : "generic";
 
     const analysis = await analyzeResume(text, jobDescription, roleKey);
     if (!analysis) {

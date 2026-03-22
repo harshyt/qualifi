@@ -8,7 +8,7 @@ function buildPrompt(
   jobDescription: string,
   resumeText: string,
 ): string {
-  const config = ROLE_CONFIGS[role];
+  const config = ROLE_CONFIGS[role] || ROLE_CONFIGS["generic"];
 
   return `
 You are a ${config.persona} conducting a thorough resume screening for a ${config.title} position.
@@ -65,6 +65,12 @@ Use this exact structure:
 `;
 }
 
+/**
+ * Analyzes a resume against a job description.
+ * NOTE: `resumeText` and `jobDescription` are untrusted inputs from the user/candidate
+ * and pose a direct prompt injection risk. Ensure upstream validation when possible.
+ * We apply basic sanitization and truncation below to mitigate extreme payload executions.
+ */
 export async function analyzeResume(
   resumeText: string,
   jobDescription: string,
@@ -72,7 +78,11 @@ export async function analyzeResume(
 ) {
   const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
 
-  const prompt = buildPrompt(role, jobDescription, resumeText);
+  // Basic sanitization to minimize injection severity and limit token exhaustion.
+  const safeResumeText = resumeText.slice(0, 15000).replace(/```/g, "");
+  const safeJobDesc = jobDescription.slice(0, 15000).replace(/```/g, "");
+
+  const prompt = buildPrompt(role, safeJobDesc, safeResumeText);
 
   try {
     const response = await model.generateContent(prompt);

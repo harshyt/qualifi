@@ -396,12 +396,16 @@ function CandidateView({ candidate }: CandidateViewProps) {
                   <ul style={{ paddingLeft: 20, margin: 0 }}>
                     {candidate.analysis.redFlags.map(
                       (flag: string, i: number) => (
-                        <Box key={i} sx={{ display: "flex", gap: 1.5, mb: 1 }}>
+                        <Box
+                          component="li"
+                          key={i}
+                          sx={{ mb: 1, color: "#B71C1C" }}
+                        >
                           <Typography
                             variant="body2"
                             sx={{ color: "#B71C1C", fontWeight: 500 }}
                           >
-                            • {flag}
+                            {flag}
                           </Typography>
                         </Box>
                       ),
