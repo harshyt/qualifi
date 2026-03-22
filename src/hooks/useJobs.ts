@@ -8,6 +8,7 @@ export interface Job {
   client: string[];
   user_id: string;
   created_at: string;
+  tags: string[];
 }
 
 export const useJobs = () => {
@@ -17,7 +18,7 @@ export const useJobs = () => {
       const supabase = createSupabaseBrowserClient();
       const { data, error } = await supabase
         .from("jobs")
-        .select("id, title, description, client, user_id, created_at")
+        .select("id, title, description, client, user_id, created_at, tags")
         .order("created_at", { ascending: false });
 
       if (error) {

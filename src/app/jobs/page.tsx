@@ -105,7 +105,7 @@ export default function JobLibraryPage() {
   const allClients = Array.from(
     new Set(jobs.flatMap((job) => job.client || [])),
   ).sort();
-
+  console.log({ jobs });
   const filteredJobs = jobs.filter((job) => {
     const searchLower = searchTerm.toLowerCase();
     const titleMatch = job.title.toLowerCase().includes(searchLower);
@@ -122,7 +122,7 @@ export default function JobLibraryPage() {
 
     return matchesSearch && matchesClient;
   });
-
+  console.log({ selectedJob });
   return (
     <Box>
       <Box
@@ -235,13 +235,16 @@ export default function JobLibraryPage() {
             <Table>
               <TableHead sx={{ bgcolor: "#F9FAFB" }}>
                 <TableRow>
-                  <TableCell sx={{ fontWeight: 600, width: "25%" }}>
+                  <TableCell sx={{ fontWeight: 600, width: "15%" }}>
                     Job Title
                   </TableCell>
-                  <TableCell sx={{ fontWeight: 600, width: "20%" }}>
+                  <TableCell sx={{ fontWeight: 600, width: "10%" }}>
                     Clients
                   </TableCell>
-                  <TableCell sx={{ fontWeight: 600, width: "45%" }}>
+                  <TableCell sx={{ fontWeight: 600, width: "10%" }}>
+                    Profile
+                  </TableCell>
+                  <TableCell sx={{ fontWeight: 600, width: "55%" }}>
                     Description
                   </TableCell>
                   <TableCell
@@ -265,7 +268,17 @@ export default function JobLibraryPage() {
                   </TableRow>
                 ) : (
                   filteredJobs.map((job) => (
-                    <TableRow key={job.id} hover>
+                    <TableRow
+                      key={job.id}
+                      hover
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleViewJob(job);
+                      }}
+                      sx={{
+                        cursor: "pointer",
+                      }}
+                    >
                       <TableCell sx={{ fontWeight: 500 }}>
                         {job.title}
                       </TableCell>
@@ -294,6 +307,31 @@ export default function JobLibraryPage() {
                         )}
                       </TableCell>
                       <TableCell>
+                        {job.tags && job.tags.length > 0 ? (
+                          <Box
+                            sx={{
+                              display: "flex",
+                              flexWrap: "wrap",
+                              gap: 0.5,
+                            }}
+                          >
+                            {job.tags.map((t: string) => (
+                              <Chip
+                                key={t}
+                                label={t}
+                                size="small"
+                                variant="outlined"
+                                color="secondary"
+                              />
+                            ))}
+                          </Box>
+                        ) : (
+                          <Typography variant="body2" color="text.disabled">
+                            None
+                          </Typography>
+                        )}
+                      </TableCell>
+                      <TableCell>
                         <Box
                           sx={{
                             color: "text.secondary",
@@ -304,6 +342,7 @@ export default function JobLibraryPage() {
                             textOverflow: "ellipsis",
                             typography: "body2",
                             "& p": { m: 0 },
+                            lineBreak: "anywhere",
                           }}
                           dangerouslySetInnerHTML={{
                             __html: DOMPurify.sanitize(job.description),
@@ -472,34 +511,80 @@ export default function JobLibraryPage() {
                   }}
                 >
                   <Users size={16} color="#78909C" />
-                  <Typography
-                    variant="subtitle2"
+                  <Box
                     sx={{
-                      fontWeight: 600,
-                      color: "#78909C",
-                      textTransform: "uppercase",
-                      fontSize: 12,
+                      display: "flex",
+                      justifyContent: "space-between",
+                      margin: "auto",
+                      width: "100%",
                     }}
                   >
-                    Clients
-                  </Typography>
-                </Box>
-                {selectedJob.client && selectedJob.client.length > 0 ? (
-                  <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
-                    {selectedJob.client.map((c: string) => (
-                      <Chip
-                        key={c}
-                        label={c}
-                        size="small"
-                        sx={{ bgcolor: "#E3F2FD", color: "#1565C0" }}
-                      />
-                    ))}
+                    <Typography
+                      variant="subtitle2"
+                      sx={{
+                        fontWeight: 600,
+                        color: "#78909C",
+                        textTransform: "uppercase",
+                        fontSize: 12,
+                      }}
+                    >
+                      Clients
+                    </Typography>
+                    <Typography
+                      variant="subtitle2"
+                      sx={{
+                        fontWeight: 600,
+                        color: "#78909C",
+                        textTransform: "uppercase",
+                        fontSize: 12,
+                      }}
+                    >
+                      Profile
+                    </Typography>
                   </Box>
-                ) : (
-                  <Typography variant="body2" color="text.disabled">
-                    No clients assigned
-                  </Typography>
-                )}
+                </Box>
+                <Box
+                  sx={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    margin: "auto",
+                    width: "100%",
+                  }}
+                >
+                  {selectedJob.client && selectedJob.client.length > 0 ? (
+                    <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
+                      {selectedJob.client.map((c: string) => (
+                        <Chip
+                          key={c}
+                          label={c}
+                          size="small"
+                          sx={{ bgcolor: "#E3F2FD", color: "#1565C0" }}
+                        />
+                      ))}
+                    </Box>
+                  ) : (
+                    <Typography variant="body2" color="text.disabled">
+                      No clients assigned
+                    </Typography>
+                  )}
+                  {selectedJob.tags && selectedJob.tags.length > 0 ? (
+                    <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
+                      {selectedJob.tags.map((c: string) => (
+                        <Chip
+                          key={c}
+                          label={c}
+                          size="small"
+                          color="secondary"
+                          variant="outlined"
+                        />
+                      ))}
+                    </Box>
+                  ) : (
+                    <Typography variant="body2" color="text.disabled">
+                      No profile assigned
+                    </Typography>
+                  )}
+                </Box>
               </Box>
 
               <Divider sx={{ my: 2 }} />
@@ -539,6 +624,7 @@ export default function JobLibraryPage() {
                       mt: 2,
                       mb: 1,
                     },
+                    lineBreak: "anywhere",
                     "& strong": { fontWeight: 600 },
                     typography: "body1",
                   }}

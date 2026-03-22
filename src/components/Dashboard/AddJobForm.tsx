@@ -8,10 +8,7 @@ import {
   InputLabel,
   Select,
   MenuItem,
-  OutlinedInput,
-  Chip,
   Typography,
-  SelectChangeEvent,
 } from "@mui/material";
 import dynamic from "next/dynamic";
 import { createJob } from "@/actions/jobs";
@@ -50,19 +47,11 @@ interface AddJobFormProps {
 export default function AddJobForm({ onSuccess }: AddJobFormProps) {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [selectedClients, setSelectedClients] = useState<string[]>([]);
+  const [selectedClient, setSelectedClient] = useState<string>("");
   const [roleKey, setRoleKey] = useState<string>("generic");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const router = useRouter();
 
-  const handleClientChange = (
-    event: SelectChangeEvent<typeof selectedClients>,
-  ) => {
-    const {
-      target: { value },
-    } = event;
-    setSelectedClients(typeof value === "string" ? value.split(",") : value);
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -75,7 +64,7 @@ export default function AddJobForm({ onSuccess }: AddJobFormProps) {
     const formData = new FormData();
     formData.append("title", title);
     formData.append("description", description);
-    formData.append("clients", JSON.stringify(selectedClients));
+    formData.append("clients", JSON.stringify(selectedClient ? [selectedClient] : []));
     formData.append("roleKey", roleKey);
 
     try {
@@ -86,7 +75,7 @@ export default function AddJobForm({ onSuccess }: AddJobFormProps) {
         toast.success("Job added successfully");
         setTitle("");
         setDescription("");
-        setSelectedClients([]);
+        setSelectedClient("");
         if (onSuccess) onSuccess();
         router.refresh();
       }
@@ -110,21 +99,13 @@ export default function AddJobForm({ onSuccess }: AddJobFormProps) {
       />
 
       <FormControl fullWidth sx={{ mb: 3 }}>
-        <InputLabel id="client-multiple-select-label">Clients</InputLabel>
+        <InputLabel id="client-select-label">Client</InputLabel>
         <Select
-          labelId="client-multiple-select-label"
-          id="client-multiple-select"
-          multiple
-          value={selectedClients}
-          onChange={handleClientChange}
-          input={<OutlinedInput id="select-multiple-chip" label="Clients" />}
-          renderValue={(selected) => (
-            <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
-              {selected.map((value) => (
-                <Chip key={value} label={value} size="small" />
-              ))}
-            </Box>
-          )}
+          labelId="client-select-label"
+          id="client-select"
+          value={selectedClient}
+          label="Client"
+          onChange={(e) => setSelectedClient(e.target.value)}
           MenuProps={MenuProps}
         >
           {CLIENTS.map((client) => (
