@@ -24,7 +24,7 @@ import {
   Button,
 } from "@mui/material";
 import { Eye, MoreHorizontal, Trash2 } from "lucide-react";
-import { useState } from "react";
+import { useState, useCallback, memo } from "react";
 import { useDeleteCandidate } from "@/hooks/useDeleteCandidate";
 import { useRouter } from "next/navigation";
 
@@ -50,7 +50,7 @@ function getStatusColor(status: string) {
   }
 }
 
-function ScoreGauge({ score }: { score: number }) {
+const ScoreGauge = memo(function ScoreGauge({ score }: { score: number }) {
   let color = "#2E7D32";
   if (score < 50) color = "#C62828";
   else if (score < 75) color = "#E65100";
@@ -92,13 +92,9 @@ function ScoreGauge({ score }: { score: number }) {
       </Box>
     </Box>
   );
-}
+});
 
-export default function DashboardTable({
-  candidates,
-}: {
-  candidates: Candidate[];
-}) {
+function DashboardTable({ candidates }: { candidates: Candidate[] }) {
   const router = useRouter();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [selectedCandidate, setSelectedCandidate] = useState<Candidate | null>(
@@ -109,37 +105,51 @@ export default function DashboardTable({
     useDeleteCandidate();
   const open = Boolean(anchorEl);
 
-  const handleMenuClick = (
-    event: React.MouseEvent<HTMLElement>,
-    candidate: Candidate,
-  ) => {
-    event.stopPropagation();
-    setAnchorEl(event.currentTarget);
-    setSelectedCandidate(candidate);
-  };
+  const handleMenuClick = useCallback(
+    (event: React.MouseEvent<HTMLElement>, candidate: Candidate) => {
+      event.stopPropagation();
+      setAnchorEl(event.currentTarget);
+      setSelectedCandidate(candidate);
+    },
+    [],
+  );
 
-  const handleMenuClose = () => {
+  const handleMenuClose = useCallback(() => {
     setAnchorEl(null);
-    // Don't clear selectedCandidate immediately to avoid UI glitches during transition
-  };
+  }, []);
 
-  const handleDeleteClick = () => {
-    handleMenuClose();
+  const handleDeleteClick = useCallback(() => {
+    setAnchorEl(null);
     setIsDeleteDialogOpen(true);
-  };
+  }, []);
 
-  const handleConfirmDelete = () => {
+  const handleConfirmDelete = useCallback(() => {
     if (selectedCandidate) {
       deleteCandidate(selectedCandidate.id);
       setIsDeleteDialogOpen(false);
       setSelectedCandidate(null);
     }
-  };
+  }, [selectedCandidate, deleteCandidate]);
 
-  const handleDialogClose = () => {
+  const handleDialogClose = useCallback(() => {
     setIsDeleteDialogOpen(false);
     setSelectedCandidate(null);
-  };
+  }, []);
+
+  const handleRowClick = useCallback(
+    (id: string) => {
+      router.push(`/dashboard/candidate/${id}`);
+    },
+    [router],
+  );
+
+  const handleViewClick = useCallback(
+    (e: React.MouseEvent, id: string) => {
+      e.stopPropagation();
+      router.push(`/dashboard/candidate/${id}`);
+    },
+    [router],
+  );
 
   return (
     <>
@@ -185,7 +195,7 @@ export default function DashboardTable({
                     cursor: "pointer",
                     "&:hover": { bgcolor: "#F5F5F5" },
                   }}
-                  onClick={() => router.push(`/dashboard/candidate/${row.id}`)}
+                  onClick={() => handleRowClick(row.id)}
                 >
                   <TableCell component="th" scope="row">
                     <Typography
@@ -220,10 +230,7 @@ export default function DashboardTable({
                   <TableCell align="right">
                     <IconButton
                       size="small"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        router.push(`/dashboard/candidate/${row.id}`);
-                      }}
+                      onClick={(e) => handleViewClick(e, row.id)}
                     >
                       <Eye size={18} color="#78909C" />
                     </IconButton>
@@ -246,7 +253,6 @@ export default function DashboardTable({
         onClose={(e: object, reason: string) => {
           if (reason === "backdropClick" || reason === "escapeKeyDown") {
             handleMenuClose();
-            // stopPropagation not needed here usually as backdrop handles it
           } else {
             handleMenuClose();
           }
@@ -314,3 +320,5 @@ export default function DashboardTable({
     </>
   );
 }
+
+export default memo(DashboardTable);

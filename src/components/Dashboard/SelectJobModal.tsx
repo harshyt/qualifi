@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useMemo, useCallback } from "react";
 import {
   Dialog,
   DialogTitle,
@@ -18,15 +18,7 @@ import {
   InputAdornment,
 } from "@mui/material";
 import { Search } from "lucide-react";
-import { fetchJobsForSelect } from "@/actions/jobList";
-
-interface JobOption {
-  id: string;
-  title: string;
-  client: string[];
-  description: string;
-  tags?: string[];
-}
+import { useJobs } from "@/hooks/useJobs";
 
 interface SelectJobModalProps {
   open: boolean;
@@ -41,49 +33,57 @@ export default function SelectJobModal({
   onConfirm,
   fileCount,
 }: SelectJobModalProps) {
-  const [jobs, setJobs] = useState<JobOption[]>([]);
-  const [loading, setLoading] = useState(false);
+  const { data: jobs = [], isLoading: loading } = useJobs();
   const [search, setSearch] = useState("");
   const [selectedJobId, setSelectedJobId] = useState<string | null>(null);
 
-  useEffect(() => {
-    let active = true;
-    const fetchJobs = async () => {
-      setLoading(true);
-      try {
-        const result = await fetchJobsForSelect();
-        if (active && result.jobs) {
-          setJobs(result.jobs);
-        }
-      } catch (error) {
-        if (active) {
-          console.error("Error fetching jobs:", error);
-        }
-      } finally {
-        if (active) {
-          setLoading(false);
-        }
+  const handleSearchChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setSearch(e.target.value);
+    },
+    [],
+  );
+
+  const handleJobClick = useCallback((jobId: string) => {
+    setSelectedJobId(jobId);
+  }, []);
+
+  const handleConfirmClick = useCallback(() => {
+    if (selectedJobId) {
+      const selectedJob = jobs.find((j) => j.id === selectedJobId);
+      if (selectedJob) {
+        onConfirm(
+          selectedJobId,
+          selectedJob.description,
+          selectedJob.tags?.[0],
+        );
+        // Reset selection for next open
+        setSelectedJobId(null);
+        setSearch("");
       }
-    };
-
-    if (open) {
-      setSearch("");
-      setSelectedJobId(null);
-      void fetchJobs();
     }
-    return () => {
-      active = false;
-    };
-  }, [open]);
+  }, [selectedJobId, jobs, onConfirm]);
 
-  const filteredJobs = jobs.filter(
-    (job) =>
-      job.title.toLowerCase().includes(search.toLowerCase()) ||
-      job.client?.some((c) => c.toLowerCase().includes(search.toLowerCase())),
+  const handleClose = useCallback(() => {
+    setSelectedJobId(null);
+    setSearch("");
+    onClose();
+  }, [onClose]);
+
+  const filteredJobs = useMemo(
+    () =>
+      jobs.filter(
+        (job) =>
+          job.title.toLowerCase().includes(search.toLowerCase()) ||
+          job.client?.some((c) =>
+            c.toLowerCase().includes(search.toLowerCase()),
+          ),
+      ),
+    [jobs, search],
   );
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
+    <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
       <DialogTitle component="div">
         <Typography variant="h6" component="h2" fontWeight={600}>
           Select Job for Analysis
@@ -102,7 +102,7 @@ export default function SelectJobModal({
           fullWidth
           variant="outlined"
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          onChange={handleSearchChange}
           sx={{ mb: 2 }}
           slotProps={{
             input: {
@@ -129,7 +129,7 @@ export default function SelectJobModal({
               <ListItem disableGutters key={job.id}>
                 <ListItemButton
                   selected={selectedJobId === job.id}
-                  onClick={() => setSelectedJobId(job.id)}
+                  onClick={() => handleJobClick(job.id)}
                   sx={{
                     borderRadius: 1,
                     mb: 0.5,
@@ -212,22 +212,11 @@ export default function SelectJobModal({
         )}
       </DialogContent>
       <DialogActions sx={{ p: 2 }}>
-        <Button onClick={onClose} color="inherit">
+        <Button onClick={handleClose} color="inherit">
           Cancel
         </Button>
         <Button
-          onClick={() => {
-            if (selectedJobId) {
-              const selectedJob = jobs.find((j) => j.id === selectedJobId);
-              if (selectedJob) {
-                onConfirm(
-                  selectedJobId,
-                  selectedJob.description,
-                  selectedJob.tags?.[0],
-                );
-              }
-            }
-          }}
+          onClick={handleConfirmClick}
           variant="contained"
           disabled={!selectedJobId}
         >

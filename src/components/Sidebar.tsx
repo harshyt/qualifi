@@ -30,13 +30,16 @@ const menuItems = [
   },
 ];
 
-export default function Sidebar() {
+import { useCallback } from "react";
+import { memo } from "react";
+
+function Sidebar() {
   const router = useRouter();
   const pathname = usePathname();
   const { user } = useAuth();
   const [isPending, startTransition] = useTransition();
 
-  const handleLogout = () => {
+  const handleLogout = useCallback(() => {
     startTransition(async () => {
       try {
         const supabase = createSupabaseBrowserClient();
@@ -48,7 +51,7 @@ export default function Sidebar() {
         toast.error("Logout failed. Please try again.");
       }
     });
-  };
+  }, [router]);
 
   const userInitial = user?.email?.charAt(0).toUpperCase() ?? "U";
   const userEmail = user?.email ?? "";
@@ -178,3 +181,5 @@ export default function Sidebar() {
     </Drawer>
   );
 }
+
+export default memo(Sidebar);

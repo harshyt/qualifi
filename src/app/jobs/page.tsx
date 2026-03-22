@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useMemo, useCallback } from "react";
 import {
   Box,
   Typography,
@@ -42,6 +42,7 @@ import {
 import AddJobForm from "@/components/Dashboard/AddJobForm";
 import { useAuth } from "@/components/Providers/AuthContext";
 import { useJobs, type Job } from "@/hooks/useJobs";
+import { useQueryClient } from "@tanstack/react-query";
 import DOMPurify from "isomorphic-dompurify";
 import { useDeleteJob } from "@/hooks/useDeleteJob";
 
@@ -51,12 +52,8 @@ export default function JobLibraryPage() {
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
 
   const { user } = useAuth();
-  const {
-    data: jobs = [],
-    isLoading,
-    error: queryError,
-    refetch: fetchJobs,
-  } = useJobs();
+  const queryClient = useQueryClient();
+  const { data: jobs = [], isLoading, error: queryError } = useJobs();
   const error = queryError?.message || null;
 
   const [searchTerm, setSearchTerm] = useState("");
@@ -65,62 +62,62 @@ export default function JobLibraryPage() {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [jobToDelete, setJobToDelete] = useState<Job | null>(null);
   const { mutate: deleteJob, isPending: isDeleting } = useDeleteJob(() => {
-    fetchJobs();
+    setIsDeleteDialogOpen(false);
+    setJobToDelete(null);
   });
 
   const isAdmin = user?.app_metadata?.role === "ADMIN";
 
-  const handleSuccess = () => {
+  const handleSuccess = useCallback(() => {
     setIsDrawerOpen(false);
-    fetchJobs();
-  };
+    queryClient.invalidateQueries({ queryKey: ["jobs"] });
+  }, [queryClient]);
 
-  const handleViewJob = (job: Job) => {
+  const handleViewJob = useCallback((job: Job) => {
     setSelectedJob(job);
     setIsViewDrawerOpen(true);
-  };
+  }, []);
 
-  const handleDeleteClick = (e: React.MouseEvent, job: Job) => {
+  const handleDeleteClick = useCallback((e: React.MouseEvent, job: Job) => {
     e.stopPropagation();
     setJobToDelete(job);
     setIsDeleteDialogOpen(true);
-  };
+  }, []);
 
-  const handleConfirmDelete = () => {
+  const handleConfirmDelete = useCallback(() => {
     if (jobToDelete) {
-      deleteJob(jobToDelete.id, {
-        onSuccess: () => {
-          setIsDeleteDialogOpen(false);
-          setJobToDelete(null);
-        },
-      });
+      deleteJob(jobToDelete.id);
     }
-  };
+  }, [jobToDelete, deleteJob]);
 
-  const handleDeleteDialogClose = () => {
+  const handleDeleteDialogClose = useCallback(() => {
     setIsDeleteDialogOpen(false);
     setJobToDelete(null);
-  };
+  }, []);
 
-  const allClients = Array.from(
-    new Set(jobs.flatMap((job) => job.client || [])),
-  ).sort();
-  const filteredJobs = jobs.filter((job) => {
-    const searchLower = searchTerm.toLowerCase();
-    const titleMatch = job.title.toLowerCase().includes(searchLower);
-    const descMatch = job.description.toLowerCase().includes(searchLower);
-    const clientMatch = job.client?.some((c) =>
-      c.toLowerCase().includes(searchLower),
-    );
+  const allClients = useMemo(
+    () => Array.from(new Set(jobs.flatMap((job) => job.client || []))).sort(),
+    [jobs],
+  );
 
-    const matchesSearch = titleMatch || descMatch || clientMatch;
+  const filteredJobs = useMemo(() => {
+    return jobs.filter((job) => {
+      const searchLower = searchTerm.toLowerCase();
+      const titleMatch = job.title.toLowerCase().includes(searchLower);
+      const descMatch = job.description.toLowerCase().includes(searchLower);
+      const clientMatch = job.client?.some((c) =>
+        c.toLowerCase().includes(searchLower),
+      );
 
-    const matchesClient =
-      selectedClientFilter === "All" ||
-      (job.client && job.client.includes(selectedClientFilter));
+      const matchesSearch = titleMatch || descMatch || clientMatch;
 
-    return matchesSearch && matchesClient;
-  });
+      const matchesClient =
+        selectedClientFilter === "All" ||
+        (job.client && job.client.includes(selectedClientFilter));
+
+      return matchesSearch && matchesClient;
+    });
+  }, [jobs, searchTerm, selectedClientFilter]);
   return (
     <Box>
       <Box
