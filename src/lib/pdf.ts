@@ -1,6 +1,10 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
+const geminiKey = process.env.GEMINI_API_KEY;
+if (!geminiKey) {
+  throw new Error("GEMINI_API_KEY is required for GoogleGenerativeAI");
+}
+const genAI = new GoogleGenerativeAI(geminiKey);
 
 /**
  * Extracts plain text from a PDF buffer using the Gemini multimodal API.
