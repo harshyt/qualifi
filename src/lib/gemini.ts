@@ -1,11 +1,9 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { RoleKey, ROLE_CONFIGS } from "@/constants/roles";
+import { getServerEnv } from "@/lib/env";
+import { analysisResultSchema, type AnalysisResult } from "@/types/analysis";
 
-const geminiKey = process.env.GEMINI_API_KEY;
-if (!geminiKey) {
-  throw new Error("GEMINI_API_KEY is required for GoogleGenerativeAI");
-}
-const genAI = new GoogleGenerativeAI(geminiKey);
+const genAI = new GoogleGenerativeAI(getServerEnv().GEMINI_API_KEY);
 
 function buildPrompt(
   role: RoleKey,
@@ -79,7 +77,7 @@ export async function analyzeResume(
   resumeText: string,
   jobDescription: string,
   role: RoleKey = "generic",
-) {
+): Promise<AnalysisResult> {
   const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
 
   // Basic sanitization to minimize injection severity and limit token exhaustion.
@@ -88,15 +86,14 @@ export async function analyzeResume(
 
   const prompt = buildPrompt(role, safeJobDesc, safeResumeText);
 
-  try {
-    const response = await model.generateContent(prompt);
-    const text = response.response.text();
+  const response = await model.generateContent(prompt);
+  const text = response.response.text();
 
-    const cleanedText = text.replace(/```json\n?|\n?```/g, "").trim();
+  const cleanedText = text.replace(/```json\n?|\n?```/g, "").trim();
 
-    return JSON.parse(cleanedText);
-  } catch (error) {
-    console.error("Gemini API Error:", error);
-    return null;
-  }
+  const parsed: unknown = JSON.parse(cleanedText);
+
+  // Validate the AI response against our schema before trusting it
+  const validated = analysisResultSchema.parse(parsed);
+  return validated;
 }

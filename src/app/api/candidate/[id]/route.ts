@@ -16,13 +16,37 @@ export async function DELETE(
     }
 
     const supabase = await createSupabaseServerClient();
-    const { error } = await supabase.from("candidates").delete().eq("id", id);
+
+    // Auth guard: ensure the user is authenticated
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+
+    if (authError || !user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    // Ownership check: only delete candidates belonging to this user
+    const { data, error } = await supabase
+      .from("candidates")
+      .delete()
+      .eq("id", id)
+      .eq("user_id", user.id)
+      .select();
 
     if (error) {
       console.error("Error deleting candidate:", error);
       return NextResponse.json(
         { error: "Failed to delete candidate" },
         { status: 500 },
+      );
+    }
+
+    if (!data || data.length === 0) {
+      return NextResponse.json(
+        { error: "Candidate not found or not authorized to delete" },
+        { status: 404 },
       );
     }
 

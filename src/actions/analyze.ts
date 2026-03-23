@@ -3,6 +3,7 @@ import { extractTextFromPDF } from "@/lib/pdf";
 import { analyzeResume } from "@/lib/gemini";
 import { createSupabaseServerClient } from "@/lib/supabase-server";
 import { RoleKey, ROLE_CONFIGS } from "@/constants/roles";
+import { ZodError } from "zod";
 
 export async function analyzeCandidateResume(formData: FormData) {
   const file = formData.get("resume") as File;
@@ -35,9 +36,6 @@ export async function analyzeCandidateResume(formData: FormData) {
       : "generic";
 
     const analysis = await analyzeResume(text, jobDescription, roleKey);
-    if (!analysis) {
-      return { error: "Analysis failed" };
-    }
 
     const { data: candidate, error: dbError } = await supabase
       .from("candidates")
@@ -64,6 +62,13 @@ export async function analyzeCandidateResume(formData: FormData) {
     return { success: true, analysis, candidate };
   } catch (error) {
     console.error("Analysis Error:", error);
+
+    if (error instanceof ZodError) {
+      return {
+        error: "AI returned an invalid response. Please try again.",
+      };
+    }
+
     return {
       error: error instanceof Error ? error.message : "Analysis failed",
     };
