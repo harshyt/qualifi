@@ -33,7 +33,7 @@ export const analysisResultSchema = z.object({
     .array(
       z.object({
         category: z.string(),
-        technologies: z.array(z.string()),
+        technologies: z.array(z.string()).default([]),
       }),
     )
     .default([]),

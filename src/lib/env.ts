@@ -3,7 +3,7 @@ import { z } from "zod";
 /**
  * Centralized, validated environment variables.
  *
- * Every server-side module should import `serverEnv` instead of accessing
+ * Every server-side module should call `getServerEnv()` instead of accessing
  * `process.env` directly. This guarantees a hard, early failure with a
  * clear error message if any required variable is missing.
  */
