@@ -39,13 +39,16 @@ import {
   Calendar,
   Users,
   Pencil,
+  History,
 } from "lucide-react";
 import AddJobForm from "@/components/Dashboard/AddJobForm";
+import JobHistoryDrawer from "@/components/Dashboard/JobHistoryDrawer";
 import { useAuth } from "@/components/Providers/AuthContext";
 import { useJobs, type Job } from "@/hooks/useJobs";
 import { useQueryClient } from "@tanstack/react-query";
 import DOMPurify from "isomorphic-dompurify";
 import { useDeleteJob } from "@/hooks/useDeleteJob";
+import type { JobHistoryEntry } from "@/types/job";
 
 export default function JobLibraryPage() {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
@@ -61,6 +64,8 @@ export default function JobLibraryPage() {
   const [selectedClientFilter, setSelectedClientFilter] = useState("All");
 
   const [editingJob, setEditingJob] = useState<Job | null>(null);
+  const [isHistoryDrawerOpen, setIsHistoryDrawerOpen] = useState(false);
+  const [historyJob, setHistoryJob] = useState<Job | null>(null);
 
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [jobToDelete, setJobToDelete] = useState<Job | null>(null);
@@ -104,6 +109,12 @@ export default function JobLibraryPage() {
     setIsViewDrawerOpen(false);
     setIsDrawerOpen(true);
   }, [selectedJob]);
+
+  const handleViewHistory = useCallback((e: React.MouseEvent, job: Job) => {
+    e.stopPropagation();
+    setHistoryJob(job);
+    setIsHistoryDrawerOpen(true);
+  }, []);
 
   const allClients = useMemo(
     () => Array.from(new Set(jobs.flatMap((job) => job.client || []))).sort(),
@@ -373,6 +384,16 @@ export default function JobLibraryPage() {
                               <Eye size={18} color="#78909C" />
                             </IconButton>
                           </Tooltip>
+                          {isAdmin && job.change_history?.length > 0 && (
+                            <Tooltip title="Change History">
+                              <IconButton
+                                size="small"
+                                onClick={(e) => handleViewHistory(e, job)}
+                              >
+                                <History size={18} color="#78909C" />
+                              </IconButton>
+                            </Tooltip>
+                          )}
                           {isAdmin && (
                             <Tooltip title="Delete Job">
                               <IconButton
@@ -662,6 +683,16 @@ export default function JobLibraryPage() {
           </Box>
         )}
       </Drawer>
+
+      <JobHistoryDrawer
+        open={isHistoryDrawerOpen}
+        onClose={() => {
+          setIsHistoryDrawerOpen(false);
+          setHistoryJob(null);
+        }}
+        jobTitle={historyJob?.title ?? ""}
+        history={(historyJob?.change_history ?? []) as JobHistoryEntry[]}
+      />
 
       <Dialog
         open={isDeleteDialogOpen}

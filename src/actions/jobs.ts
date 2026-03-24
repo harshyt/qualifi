@@ -2,6 +2,7 @@
 import { createSupabaseServerClient } from "@/lib/supabase-server";
 import { revalidatePath } from "next/cache";
 import { logger } from "@/lib/logger";
+import type { JobHistoryEntry, JobFieldDiff } from "@/types/job";
 
 export async function createJob(formData: FormData) {
   const title = formData.get("title") as string;
@@ -139,6 +140,84 @@ export async function updateJob(jobId: string, formData: FormData) {
       return { error: "Unauthorized: Only ADMIN users can edit jobs." };
     }
 
+    // Fetch current row to compute diffs
+    const { data: currentJob, error: fetchError } = await supabase
+      .from("jobs")
+      .select("title, description, client, tags, change_history, user_id")
+      .eq("id", jobId)
+      .single();
+
+    if (fetchError || !currentJob) {
+      logger.error("DB error fetching job for diff", {
+        jobId,
+        error: fetchError?.message,
+      });
+      return { error: "Job not found" };
+    }
+
+    if (currentJob.user_id !== user.id) {
+      return { error: "Unauthorized" };
+    }
+
+    // Build field diffs
+    const arrKey = (a: string[]) => JSON.stringify([...(a ?? [])].sort());
+
+    const diffs: JobFieldDiff[] = [];
+
+    if (currentJob.title !== trimmedTitle) {
+      diffs.push({
+        field: "title",
+        label: "Title",
+        before: currentJob.title,
+        after: trimmedTitle,
+      });
+    }
+    if (currentJob.description !== trimmedDescription) {
+      diffs.push({
+        field: "description",
+        label: "Description",
+        before: currentJob.description,
+        after: trimmedDescription,
+      });
+    }
+    if (arrKey(currentJob.client) !== arrKey(clients)) {
+      diffs.push({
+        field: "client",
+        label: "Clients",
+        before: (currentJob.client ?? []).join(", ") || "(none)",
+        after: clients.join(", ") || "(none)",
+      });
+    }
+    if (arrKey(currentJob.tags) !== arrKey(tags)) {
+      diffs.push({
+        field: "tags",
+        label: "Profile",
+        before: (currentJob.tags ?? []).join(", ") || "(none)",
+        after: tags.join(", ") || "(none)",
+      });
+    }
+
+    const existingHistory: JobHistoryEntry[] = Array.isArray(
+      currentJob.change_history,
+    )
+      ? (currentJob.change_history as JobHistoryEntry[])
+      : [];
+
+    const updatedHistory: JobHistoryEntry[] =
+      diffs.length > 0
+        ? [
+            {
+              changedAt: new Date().toISOString(),
+              changedBy:
+                (user.user_metadata?.full_name as string | undefined) ??
+                user.email ??
+                "Unknown",
+              diffs,
+            },
+            ...existingHistory,
+          ]
+        : existingHistory;
+
     const { error: dbError } = await supabase
       .from("jobs")
       .update({
@@ -146,6 +225,7 @@ export async function updateJob(jobId: string, formData: FormData) {
         description: trimmedDescription,
         client: clients,
         tags,
+        change_history: updatedHistory,
       })
       .eq("id", jobId)
       .eq("user_id", user.id);
