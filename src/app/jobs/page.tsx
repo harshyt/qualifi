@@ -28,6 +28,9 @@ import {
   DialogContentText,
   DialogActions,
   Tooltip,
+  Menu,
+  ListItemIcon,
+  ListItemText,
 } from "@mui/material";
 import {
   Plus,
@@ -40,6 +43,7 @@ import {
   Users,
   Pencil,
   History,
+  MoreVertical,
 } from "lucide-react";
 import AddJobForm from "@/components/Dashboard/AddJobForm";
 import JobHistoryDrawer from "@/components/Dashboard/JobHistoryDrawer";
@@ -66,6 +70,8 @@ export default function JobLibraryPage() {
   const [editingJob, setEditingJob] = useState<Job | null>(null);
   const [isHistoryDrawerOpen, setIsHistoryDrawerOpen] = useState(false);
   const [historyJob, setHistoryJob] = useState<Job | null>(null);
+  const [menuAnchor, setMenuAnchor] = useState<null | HTMLElement>(null);
+  const [menuJob, setMenuJob] = useState<Job | null>(null);
 
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [jobToDelete, setJobToDelete] = useState<Job | null>(null);
@@ -110,10 +116,23 @@ export default function JobLibraryPage() {
     setIsDrawerOpen(true);
   }, [selectedJob]);
 
-  const handleViewHistory = useCallback((e: React.MouseEvent, job: Job) => {
-    e.stopPropagation();
+  const handleViewHistory = useCallback((job: Job) => {
     setHistoryJob(job);
     setIsHistoryDrawerOpen(true);
+  }, []);
+
+  const handleMenuOpen = useCallback(
+    (e: React.MouseEvent<HTMLElement>, job: Job) => {
+      e.stopPropagation();
+      setMenuAnchor(e.currentTarget);
+      setMenuJob(job);
+    },
+    [],
+  );
+
+  const handleMenuClose = useCallback(() => {
+    setMenuAnchor(null);
+    setMenuJob(null);
   }, []);
 
   const allClients = useMemo(
@@ -366,45 +385,12 @@ export default function JobLibraryPage() {
                         />
                       </TableCell>
                       <TableCell align="right">
-                        <Box
-                          sx={{
-                            display: "flex",
-                            justifyContent: "flex-end",
-                            gap: 0.5,
-                          }}
+                        <IconButton
+                          size="small"
+                          onClick={(e) => handleMenuOpen(e, job)}
                         >
-                          <Tooltip title="View Job">
-                            <IconButton
-                              size="small"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleViewJob(job);
-                              }}
-                            >
-                              <Eye size={18} color="#78909C" />
-                            </IconButton>
-                          </Tooltip>
-                          {isAdmin && job.change_history?.length > 0 && (
-                            <Tooltip title="Change History">
-                              <IconButton
-                                size="small"
-                                onClick={(e) => handleViewHistory(e, job)}
-                              >
-                                <History size={18} color="#78909C" />
-                              </IconButton>
-                            </Tooltip>
-                          )}
-                          {isAdmin && (
-                            <Tooltip title="Delete Job">
-                              <IconButton
-                                size="small"
-                                onClick={(e) => handleDeleteClick(e, job)}
-                              >
-                                <Trash2 size={18} color="#d32f2f" />
-                              </IconButton>
-                            </Tooltip>
-                          )}
-                        </Box>
+                          <MoreVertical size={18} color="#78909C" />
+                        </IconButton>
                       </TableCell>
                     </TableRow>
                   ))
@@ -414,6 +400,68 @@ export default function JobLibraryPage() {
           </TableContainer>
         </Box>
       )}
+
+      <Menu
+        anchorEl={menuAnchor}
+        open={Boolean(menuAnchor)}
+        onClose={handleMenuClose}
+        transformOrigin={{ horizontal: "right", vertical: "top" }}
+        anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
+        PaperProps={{ sx: { borderRadius: 2, minWidth: 180, boxShadow: 3 } }}
+      >
+        <MenuItem
+          onClick={() => {
+            handleViewJob(menuJob!);
+            handleMenuClose();
+          }}
+        >
+          <ListItemIcon>
+            <Eye size={16} color="#78909C" />
+          </ListItemIcon>
+          <ListItemText>View</ListItemText>
+        </MenuItem>
+        {isAdmin && (
+          <MenuItem
+            onClick={() => {
+              setEditingJob(menuJob);
+              setIsDrawerOpen(true);
+              handleMenuClose();
+            }}
+          >
+            <ListItemIcon>
+              <Pencil size={16} color="#78909C" />
+            </ListItemIcon>
+            <ListItemText>Edit</ListItemText>
+          </MenuItem>
+        )}
+        {isAdmin && (menuJob?.change_history?.length ?? 0) > 0 && (
+          <MenuItem
+            onClick={() => {
+              handleViewHistory(menuJob!);
+              handleMenuClose();
+            }}
+          >
+            <ListItemIcon>
+              <History size={16} color="#78909C" />
+            </ListItemIcon>
+            <ListItemText>Change History</ListItemText>
+          </MenuItem>
+        )}
+        {isAdmin && (
+          <MenuItem
+            onClick={(e) => {
+              handleDeleteClick(e, menuJob!);
+              handleMenuClose();
+            }}
+            sx={{ color: "#d32f2f" }}
+          >
+            <ListItemIcon>
+              <Trash2 size={16} color="#d32f2f" />
+            </ListItemIcon>
+            <ListItemText>Delete</ListItemText>
+          </MenuItem>
+        )}
+      </Menu>
 
       <Drawer
         anchor="right"
