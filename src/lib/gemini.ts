@@ -2,6 +2,7 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 import { RoleKey, ROLE_CONFIGS } from "@/constants/roles";
 import { getServerEnv } from "@/lib/env";
 import { analysisResultSchema, type AnalysisResult } from "@/types/analysis";
+import { logger } from "@/lib/logger";
 
 const genAI = new GoogleGenerativeAI(getServerEnv().GEMINI_API_KEY);
 
@@ -86,14 +87,33 @@ export async function analyzeResume(
 
   const prompt = buildPrompt(role, safeJobDesc, safeResumeText);
 
-  const response = await model.generateContent(prompt);
-  const text = response.response.text();
+  let response;
+  const t0 = Date.now();
+  try {
+    response = await model.generateContent(prompt);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    throw new Error(`Gemini API call failed: ${message}`);
+  }
+  logger.info("Gemini API call complete", {
+    role,
+    durationMs: Date.now() - t0,
+  });
 
+  const text = response.response.text();
   const cleanedText = text.replace(/```json\n?|\n?```/g, "").trim();
 
-  const parsed: unknown = JSON.parse(cleanedText);
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(cleanedText);
+  } catch {
+    throw new Error(
+      "Gemini returned non-JSON output. The model may have violated the response format.",
+    );
+  }
 
   // Validate the AI response against our schema before trusting it
+  // ZodError is intentionally uncaught here — analyze.ts handles it specifically
   const validated = analysisResultSchema.parse(parsed);
   return validated;
 }

@@ -1,18 +1,24 @@
 import { createSupabaseServerClient } from "@/lib/supabase-server";
 import { NextResponse } from "next/server";
+import { logger } from "@/lib/logger";
 
 export async function DELETE(
   request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  const { id } = await params;
   try {
-    const { id } = await params;
-
     if (!id) {
       return NextResponse.json(
         { error: "Job ID is required" },
         { status: 400 },
       );
+    }
+
+    const UUID_REGEX =
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!UUID_REGEX.test(id)) {
+      return NextResponse.json({ error: "Invalid ID format" }, { status: 400 });
     }
 
     const supabase = await createSupabaseServerClient();
@@ -23,10 +29,7 @@ export async function DELETE(
     } = await supabase.auth.getUser();
 
     if (!user) {
-      return NextResponse.json(
-        { error: "Not authenticated" },
-        { status: 401 },
-      );
+      return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
     }
 
     if (user.app_metadata?.role !== "ADMIN") {
@@ -44,7 +47,11 @@ export async function DELETE(
       .select();
 
     if (error) {
-      console.error("Error deleting job:", error);
+      logger.error("Error deleting job", {
+        jobId: id,
+        userId: user.id,
+        error: error.message,
+      });
       return NextResponse.json(
         { error: "Failed to delete job" },
         { status: 500 },
@@ -58,9 +65,13 @@ export async function DELETE(
       );
     }
 
+    logger.info("Job deleted", { jobId: id, userId: user.id });
     return NextResponse.json({ message: "Job deleted successfully" });
   } catch (error) {
-    console.error("Unexpected error:", error);
+    logger.error("Unexpected error in DELETE job route", {
+      jobId: id,
+      error: String(error),
+    });
     return NextResponse.json(
       { error: "An unexpected error occurred" },
       { status: 500 },

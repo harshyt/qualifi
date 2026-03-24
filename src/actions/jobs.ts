@@ -1,6 +1,7 @@
 "use server";
 import { createSupabaseServerClient } from "@/lib/supabase-server";
 import { revalidatePath } from "next/cache";
+import { logger } from "@/lib/logger";
 
 export async function createJob(formData: FormData) {
   const title = formData.get("title") as string;
@@ -8,8 +9,19 @@ export async function createJob(formData: FormData) {
   const clientsJson = formData.get("clients") as string;
   const roleKey = formData.get("roleKey") as string;
 
-  if (!title || !description) {
+  const trimmedTitle = title?.trim();
+  const trimmedDescription = description?.trim();
+
+  if (!trimmedTitle || !trimmedDescription) {
     return { error: "Missing required fields" };
+  }
+
+  if (trimmedTitle.length > 200) {
+    return { error: "Job title must be 200 characters or fewer" };
+  }
+
+  if (trimmedDescription.length > 50_000) {
+    return { error: "Job description must be 50,000 characters or fewer" };
   }
 
   let clients: string[] = [];
@@ -23,14 +35,12 @@ export async function createJob(formData: FormData) {
       ) {
         clients = parsed as string[];
       } else {
-        console.warn(
-          "Invalid clients format, expected string[]. Defaulting to [].",
-        );
+        logger.warn("Invalid clients format received, expected string[]", {});
         clients = [];
       }
     }
   } catch {
-    console.warn("Failed to parse clients JSON. Defaulting to [].");
+    logger.warn("Failed to parse clients JSON", {});
     clients = [];
   }
 
@@ -49,22 +59,27 @@ export async function createJob(formData: FormData) {
     }
 
     const { error: dbError } = await supabase.from("jobs").insert({
-      title,
-      description,
+      title: trimmedTitle,
+      description: trimmedDescription,
       client: clients,
       tags,
       user_id: user.id,
     });
 
     if (dbError) {
-      console.error("DB Error inserting job:", dbError);
+      logger.error("DB error inserting job", {
+        userId: user.id,
+        error: dbError.message,
+      });
       return { error: "Failed to save job to database" };
     }
 
     revalidatePath("/jobs");
     return { success: true };
   } catch (error) {
-    console.error("Server Action Error:", error);
+    logger.error("createJob server action error", {
+      error: error instanceof Error ? error.message : String(error),
+    });
     return { error: "Internal Server Error" };
   }
 }

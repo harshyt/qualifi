@@ -1,5 +1,5 @@
 "use client";
-import { useRef, useState, useCallback, useEffect } from "react";
+import { useRef, useState, useCallback, useEffect, memo } from "react";
 import {
   Button,
   CircularProgress,
@@ -28,7 +28,11 @@ interface FileProgress {
   errorMessage?: string;
 }
 
-function FileProgressItem({ file }: { file: FileProgress }) {
+const FileProgressItem = memo(function FileProgressItem({
+  file,
+}: {
+  file: FileProgress;
+}) {
   const statusIcon = {
     pending: <Loader2 size={16} color="#90A4AE" />,
     uploading: <CircularProgress size={16} />,
@@ -93,7 +97,7 @@ function FileProgressItem({ file }: { file: FileProgress }) {
       </Box>
     </Box>
   );
-}
+});
 
 export default function UploadResume() {
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -151,58 +155,68 @@ export default function UploadResume() {
       setFileProgress(initialProgress);
       setIsUploading(true);
 
-      // Process all files in parallel using Promise.allSettled
-      const results = await Promise.allSettled(
-        files.map(async (file, index) => {
-          // Mark as uploading
-          setFileProgress((prev) =>
-            prev.map((fp, i) =>
-              i === index ? { ...fp, status: "uploading" as FileStatus } : fp,
-            ),
-          );
+      // Process files in parallel with a concurrency cap of 5
+      const CONCURRENCY = 5;
+      const results: PromiseSettledResult<{
+        error?: string;
+        success?: boolean;
+      }>[] = new Array(files.length);
+      const queue = files.map((file, index) => ({ file, index }));
 
-          const formData = new FormData();
-          formData.append("resume", file);
-          formData.append("jobId", jobId);
-          formData.append("jobDescription", jobDescription);
-          if (roleKey) {
-            formData.append("roleKey", roleKey);
-          }
+      async function processEntry(entry: { file: File; index: number }) {
+        const { file, index } = entry;
+        setFileProgress((prev) =>
+          prev.map((fp, i) =>
+            i === index ? { ...fp, status: "uploading" as FileStatus } : fp,
+          ),
+        );
 
+        const formData = new FormData();
+        formData.append("resume", file);
+        formData.append("jobId", jobId);
+        formData.append("jobDescription", jobDescription);
+        if (roleKey) {
+          formData.append("roleKey", roleKey);
+        }
+
+        try {
           const result: { error?: string; success?: boolean } =
             await analyzeCandidateResume(formData);
-
-          if (result.error) {
-            throw new Error(result.error);
-          }
-
-          // Mark as done
+          if (result.error) throw new Error(result.error);
           setFileProgress((prev) =>
             prev.map((fp, i) =>
               i === index ? { ...fp, status: "done" as FileStatus } : fp,
             ),
           );
-
-          return result;
-        }),
-      );
-
-      // Mark failures
-      results.forEach((result, index) => {
-        if (result.status === "rejected") {
+          results[index] = { status: "fulfilled", value: result };
+        } catch (err) {
+          const message =
+            err instanceof Error ? err.message : "Analysis failed";
           setFileProgress((prev) =>
             prev.map((fp, i) =>
               i === index
                 ? {
                     ...fp,
                     status: "error" as FileStatus,
-                    errorMessage: result.reason?.message || "Analysis failed",
+                    errorMessage: message,
                   }
                 : fp,
             ),
           );
+          results[index] = { status: "rejected", reason: err };
         }
-      });
+      }
+
+      async function runWorker() {
+        while (queue.length > 0) {
+          const entry = queue.shift()!;
+          await processEntry(entry);
+        }
+      }
+
+      await Promise.all(
+        Array.from({ length: Math.min(CONCURRENCY, files.length) }, runWorker),
+      );
 
       // Invalidate candidates query once after all uploads complete
       queryClient.invalidateQueries({ queryKey: ["candidates"] });

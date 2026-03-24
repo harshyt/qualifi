@@ -4,6 +4,7 @@ import { analyzeResume } from "@/lib/gemini";
 import { createSupabaseServerClient } from "@/lib/supabase-server";
 import { RoleKey, ROLE_CONFIGS } from "@/constants/roles";
 import { ZodError } from "zod";
+import { logger } from "@/lib/logger";
 
 export async function analyzeCandidateResume(formData: FormData) {
   const file = formData.get("resume") as File;
@@ -28,7 +29,17 @@ export async function analyzeCandidateResume(formData: FormData) {
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
-    const text = await extractTextFromPDF(buffer);
+    let text: string;
+    try {
+      text = await extractTextFromPDF(buffer);
+    } catch (pdfError) {
+      const detail =
+        pdfError instanceof Error ? pdfError.message : "Unknown error";
+      return {
+        error: `Failed to extract text from the PDF. The file may be scanned, password-protected, or corrupted. (${detail})`,
+      };
+    }
+
     const rawRoleKey = formData.get("roleKey") as string;
     const isValidRoleKey = Object.keys(ROLE_CONFIGS).includes(rawRoleKey);
     const roleKey: RoleKey = isValidRoleKey
@@ -55,13 +66,27 @@ export async function analyzeCandidateResume(formData: FormData) {
       .single();
 
     if (dbError) {
-      console.error("DB Error inserting candidate:", dbError);
+      logger.error("DB error inserting candidate", {
+        userId: user.id,
+        jobId,
+        error: dbError.message,
+      });
       return { error: "Failed to save candidate to database" };
     }
 
+    logger.info("Candidate analysis complete", {
+      userId: user.id,
+      candidateId: candidate.id,
+      jobId,
+      score: analysis.score,
+      verdict: analysis.verdict,
+    });
+
     return { success: true, analysis, candidate };
   } catch (error) {
-    console.error("Analysis Error:", error);
+    logger.error("Analysis error", {
+      error: error instanceof Error ? error.message : String(error),
+    });
 
     if (error instanceof ZodError) {
       return {

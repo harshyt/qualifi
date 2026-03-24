@@ -1,18 +1,24 @@
 import { createSupabaseServerClient } from "@/lib/supabase-server";
 import { NextResponse } from "next/server";
+import { logger } from "@/lib/logger";
 
 export async function DELETE(
   request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  const { id } = await params;
   try {
-    const { id } = await params;
-
     if (!id) {
       return NextResponse.json(
         { error: "Candidate ID is required" },
         { status: 400 },
       );
+    }
+
+    const UUID_REGEX =
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!UUID_REGEX.test(id)) {
+      return NextResponse.json({ error: "Invalid ID format" }, { status: 400 });
     }
 
     const supabase = await createSupabaseServerClient();
@@ -36,7 +42,11 @@ export async function DELETE(
       .select();
 
     if (error) {
-      console.error("Error deleting candidate:", error);
+      logger.error("Error deleting candidate", {
+        candidateId: id,
+        userId: user.id,
+        error: error.message,
+      });
       return NextResponse.json(
         { error: "Failed to delete candidate" },
         { status: 500 },
@@ -50,9 +60,13 @@ export async function DELETE(
       );
     }
 
+    logger.info("Candidate deleted", { candidateId: id, userId: user.id });
     return NextResponse.json({ message: "Candidate deleted successfully" });
   } catch (error) {
-    console.error("Unexpected error:", error);
+    logger.error("Unexpected error in DELETE candidate route", {
+      candidateId: id,
+      error: String(error),
+    });
     return NextResponse.json(
       { error: "An unexpected error occurred" },
       { status: 500 },

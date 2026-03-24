@@ -1,6 +1,7 @@
 import { CandidateStatus } from "@/types/candidate";
 import { createSupabaseServerClient } from "@/lib/supabase-server";
 import { NextResponse } from "next/server";
+import { logger } from "@/lib/logger";
 
 const ALLOWED_STATUSES = [CandidateStatus.REJECT, CandidateStatus.SHORTLIST];
 
@@ -8,8 +9,8 @@ export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  const { id } = await params;
   try {
-    const { id } = await params;
     const body = await request.json();
     const { status } = body;
 
@@ -19,6 +20,12 @@ export async function PATCH(
         { error: "Candidate ID and status are required" },
         { status: 400 },
       );
+    }
+
+    const UUID_REGEX =
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!UUID_REGEX.test(id)) {
+      return NextResponse.json({ error: "Invalid ID format" }, { status: 400 });
     }
 
     // 2. Validate against explicit ALLOWED_STATUSES list
@@ -38,15 +45,20 @@ export async function PATCH(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // 4. Perform update and append .select() to retrieve modified rows
+    // 4. Perform update scoped to this user's candidates only
     const { data, error } = await supabase
       .from("candidates")
       .update({ status })
       .eq("id", id)
+      .eq("user_id", user.id)
       .select();
 
     if (error) {
-      console.error("Error updating candidate status:", error);
+      logger.error("Error updating candidate status", {
+        candidateId: id,
+        userId: user.id,
+        error: error.message,
+      });
       return NextResponse.json(
         { error: "Failed to update candidate status" },
         { status: 500 },
@@ -61,9 +73,17 @@ export async function PATCH(
       );
     }
 
+    logger.info("Candidate status updated", {
+      candidateId: id,
+      userId: user.id,
+      status,
+    });
     return NextResponse.json({ message: "Status updated successfully" });
   } catch (error) {
-    console.error("Unexpected error:", error);
+    logger.error("Unexpected error in PATCH status route", {
+      candidateId: id,
+      error: String(error),
+    });
     return NextResponse.json(
       { error: "An unexpected error occurred" },
       { status: 500 },
