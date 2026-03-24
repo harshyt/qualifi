@@ -38,6 +38,7 @@ import {
   Briefcase,
   Calendar,
   Users,
+  Pencil,
 } from "lucide-react";
 import AddJobForm from "@/components/Dashboard/AddJobForm";
 import { useAuth } from "@/components/Providers/AuthContext";
@@ -59,6 +60,8 @@ export default function JobLibraryPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedClientFilter, setSelectedClientFilter] = useState("All");
 
+  const [editingJob, setEditingJob] = useState<Job | null>(null);
+
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [jobToDelete, setJobToDelete] = useState<Job | null>(null);
   const { mutate: deleteJob, isPending: isDeleting } = useDeleteJob(() => {
@@ -70,6 +73,7 @@ export default function JobLibraryPage() {
 
   const handleSuccess = useCallback(() => {
     setIsDrawerOpen(false);
+    setEditingJob(null);
     queryClient.invalidateQueries({ queryKey: ["jobs"] });
   }, [queryClient]);
 
@@ -94,6 +98,12 @@ export default function JobLibraryPage() {
     setIsDeleteDialogOpen(false);
     setJobToDelete(null);
   }, []);
+
+  const handleEditJob = useCallback(() => {
+    setEditingJob(selectedJob);
+    setIsViewDrawerOpen(false);
+    setIsDrawerOpen(true);
+  }, [selectedJob]);
 
   const allClients = useMemo(
     () => Array.from(new Set(jobs.flatMap((job) => job.client || []))).sort(),
@@ -387,7 +397,10 @@ export default function JobLibraryPage() {
       <Drawer
         anchor="right"
         open={isDrawerOpen}
-        onClose={() => setIsDrawerOpen(false)}
+        onClose={() => {
+          setIsDrawerOpen(false);
+          setEditingJob(null);
+        }}
         PaperProps={{
           sx: { width: { xs: "100%", sm: 500 }, p: 3 },
         }}
@@ -403,9 +416,14 @@ export default function JobLibraryPage() {
           }}
         >
           <Typography variant="h6" sx={{ fontWeight: 600 }}>
-            Create New Job
+            {editingJob ? "Edit Job" : "Create New Job"}
           </Typography>
-          <IconButton onClick={() => setIsDrawerOpen(false)}>
+          <IconButton
+            onClick={() => {
+              setIsDrawerOpen(false);
+              setEditingJob(null);
+            }}
+          >
             <X size={20} />
           </IconButton>
         </Box>
@@ -435,7 +453,10 @@ export default function JobLibraryPage() {
             </Typography>
           </Box>
         ) : (
-          <AddJobForm onSuccess={handleSuccess} />
+          <AddJobForm
+            onSuccess={handleSuccess}
+            initialData={editingJob ?? undefined}
+          />
         )}
       </Drawer>
 
@@ -490,9 +511,18 @@ export default function JobLibraryPage() {
                   </Typography>
                 </Box>
               </Box>
-              <IconButton onClick={() => setIsViewDrawerOpen(false)}>
-                <X size={20} />
-              </IconButton>
+              <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+                {isAdmin && (
+                  <Tooltip title="Edit Job">
+                    <IconButton onClick={handleEditJob} size="small">
+                      <Pencil size={18} color="#78909C" />
+                    </IconButton>
+                  </Tooltip>
+                )}
+                <IconButton onClick={() => setIsViewDrawerOpen(false)}>
+                  <X size={20} />
+                </IconButton>
+              </Box>
             </Box>
 
             <Box sx={{ p: 3, overflow: "auto", flexGrow: 1 }}>

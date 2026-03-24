@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Box,
   TextField,
@@ -11,7 +11,8 @@ import {
   Typography,
 } from "@mui/material";
 import dynamic from "next/dynamic";
-import { createJob } from "@/actions/jobs";
+import { createJob, updateJob } from "@/actions/jobs";
+import type { Job } from "@/hooks/useJobs";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { ROLE_CONFIGS } from "@/constants/roles";
@@ -42,15 +43,30 @@ function isEmptyRichText(html: string): boolean {
 
 interface AddJobFormProps {
   onSuccess?: () => void;
+  initialData?: Job;
 }
 
-export default function AddJobForm({ onSuccess }: AddJobFormProps) {
+export default function AddJobForm({ onSuccess, initialData }: AddJobFormProps) {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [selectedClient, setSelectedClient] = useState<string>("");
   const [roleKey, setRoleKey] = useState<string>("generic");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const router = useRouter();
+
+  useEffect(() => {
+    if (initialData) {
+      setTitle(initialData.title);
+      setDescription(initialData.description);
+      setSelectedClient(initialData.client?.[0] ?? "");
+      setRoleKey(initialData.tags?.[0] ?? "generic");
+    } else {
+      setTitle("");
+      setDescription("");
+      setSelectedClient("");
+      setRoleKey("generic");
+    }
+  }, [initialData]);
 
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -68,14 +84,18 @@ export default function AddJobForm({ onSuccess }: AddJobFormProps) {
     formData.append("roleKey", roleKey);
 
     try {
-      const result = await createJob(formData);
+      const result = initialData
+        ? await updateJob(initialData.id, formData)
+        : await createJob(formData);
       if (result.error) {
         toast.error(result.error);
       } else {
-        toast.success("Job added successfully");
-        setTitle("");
-        setDescription("");
-        setSelectedClient("");
+        toast.success(initialData ? "Job updated successfully" : "Job added successfully");
+        if (!initialData) {
+          setTitle("");
+          setDescription("");
+          setSelectedClient("");
+        }
         if (onSuccess) onSuccess();
         router.refresh();
       }
@@ -169,7 +189,7 @@ export default function AddJobForm({ onSuccess }: AddJobFormProps) {
           mt: 2,
         }}
       >
-        {isSubmitting ? "Saving..." : "Save Job"}
+        {isSubmitting ? "Saving..." : initialData ? "Update Job" : "Save Job"}
       </Button>
     </Box>
   );

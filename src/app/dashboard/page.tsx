@@ -1,5 +1,5 @@
 "use client";
-import { useMemo } from "react";
+import { useMemo, useState, memo } from "react";
 import {
   Box,
   Typography,
@@ -7,12 +7,24 @@ import {
   Grid,
   CircularProgress,
   Skeleton,
+  Tabs,
+  Tab,
+  Chip,
 } from "@mui/material";
 import DashboardTable from "@/components/Dashboard/DashboardTable";
 import UploadResume from "@/components/Dashboard/UploadResume";
 
 import { useCandidates } from "@/hooks/useCandidates";
 import type { Candidate } from "@/components/Dashboard/DashboardTable";
+
+const TabLabel = memo(function TabLabel({ label, count }: { label: string; count: number }) {
+  return (
+    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+      {label}
+      <Chip label={count} size="small" sx={{ height: 20, fontSize: 11, fontWeight: 600 }} />
+    </Box>
+  );
+});
 
 function StatCardSkeleton() {
   return (
@@ -29,6 +41,8 @@ export default function DashboardPage() {
     () => (Array.isArray(data) ? data : []),
     [data],
   );
+
+  const [activeTab, setActiveTab] = useState<"PENDING" | "SHORTLIST" | "REJECT">("PENDING");
 
   const stats = useMemo(() => {
     const total = candidates.length;
@@ -48,6 +62,11 @@ export default function DashboardPage() {
       { label: "Pending Review", value: pending },
     ];
   }, [candidates]);
+
+  const filteredCandidates = useMemo(
+    () => candidates.filter((c: Candidate) => c.status === activeTab),
+    [candidates, activeTab]
+  );
 
   if (error)
     return (
@@ -110,18 +129,48 @@ export default function DashboardPage() {
             ))}
       </Grid>
 
-      <Typography
-        variant="h6"
-        sx={{ fontWeight: 600, color: "#37474F", mb: 1 }}
-      >
-        Recent Applications
-      </Typography>
+      <Box sx={{ borderBottom: 1, borderColor: "divider", mb: 0 }}>
+        <Tabs
+          value={activeTab}
+          onChange={(_: React.SyntheticEvent, v: "PENDING" | "SHORTLIST" | "REJECT") => setActiveTab(v)}
+          sx={{ "& .MuiTab-root": { textTransform: "none", fontWeight: 600 } }}
+        >
+          <Tab
+            label={<TabLabel label="Pending" count={stats[3].value} />}
+            value="PENDING"
+          />
+          <Tab
+            label={<TabLabel label="Shortlisted" count={stats[1].value} />}
+            value="SHORTLIST"
+          />
+          <Tab
+            label={<TabLabel label="Rejected" count={stats[2].value} />}
+            value="REJECT"
+          />
+        </Tabs>
+      </Box>
       {isLoading ? (
         <Box sx={{ display: "flex", justifyContent: "center", p: 2 }}>
           <CircularProgress aria-label="Loading dashboard" role="status" />
         </Box>
+      ) : filteredCandidates.length === 0 ? (
+        <Box
+          sx={{
+            textAlign: "center",
+            py: 6,
+            color: "text.secondary",
+            bgcolor: "#F9FAFB",
+            borderRadius: "0 0 8px 8px",
+            border: "1px solid #E0E0E0",
+            borderTop: 0,
+          }}
+        >
+          <Typography variant="body1">
+            No {activeTab === "PENDING" ? "pending" : activeTab === "SHORTLIST" ? "shortlisted" : "rejected"} candidates yet.
+          </Typography>
+        </Box>
       ) : (
-        <DashboardTable candidates={candidates} />
+        <DashboardTable candidates={filteredCandidates} />
       )}
     </Box>
   );

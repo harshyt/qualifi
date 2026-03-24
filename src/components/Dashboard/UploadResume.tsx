@@ -283,12 +283,11 @@ export default function UploadResume() {
           />
         </Button>
       </Box>
-      {isUploading && (
-        <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5 }}>
-          Analyzing {totalCount} resume{totalCount !== 1 ? "s" : ""}… please
-          wait.
-        </Typography>
-      )}
+      <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5 }}>
+        {isUploading
+          ? `Analyzing ${totalCount} resume${totalCount !== 1 ? "s" : ""}… please wait.`
+          : "Accepts PDF · Up to 5 files at a time"}
+      </Typography>
 
       {/* Per-file progress panel */}
       {isUploading && fileProgress.length > 0 && (
