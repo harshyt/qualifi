@@ -8,11 +8,7 @@ export const useAnalyzeResume = () => {
     mutationFn: async (formData: FormData) => {
       const result = await analyzeCandidateResume(formData);
       if (result.error) {
-        throw new Error(
-          typeof result.error === "string"
-            ? result.error
-            : JSON.stringify(result.error),
-        );
+        throw new Error(result.error);
       }
       return result;
     },

@@ -6,11 +6,7 @@ import { logger } from "@/lib/logger";
 
 const genAI = new GoogleGenerativeAI(getServerEnv().GEMINI_API_KEY);
 
-function buildPrompt(
-  role: RoleKey,
-  jobDescription: string,
-  resumeText: string,
-): string {
+function buildPrompt(role: RoleKey, jobDescription: string): string {
   const config = ROLE_CONFIGS[role] || ROLE_CONFIGS["generic"];
 
   return `
@@ -26,7 +22,7 @@ ${jobDescription}
 
 ---
 RESUME:
-${resumeText}
+The candidate's resume is provided as an attached PDF. Extract all relevant information directly from it. Do not paraphrase, clean up, or interpret vague entries — preserve details and nuances exactly as written, as these often contain important signals. If a name or text appears in a non-Latin script, transliterate it to the closest Latin equivalent for the JSON output.
 
 ---
 ROLE-SPECIFIC EVALUATION CRITERIA:
@@ -69,28 +65,33 @@ Use this exact structure:
 }
 
 /**
- * Analyzes a resume against a job description.
- * NOTE: `resumeText` and `jobDescription` are untrusted inputs from the user/candidate
- * and pose a direct prompt injection risk. Ensure upstream validation when possible.
- * We apply basic sanitization and truncation below to mitigate extreme payload executions.
+ * Analyzes a resume PDF against a job description in a single Gemini multimodal call.
+ * The PDF is sent as inline base64 data alongside the analysis prompt, eliminating
+ * a separate text-extraction call.
+ *
+ * NOTE: `jobDescription` is untrusted user input and poses a prompt injection risk.
+ * We apply truncation and markdown-delimiter stripping below to mitigate extreme payloads.
  */
 export async function analyzeResume(
-  resumeText: string,
+  pdfBuffer: Buffer,
   jobDescription: string,
   role: RoleKey = "generic",
 ): Promise<AnalysisResult> {
   const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
 
-  // Basic sanitization to minimize injection severity and limit token exhaustion.
-  const safeResumeText = resumeText.slice(0, 15000).replace(/```/g, "");
+  // Sanitize the job description to minimize injection severity and limit token exhaustion.
   const safeJobDesc = jobDescription.slice(0, 15000).replace(/```/g, "");
 
-  const prompt = buildPrompt(role, safeJobDesc, safeResumeText);
+  const prompt = buildPrompt(role, safeJobDesc);
+  const base64Data = pdfBuffer.toString("base64");
 
   let response;
   const t0 = Date.now();
   try {
-    response = await model.generateContent(prompt);
+    response = await model.generateContent([
+      { inlineData: { data: base64Data, mimeType: "application/pdf" } },
+      prompt,
+    ]);
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     throw new Error(`Gemini API call failed: ${message}`);

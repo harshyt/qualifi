@@ -1,5 +1,4 @@
 "use server";
-import { extractTextFromPDF } from "@/lib/pdf";
 import { analyzeResume } from "@/lib/gemini";
 import { createSupabaseServerClient } from "@/lib/supabase-server";
 import { RoleKey, ROLE_CONFIGS } from "@/constants/roles";
@@ -29,24 +28,13 @@ export async function analyzeCandidateResume(formData: FormData) {
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
-    let text: string;
-    try {
-      text = await extractTextFromPDF(buffer);
-    } catch (pdfError) {
-      const detail =
-        pdfError instanceof Error ? pdfError.message : "Unknown error";
-      return {
-        error: `Failed to extract text from the PDF. The file may be scanned, password-protected, or corrupted. (${detail})`,
-      };
-    }
-
     const rawRoleKey = formData.get("roleKey") as string;
     const isValidRoleKey = Object.keys(ROLE_CONFIGS).includes(rawRoleKey);
     const roleKey: RoleKey = isValidRoleKey
       ? (rawRoleKey as RoleKey)
       : "generic";
 
-    const analysis = await analyzeResume(text, jobDescription, roleKey);
+    const analysis = await analyzeResume(buffer, jobDescription, roleKey);
 
     const { data: candidate, error: dbError } = await supabase
       .from("candidates")
@@ -57,7 +45,7 @@ export async function analyzeCandidateResume(formData: FormData) {
         role: analysis.role,
         status: "PENDING",
         score: analysis.score,
-        resume_text: text,
+        resume_text: "",
         analysis: analysis,
         user_id: user.id,
         job_id: jobId,

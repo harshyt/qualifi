@@ -122,7 +122,7 @@ export default function UploadResume() {
       if (!files || files.length === 0) return;
 
       if (files.length > 5) {
-        toast.error("You can only upload up to 5 resumes at a time.");
+        toast.error("Please select up to 5 files only.");
         if (fileInputRef.current) fileInputRef.current.value = "";
         return;
       }
@@ -283,6 +283,12 @@ export default function UploadResume() {
           />
         </Button>
       </Box>
+      {isUploading && (
+        <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5 }}>
+          Analyzing {totalCount} resume{totalCount !== 1 ? "s" : ""}… please
+          wait.
+        </Typography>
+      )}
 
       {/* Per-file progress panel */}
       {isUploading && fileProgress.length > 0 && (
