@@ -4,7 +4,7 @@ AI-powered resume screening tool that analyzes candidate PDFs against role-speci
 
 ## What It Does
 
-Upload a candidate's resume (PDF), select a target role, and Screener uses Google Gemini's multimodal AI to:
+Upload a candidate's resume (PDF), select a target role, and Qualiphy uses Google Gemini's multimodal AI to:
 
 - Extract and understand resume content directly from the PDF
 - Score the candidate (0–100) against role-specific rubrics
@@ -27,7 +27,7 @@ Upload a candidate's resume (PDF), select a target role, and Screener uses Googl
 
 ## Supported Roles
 
-Screener ships with six pre-configured role profiles, each with its own evaluation criteria and scoring rubric:
+Qualiphy ships with six pre-configured role profiles, each with its own evaluation criteria and scoring rubric:
 
 | Role Key        | Title                      | Key Criteria                                |
 | --------------- | -------------------------- | ------------------------------------------- |
@@ -57,8 +57,8 @@ Screener ships with six pre-configured role profiles, each with its own evaluati
 ### Installation
 
 ```bash
-git clone <repo-url>
-cd screener
+git clone https://github.com/harshyt/qualifi.git
+cd qualifi
 npm install
 ```
 

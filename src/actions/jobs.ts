@@ -85,7 +85,14 @@ export async function createJob(formData: FormData) {
   }
 }
 
+const UUID_REGEX =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 export async function updateJob(jobId: string, formData: FormData) {
+  if (!UUID_REGEX.test(jobId)) {
+    return { error: "Invalid job ID" };
+  }
+
   const title = formData.get("title") as string;
   const description = formData.get("description") as string;
   const clientsJson = formData.get("clients") as string;
@@ -218,7 +225,7 @@ export async function updateJob(jobId: string, formData: FormData) {
           ]
         : existingHistory;
 
-    const { error: dbError } = await supabase
+    const { data: updatedRows, error: dbError } = await supabase
       .from("jobs")
       .update({
         title: trimmedTitle,
@@ -228,7 +235,8 @@ export async function updateJob(jobId: string, formData: FormData) {
         change_history: updatedHistory,
       })
       .eq("id", jobId)
-      .eq("user_id", user.id);
+      .eq("user_id", user.id)
+      .select("id");
 
     if (dbError) {
       logger.error("DB error updating job", {
@@ -237,6 +245,14 @@ export async function updateJob(jobId: string, formData: FormData) {
         error: dbError.message,
       });
       return { error: "Failed to update job in database" };
+    }
+
+    if (!updatedRows || updatedRows.length === 0) {
+      logger.error("No rows updated — job not found or not owned", {
+        userId: user.id,
+        jobId,
+      });
+      return { error: "Job not found or not owned by user" };
     }
 
     revalidatePath("/jobs");

@@ -1,9 +1,13 @@
-export interface JobFieldDiff {
-  field: "title" | "description" | "client" | "tags";
-  label: "Title" | "Description" | "Clients" | "Profile";
-  before: string;
-  after: string;
-}
+export type JobFieldDiff =
+  | { field: "title"; label: "Title"; before: string; after: string }
+  | {
+      field: "description";
+      label: "Description";
+      before: string;
+      after: string;
+    }
+  | { field: "client"; label: "Clients"; before: string; after: string }
+  | { field: "tags"; label: "Profile"; before: string; after: string };
 
 export interface JobHistoryEntry {
   /** ISO-8601 UTC timestamp */

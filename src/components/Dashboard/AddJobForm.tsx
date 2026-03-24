@@ -46,7 +46,10 @@ interface AddJobFormProps {
   initialData?: Job;
 }
 
-export default function AddJobForm({ onSuccess, initialData }: AddJobFormProps) {
+export default function AddJobForm({
+  onSuccess,
+  initialData,
+}: AddJobFormProps) {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [selectedClient, setSelectedClient] = useState<string>("");
@@ -68,7 +71,6 @@ export default function AddJobForm({ onSuccess, initialData }: AddJobFormProps) 
     }
   }, [initialData]);
 
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim() || isEmptyRichText(description)) {
@@ -80,7 +82,10 @@ export default function AddJobForm({ onSuccess, initialData }: AddJobFormProps) 
     const formData = new FormData();
     formData.append("title", title);
     formData.append("description", description);
-    formData.append("clients", JSON.stringify(selectedClient ? [selectedClient] : []));
+    formData.append(
+      "clients",
+      JSON.stringify(selectedClient ? [selectedClient] : []),
+    );
     formData.append("roleKey", roleKey);
 
     try {
@@ -90,11 +95,14 @@ export default function AddJobForm({ onSuccess, initialData }: AddJobFormProps) 
       if (result.error) {
         toast.error(result.error);
       } else {
-        toast.success(initialData ? "Job updated successfully" : "Job added successfully");
+        toast.success(
+          initialData ? "Job updated successfully" : "Job added successfully",
+        );
         if (!initialData) {
           setTitle("");
           setDescription("");
           setSelectedClient("");
+          setRoleKey("generic");
         }
         if (onSuccess) onSuccess();
         router.refresh();

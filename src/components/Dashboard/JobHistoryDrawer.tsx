@@ -214,7 +214,11 @@ export default function JobHistoryDrawer({
             </Typography>
           </Box>
         </Box>
-        <IconButton onClick={onClose} size="small">
+        <IconButton
+          onClick={onClose}
+          size="small"
+          aria-label="Close change history"
+        >
           <X size={20} />
         </IconButton>
       </Box>
