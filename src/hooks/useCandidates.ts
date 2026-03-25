@@ -14,7 +14,7 @@ export const useCandidates = () => {
       const { data, error } = await supabase
         .from("candidates")
         .select(
-          "id, name, role, score, status, created_at, email, job_id, user_id",
+          "id, name, role, score, status, created_at, email, job_id, user_id, analysis",
         )
         .eq("user_id", user!.id)
         .order("created_at", { ascending: false });

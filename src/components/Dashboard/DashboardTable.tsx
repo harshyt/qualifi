@@ -22,11 +22,13 @@ import {
   DialogContentText,
   DialogActions,
   Button,
+  Checkbox,
 } from "@mui/material";
-import { Eye, MoreHorizontal, Trash2 } from "lucide-react";
-import { useState, useCallback, memo } from "react";
+import { Eye, MoreHorizontal, Trash2, Mail } from "lucide-react";
+import { useState, useCallback, memo, useMemo } from "react";
 import { useDeleteCandidate } from "@/hooks/useDeleteCandidate";
 import { useRouter } from "next/navigation";
+import EmailComposeDrawer from "./EmailComposeDrawer";
 
 // Define minimal interface matching Supabase
 export interface Candidate {
@@ -37,6 +39,12 @@ export interface Candidate {
   status: string;
   created_at: string;
   email: string;
+  analysis?: {
+    strengths: string[];
+    gaps: string[];
+    experienceLevel: string;
+    summary: string;
+  } | null;
 }
 
 function getStatusColor(status: string) {
@@ -105,6 +113,49 @@ function DashboardTable({ candidates }: { candidates: Candidate[] }) {
     useDeleteCandidate();
   const open = Boolean(anchorEl);
 
+  // Selection state
+  const [selectedIdsRaw, setSelectedIdsRaw] = useState<Set<string>>(new Set());
+  const selectedIds = useMemo(() => {
+    const validIdSet = new Set(candidates.map((c) => c.id));
+    const filtered = new Set<string>();
+    for (const id of selectedIdsRaw) {
+      if (validIdSet.has(id)) filtered.add(id);
+    }
+    return filtered;
+  }, [selectedIdsRaw, candidates]);
+
+  // Email drawer state
+  const [emailDrawerOpen, setEmailDrawerOpen] = useState(false);
+  const [emailMode, setEmailMode] = useState<"bulk" | "individual">("bulk");
+  const [emailCandidates, setEmailCandidates] = useState<Candidate[]>([]);
+
+  const selectableCandidates = candidates.filter((c) => c.status !== "PENDING");
+  const allSelected =
+    selectableCandidates.length > 0 &&
+    selectableCandidates.every((c) => selectedIds.has(c.id));
+  const someSelected =
+    selectableCandidates.some((c) => selectedIds.has(c.id)) && !allSelected;
+
+  const handleSelectAll = useCallback(
+    (checked: boolean) => {
+      if (checked) {
+        setSelectedIdsRaw(new Set(selectableCandidates.map((c) => c.id)));
+      } else {
+        setSelectedIdsRaw(new Set());
+      }
+    },
+    [selectableCandidates],
+  );
+
+  const handleToggleRow = useCallback((id: string, checked: boolean) => {
+    setSelectedIdsRaw((prev) => {
+      const next = new Set(prev);
+      if (checked) next.add(id);
+      else next.delete(id);
+      return next;
+    });
+  }, []);
+
   const handleMenuClick = useCallback(
     (event: React.MouseEvent<HTMLElement>, candidate: Candidate) => {
       event.stopPropagation();
@@ -122,6 +173,22 @@ function DashboardTable({ candidates }: { candidates: Candidate[] }) {
     setAnchorEl(null);
     setIsDeleteDialogOpen(true);
   }, []);
+
+  const handleSendEmailClick = useCallback(() => {
+    setAnchorEl(null);
+    if (selectedCandidate) {
+      setEmailCandidates([selectedCandidate]);
+      setEmailMode("individual");
+      setEmailDrawerOpen(true);
+    }
+  }, [selectedCandidate]);
+
+  const handleComposeEmail = useCallback(() => {
+    const selected = candidates.filter((c) => selectedIds.has(c.id));
+    setEmailCandidates(selected);
+    setEmailMode("bulk");
+    setEmailDrawerOpen(true);
+  }, [candidates, selectedIds]);
 
   const handleConfirmDelete = useCallback(() => {
     if (selectedCandidate) {
@@ -161,6 +228,15 @@ function DashboardTable({ candidates }: { candidates: Candidate[] }) {
         <Table sx={{ minWidth: 650 }} aria-label="candidate table">
           <TableHead sx={{ bgcolor: "#F9FAFB" }}>
             <TableRow>
+              <TableCell padding="checkbox">
+                <Checkbox
+                  size="small"
+                  indeterminate={someSelected}
+                  checked={allSelected}
+                  onChange={(e) => handleSelectAll(e.target.checked)}
+                  disabled={selectableCandidates.length === 0}
+                />
+              </TableCell>
               <TableCell sx={{ fontWeight: 600, color: "#78909C" }}>
                 Candidate
               </TableCell>
@@ -187,6 +263,7 @@ function DashboardTable({ candidates }: { candidates: Candidate[] }) {
           <TableBody>
             {candidates.map((row) => {
               const statusStyle = getStatusColor(row.status);
+              const isPending = row.status === "PENDING";
               return (
                 <TableRow
                   key={row.id}
@@ -194,9 +271,24 @@ function DashboardTable({ candidates }: { candidates: Candidate[] }) {
                     "&:last-child td, &:last-child th": { border: 0 },
                     cursor: "pointer",
                     "&:hover": { bgcolor: "#F5F5F5" },
+                    ...(selectedIds.has(row.id) && { bgcolor: "#F0F7FF" }),
                   }}
                   onClick={() => handleRowClick(row.id)}
                 >
+                  <TableCell
+                    padding="checkbox"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <Checkbox
+                      size="small"
+                      checked={selectedIds.has(row.id)}
+                      disabled={isPending}
+                      onChange={(e) =>
+                        handleToggleRow(row.id, e.target.checked)
+                      }
+                      sx={{ opacity: isPending ? 0.3 : 1 }}
+                    />
+                  </TableCell>
                   <TableCell component="th" scope="row">
                     <Typography
                       variant="subtitle2"
@@ -247,24 +339,89 @@ function DashboardTable({ candidates }: { candidates: Candidate[] }) {
           </TableBody>
         </Table>
       </TableContainer>
+
+      {/* Floating action bar */}
+      {selectedIds.size > 0 && (
+        <Box
+          sx={{
+            position: "fixed",
+            bottom: 28,
+            left: "50%",
+            transform: "translateX(-50%)",
+            zIndex: 1200,
+          }}
+        >
+          <Paper
+            elevation={6}
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              gap: 2,
+              px: 3,
+              py: 1.5,
+              borderRadius: 3,
+              border: "1px solid #E3F2FD",
+            }}
+          >
+            <Typography
+              variant="body2"
+              sx={{ fontWeight: 600, color: "#37474F", whiteSpace: "nowrap" }}
+            >
+              {selectedIds.size} candidate{selectedIds.size !== 1 ? "s" : ""}{" "}
+              selected
+            </Typography>
+            <Button
+              variant="contained"
+              size="small"
+              startIcon={<Mail size={15} />}
+              onClick={handleComposeEmail}
+              sx={{
+                borderRadius: 2,
+                fontWeight: 600,
+                boxShadow: "none",
+                bgcolor: "#2196F3",
+                "&:hover": { bgcolor: "#1976D2", boxShadow: "none" },
+                whiteSpace: "nowrap",
+              }}
+            >
+              Compose Email
+            </Button>
+            <Button
+              variant="text"
+              size="small"
+              onClick={() => setSelectedIdsRaw(new Set())}
+              sx={{ color: "#78909C", fontWeight: 600, whiteSpace: "nowrap" }}
+            >
+              Clear
+            </Button>
+          </Paper>
+        </Box>
+      )}
+
+      {/* Context menu */}
       <Menu
         anchorEl={anchorEl}
         open={open}
-        onClose={(e: object, reason: string) => {
-          if (reason === "backdropClick" || reason === "escapeKeyDown") {
-            handleMenuClose();
-          } else {
-            handleMenuClose();
-          }
-        }}
+        onClose={handleMenuClose}
         onClick={(e) => e.stopPropagation()}
         transformOrigin={{ horizontal: "right", vertical: "top" }}
         anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
         PaperProps={{
           elevation: 3,
-          sx: { borderRadius: 2, minWidth: 150 },
+          sx: { borderRadius: 2, minWidth: 160 },
         }}
       >
+        {selectedCandidate?.status !== "PENDING" && (
+          <MenuItem onClick={handleSendEmailClick}>
+            <ListItemIcon>
+              <Mail size={16} color="#1565C0" />
+            </ListItemIcon>
+            <ListItemText
+              primary="Send Email"
+              primaryTypographyProps={{ variant: "body2", fontWeight: 500 }}
+            />
+          </MenuItem>
+        )}
         <MenuItem onClick={handleDeleteClick}>
           <ListItemIcon>
             <Trash2 size={16} color="#d32f2f" />
@@ -280,6 +437,7 @@ function DashboardTable({ candidates }: { candidates: Candidate[] }) {
         </MenuItem>
       </Menu>
 
+      {/* Delete confirmation dialog */}
       <Dialog
         open={isDeleteDialogOpen}
         onClose={handleDialogClose}
@@ -317,6 +475,14 @@ function DashboardTable({ candidates }: { candidates: Candidate[] }) {
           </Button>
         </DialogActions>
       </Dialog>
+
+      {/* Email compose drawer */}
+      <EmailComposeDrawer
+        open={emailDrawerOpen}
+        onClose={() => setEmailDrawerOpen(false)}
+        candidates={emailCandidates}
+        mode={emailMode}
+      />
     </>
   );
 }
