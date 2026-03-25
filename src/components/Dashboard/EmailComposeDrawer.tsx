@@ -43,14 +43,14 @@ export default function EmailComposeDrawer({
   }, [candidates, mode]);
 
   // Initialize fields when drawer opens; preserve user edits while open
-  const currentSubject = subject || (open ? generatedEmail.subject : "");
-  const currentBody = body || (open ? generatedEmail.body : "");
+  const currentSubject = subject ?? (open ? generatedEmail.subject : "");
+  const currentBody = body ?? (open ? generatedEmail.body : "");
 
-  const handleDrawerClose = () => {
+  const handleDrawerClose = React.useCallback(() => {
     setSubject("");
     setBody("");
     onClose();
-  };
+  }, [onClose]);
 
   return (
     <>
@@ -88,7 +88,7 @@ export default function EmailComposeDrawer({
               </Typography>
             )}
           </Box>
-          <IconButton onClick={onClose} size="small">
+          <IconButton onClick={handleDrawerClose} size="small">
             <X size={20} color="#78909C" />
           </IconButton>
         </Box>
