@@ -43,8 +43,8 @@ export default function EmailComposeDrawer({
   }, [candidates, mode]);
 
   // Initialize fields when drawer opens; preserve user edits while open
-  const currentSubject = subject ?? (open ? generatedEmail.subject : "");
-  const currentBody = body ?? (open ? generatedEmail.body : "");
+  const currentSubject = subject || (open ? generatedEmail.subject : "");
+  const currentBody = body || (open ? generatedEmail.body : "");
 
   const handleDrawerClose = React.useCallback(() => {
     setSubject("");
@@ -146,8 +146,8 @@ export default function EmailComposeDrawer({
             variant="contained"
             startIcon={<Mail size={16} />}
             onClick={() => {
-              const mailto = `mailto:?subject=${encodeURIComponent(currentSubject)}&body=${encodeURIComponent(currentBody)}`;
-              window.open(mailto);
+              const url = `https://outlook.office.com/mail/deeplink/compose?subject=${encodeURIComponent(currentSubject)}&body=${encodeURIComponent(currentBody)}`;
+              window.open(url, "_blank");
             }}
             sx={{
               borderRadius: 2,
@@ -158,7 +158,7 @@ export default function EmailComposeDrawer({
               "&:hover": { bgcolor: "#1976D2", boxShadow: "none" },
             }}
           >
-            Open in Mail
+            Open in Outlook
           </Button>
         </Box>
       </Drawer>
