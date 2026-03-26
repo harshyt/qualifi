@@ -34,7 +34,13 @@ export async function analyzeCandidateResume(formData: FormData) {
       ? (rawRoleKey as RoleKey)
       : "generic";
 
-    const analysis = await analyzeResume(buffer, jobDescription, roleKey);
+    const analysis = await analyzeResume(
+      buffer,
+      file.type,
+      file.name,
+      jobDescription,
+      roleKey,
+    );
 
     const { data: candidate, error: dbError } = await supabase
       .from("candidates")

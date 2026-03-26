@@ -278,7 +278,7 @@ export default function UploadResume() {
             type="file"
             hidden
             multiple
-            accept=".pdf"
+            accept=".pdf,.docx"
             onChange={handleFileSelect}
           />
         </Button>
@@ -286,7 +286,7 @@ export default function UploadResume() {
       <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5 }}>
         {isUploading
           ? `Analyzing ${totalCount} resume${totalCount !== 1 ? "s" : ""}… please wait.`
-          : "Accepts PDF · Up to 5 files at a time"}
+          : "Accepts PDF, DOCX · Up to 5 files at a time"}
       </Typography>
 
       {/* Per-file progress panel */}

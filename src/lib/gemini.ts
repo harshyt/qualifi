@@ -1,4 +1,5 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import mammoth from "mammoth";
 import { RoleKey, ROLE_CONFIGS } from "@/constants/roles";
 import { getServerEnv } from "@/lib/env";
 import { analysisResultSchema, type AnalysisResult } from "@/types/analysis";
@@ -6,7 +7,11 @@ import { logger } from "@/lib/logger";
 
 const genAI = new GoogleGenerativeAI(getServerEnv().GEMINI_API_KEY);
 
-function buildPrompt(role: RoleKey, jobDescription: string): string {
+function buildPrompt(
+  role: RoleKey,
+  jobDescription: string,
+  isTextResume: boolean,
+): string {
   const config = ROLE_CONFIGS[role] || ROLE_CONFIGS["generic"];
 
   return `
@@ -22,7 +27,11 @@ ${jobDescription}
 
 ---
 RESUME:
-The candidate's resume is provided as an attached PDF. Extract all relevant information directly from it. Do not paraphrase, clean up, or interpret vague entries — preserve details and nuances exactly as written, as these often contain important signals. If a name or text appears in a non-Latin script, transliterate it to the closest Latin equivalent for the JSON output.
+${
+  isTextResume
+    ? "The candidate's resume text is provided at the end of this message. Extract all relevant information directly from it. Do not paraphrase, clean up, or interpret vague entries — preserve details and nuances exactly as written, as these often contain important signals. If a name or text appears in a non-Latin script, transliterate it to the closest Latin equivalent for the JSON output."
+    : "The candidate's resume is provided as an attached PDF. Extract all relevant information directly from it. Do not paraphrase, clean up, or interpret vague entries — preserve details and nuances exactly as written, as these often contain important signals. If a name or text appears in a non-Latin script, transliterate it to the closest Latin equivalent for the JSON output."
+}
 
 ---
 ROLE-SPECIFIC EVALUATION CRITERIA:
@@ -65,15 +74,17 @@ Use this exact structure:
 }
 
 /**
- * Analyzes a resume PDF against a job description in a single Gemini multimodal call.
- * The PDF is sent as inline base64 data alongside the analysis prompt, eliminating
- * a separate text-extraction call.
+ * Analyzes a resume against a job description using Gemini.
+ * - PDF files are sent as inline base64 data (multimodal).
+ * - DOC/DOCX files have text extracted via mammoth, then sent as a text part.
  *
  * NOTE: `jobDescription` is untrusted user input and poses a prompt injection risk.
  * We apply truncation and markdown-delimiter stripping below to mitigate extreme payloads.
  */
 export async function analyzeResume(
-  pdfBuffer: Buffer,
+  fileBuffer: Buffer,
+  mimeType: string,
+  fileName: string,
   jobDescription: string,
   role: RoleKey = "generic",
 ): Promise<AnalysisResult> {
@@ -82,16 +93,38 @@ export async function analyzeResume(
   // Sanitize the job description to minimize injection severity and limit token exhaustion.
   const safeJobDesc = jobDescription.slice(0, 15000).replace(/```/g, "");
 
-  const prompt = buildPrompt(role, safeJobDesc);
-  const base64Data = pdfBuffer.toString("base64");
+  const ext = fileName.split(".").pop()?.toLowerCase() ?? "";
+  const isDocx =
+    mimeType ===
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ||
+    ext === "docx";
 
   let response;
   const t0 = Date.now();
   try {
-    response = await model.generateContent([
-      { inlineData: { data: base64Data, mimeType: "application/pdf" } },
-      prompt,
-    ]);
+    if (isDocx) {
+      const { value: extractedText } = await mammoth.extractRawText({
+        buffer: fileBuffer,
+      });
+      if (!extractedText.trim()) {
+        throw new Error(
+          "Could not extract text from the uploaded document. The file may be corrupted or image-based.",
+        );
+      }
+      const safeResumeText = extractedText.slice(0, 15000).replace(/```/g, "");
+      const prompt = buildPrompt(role, safeJobDesc, true);
+      response = await model.generateContent([
+        prompt,
+        `RESUME TEXT:\n${safeResumeText}`,
+      ]);
+    } else {
+      const prompt = buildPrompt(role, safeJobDesc, false);
+      const base64Data = fileBuffer.toString("base64");
+      response = await model.generateContent([
+        { inlineData: { data: base64Data, mimeType: "application/pdf" } },
+        prompt,
+      ]);
+    }
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     throw new Error(`Gemini API call failed: ${message}`);
