@@ -17,11 +17,21 @@ import UploadResume from "@/components/Dashboard/UploadResume";
 import { useCandidates } from "@/hooks/useCandidates";
 import type { Candidate } from "@/components/Dashboard/DashboardTable";
 
-const TabLabel = memo(function TabLabel({ label, count }: { label: string; count: number }) {
+const TabLabel = memo(function TabLabel({
+  label,
+  count,
+}: {
+  label: string;
+  count: number;
+}) {
   return (
     <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
       {label}
-      <Chip label={count} size="small" sx={{ height: 20, fontSize: 11, fontWeight: 600 }} />
+      <Chip
+        label={count}
+        size="small"
+        sx={{ height: 20, fontSize: 11, fontWeight: 600 }}
+      />
     </Box>
   );
 });
@@ -42,7 +52,9 @@ export default function DashboardPage() {
     [data],
   );
 
-  const [activeTab, setActiveTab] = useState<"PENDING" | "SHORTLIST" | "REJECT">("PENDING");
+  const [activeTab, setActiveTab] = useState<
+    "ALL" | "PENDING" | "SHORTLIST" | "REJECT"
+  >("ALL");
 
   const stats = useMemo(() => {
     const total = candidates.length;
@@ -64,8 +76,11 @@ export default function DashboardPage() {
   }, [candidates]);
 
   const filteredCandidates = useMemo(
-    () => candidates.filter((c: Candidate) => c.status === activeTab),
-    [candidates, activeTab]
+    () =>
+      activeTab === "ALL"
+        ? candidates
+        : candidates.filter((c: Candidate) => c.status === activeTab),
+    [candidates, activeTab],
   );
 
   if (error)
@@ -132,9 +147,16 @@ export default function DashboardPage() {
       <Box sx={{ borderBottom: 1, borderColor: "divider", mb: 0 }}>
         <Tabs
           value={activeTab}
-          onChange={(_: React.SyntheticEvent, v: "PENDING" | "SHORTLIST" | "REJECT") => setActiveTab(v)}
+          onChange={(
+            _: React.SyntheticEvent,
+            v: "ALL" | "PENDING" | "SHORTLIST" | "REJECT",
+          ) => setActiveTab(v)}
           sx={{ "& .MuiTab-root": { textTransform: "none", fontWeight: 600 } }}
         >
+          <Tab
+            label={<TabLabel label="All" count={stats[0].value} />}
+            value="ALL"
+          />
           <Tab
             label={<TabLabel label="Pending" count={stats[3].value} />}
             value="PENDING"
@@ -166,7 +188,15 @@ export default function DashboardPage() {
           }}
         >
           <Typography variant="body1">
-            No {activeTab === "PENDING" ? "pending" : activeTab === "SHORTLIST" ? "shortlisted" : "rejected"} candidates yet.
+            No{" "}
+            {activeTab === "ALL"
+              ? ""
+              : activeTab === "PENDING"
+                ? "pending"
+                : activeTab === "SHORTLIST"
+                  ? "shortlisted"
+                  : "rejected"}{" "}
+            candidates yet.
           </Typography>
         </Box>
       ) : (
