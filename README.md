@@ -1,10 +1,10 @@
-# Qualiphy
+# Qualifi
 
 AI-powered resume screening tool that analyzes candidate PDFs against role-specific criteria and produces structured hiring verdicts.
 
 ## What It Does
 
-Upload a candidate's resume (PDF), select a target role, and Qualiphy uses Google Gemini's multimodal AI to:
+Upload a candidate's resume (PDF), select a target role, and Qualifi uses Google Gemini's multimodal AI to:
 
 - Extract and understand resume content directly from the PDF
 - Score the candidate (0–100) against role-specific rubrics
@@ -27,7 +27,7 @@ Upload a candidate's resume (PDF), select a target role, and Qualiphy uses Googl
 
 ## Supported Roles
 
-Qualiphy ships with six pre-configured role profiles, each with its own evaluation criteria and scoring rubric:
+Qualifi ships with six pre-configured role profiles, each with its own evaluation criteria and scoring rubric:
 
 | Role Key        | Title                      | Key Criteria                                |
 | --------------- | -------------------------- | ------------------------------------------- |

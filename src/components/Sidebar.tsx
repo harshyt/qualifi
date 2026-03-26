@@ -75,7 +75,7 @@ function Sidebar() {
           component="div"
           sx={{ fontWeight: 700, color: "#2196F3" }}
         >
-          Qualiphy
+          Qualifi
         </Typography>
       </Box>
       <Box sx={{ overflow: "auto", flexGrow: 1 }}>

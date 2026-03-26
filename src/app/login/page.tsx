@@ -39,7 +39,7 @@ export default function LoginPage() {
         setError(
           error instanceof Error
             ? error.message
-            : "An unexpected error occurred during login."
+            : "An unexpected error occurred during login.",
         );
       }
     });
@@ -67,7 +67,7 @@ export default function LoginPage() {
               textAlign: "center",
             }}
           >
-            Qualiphy
+            Qualifi
           </Typography>
           <Typography
             variant="body2"
