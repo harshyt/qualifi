@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import ThemeRegistry from "@/components/ThemeRegistry/ThemeRegistry";
 import QueryProvider from "@/components/Providers/QueryProvider";
 import { Toaster } from "sonner";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 
 export const metadata: Metadata = {
   title: "Qualifi - AI-powered resume screening tool",
@@ -16,6 +17,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
+        <SpeedInsights />
         <QueryProvider>
           <ThemeRegistry>{children}</ThemeRegistry>
           <Toaster position="top-center" richColors closeButton />
