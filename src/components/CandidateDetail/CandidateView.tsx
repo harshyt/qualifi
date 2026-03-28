@@ -7,6 +7,7 @@ import {
   Button,
   Divider,
   Grid,
+  CircularProgress,
 } from "@mui/material";
 import { ArrowLeft, Check, X } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -100,25 +101,37 @@ function CandidateView({ candidate }: CandidateViewProps) {
             <Button
               variant="outlined"
               color="error"
-              startIcon={<X size={18} />}
+              startIcon={
+                isPending ? (
+                  <CircularProgress size={16} color="inherit" />
+                ) : (
+                  <X size={18} />
+                )
+              }
               disabled={isPending}
               onClick={() =>
                 mutate({ id: candidate.id, status: CandidateStatus.REJECT })
               }
             >
-              Reject
+              {isPending ? "Updating..." : "Reject"}
             </Button>
             <Button
               variant="contained"
               color="success"
-              startIcon={<Check size={18} />}
+              startIcon={
+                isPending ? (
+                  <CircularProgress size={16} color="inherit" />
+                ) : (
+                  <Check size={18} />
+                )
+              }
               sx={{ color: "white" }}
               disabled={isPending}
               onClick={() =>
                 mutate({ id: candidate.id, status: CandidateStatus.SHORTLIST })
               }
             >
-              Shortlist
+              {isPending ? "Updating..." : "Shortlist"}
             </Button>
           </Box>
         )}

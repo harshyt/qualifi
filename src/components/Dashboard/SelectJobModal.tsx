@@ -12,10 +12,10 @@ import {
   ListItemButton,
   ListItemText,
   Typography,
-  CircularProgress,
   Box,
   Chip,
   InputAdornment,
+  Skeleton,
 } from "@mui/material";
 import { Search } from "lucide-react";
 import { useJobs } from "@/hooks/useJobs";
@@ -116,9 +116,45 @@ export default function SelectJobModal({
         />
 
         {loading ? (
-          <Box display="flex" justifyContent="center" p={3}>
-            <CircularProgress />
-          </Box>
+          <List sx={{ pt: 0 }}>
+            {Array.from({ length: 4 }).map((_, i) => (
+              <ListItem disableGutters key={i}>
+                <ListItemButton
+                  sx={{
+                    borderRadius: 1,
+                    mb: 0.5,
+                    border: "1px solid transparent",
+                  }}
+                >
+                  <ListItemText
+                    primary={
+                      <Skeleton
+                        variant="text"
+                        width={`${60 + i * 8}%`}
+                        height={22}
+                      />
+                    }
+                    secondary={
+                      <Box sx={{ display: "flex", gap: 0.5, mt: 0.5 }}>
+                        <Skeleton
+                          variant="rounded"
+                          width={50}
+                          height={20}
+                          sx={{ borderRadius: 2 }}
+                        />
+                        <Skeleton
+                          variant="rounded"
+                          width={70}
+                          height={20}
+                          sx={{ borderRadius: 2 }}
+                        />
+                      </Box>
+                    }
+                  />
+                </ListItemButton>
+              </ListItem>
+            ))}
+          </List>
         ) : filteredJobs.length === 0 ? (
           <Typography textAlign="center" color="text.secondary" p={3}>
             No active jobs found. Please create a job first.

@@ -1,10 +1,6 @@
-"use client";
-import { MemoizedCandidateView } from "@/components/CandidateDetail/CandidateView";
-import { useCandidate } from "@/hooks/useCandidate";
-import { useParams } from "next/navigation";
-import { Box, Typography, Grid, Paper, Skeleton, Divider } from "@mui/material";
+import { Box, Grid, Paper, Skeleton, Divider } from "@mui/material";
 
-function CandidateDetailSkeleton() {
+export default function CandidateDetailLoading() {
   return (
     <Box
       sx={{
@@ -13,6 +9,7 @@ function CandidateDetailSkeleton() {
         flexDirection: "column",
       }}
     >
+      {/* Header */}
       <Box
         sx={{
           mb: 3,
@@ -49,11 +46,16 @@ function CandidateDetailSkeleton() {
         </Box>
       </Box>
 
+      {/* Two-column layout */}
       <Grid container spacing={3} sx={{ flexGrow: 1, overflow: "hidden" }}>
+        {/* Resume Details */}
         <Grid size={{ xs: 12, md: 6 }} sx={{ height: "100%" }}>
           <Paper sx={{ height: "100%", p: 3, border: "1px solid #E0E0E0" }}>
             <Skeleton variant="text" width={140} height={28} sx={{ mb: 2 }} />
+
+            {/* Technologies */}
             <Skeleton variant="text" width={100} height={18} sx={{ mb: 1 }} />
+            <Skeleton variant="text" width={80} height={14} sx={{ mb: 0.5 }} />
             <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, mb: 3 }}>
               {Array.from({ length: 6 }).map((_, i) => (
                 <Skeleton
@@ -65,6 +67,8 @@ function CandidateDetailSkeleton() {
                 />
               ))}
             </Box>
+
+            {/* Skills */}
             <Skeleton variant="text" width={60} height={18} sx={{ mb: 1 }} />
             <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, mb: 3 }}>
               {Array.from({ length: 8 }).map((_, i) => (
@@ -77,6 +81,9 @@ function CandidateDetailSkeleton() {
                 />
               ))}
             </Box>
+
+            {/* Experience */}
+            <Skeleton variant="text" width={90} height={18} sx={{ mb: 1 }} />
             {Array.from({ length: 3 }).map((_, i) => (
               <Box
                 key={i}
@@ -90,6 +97,7 @@ function CandidateDetailSkeleton() {
           </Paper>
         </Grid>
 
+        {/* AI Analysis */}
         <Grid size={{ xs: 12, md: 6 }} sx={{ height: "100%" }}>
           <Paper sx={{ height: "100%", p: 3, border: "1px solid #E0E0E0" }}>
             <Box
@@ -108,11 +116,16 @@ function CandidateDetailSkeleton() {
                 sx={{ borderRadius: 2 }}
               />
             </Box>
+
+            {/* Summary */}
             <Skeleton variant="text" width={130} height={16} sx={{ mb: 1 }} />
             <Skeleton variant="text" width="100%" height={18} />
             <Skeleton variant="text" width="85%" height={18} />
             <Skeleton variant="text" width="70%" height={18} sx={{ mb: 3 }} />
+
             <Divider sx={{ my: 3 }} />
+
+            {/* Strengths */}
             <Skeleton variant="text" width={110} height={16} sx={{ mb: 1 }} />
             {Array.from({ length: 4 }).map((_, i) => (
               <Skeleton
@@ -123,26 +136,26 @@ function CandidateDetailSkeleton() {
                 sx={{ mb: 1 }}
               />
             ))}
+
+            {/* Gaps */}
+            <Skeleton
+              variant="text"
+              width={100}
+              height={16}
+              sx={{ mt: 3, mb: 1 }}
+            />
+            {Array.from({ length: 3 }).map((_, i) => (
+              <Skeleton
+                key={i}
+                variant="text"
+                width={`${80 - i * 10}%`}
+                height={18}
+                sx={{ mb: 1 }}
+              />
+            ))}
           </Paper>
         </Grid>
       </Grid>
     </Box>
   );
-}
-
-export default function CandidateDetailPage() {
-  const params = useParams();
-  const id = params.id as string;
-  const { data: candidate, isLoading, error } = useCandidate(id);
-
-  if (isLoading) return <CandidateDetailSkeleton />;
-  if (error)
-    return (
-      <Typography color="error">
-        Error loading candidate: {error.message}
-      </Typography>
-    );
-  if (!candidate) return <Typography>Candidate not found</Typography>;
-
-  return <MemoizedCandidateView candidate={candidate} />;
 }

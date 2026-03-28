@@ -23,6 +23,7 @@ import {
   DialogActions,
   Button,
   Checkbox,
+  CircularProgress,
 } from "@mui/material";
 import { Eye, MoreHorizontal, Trash2, Mail } from "lucide-react";
 import { useState, useCallback, memo, useMemo } from "react";
@@ -471,7 +472,14 @@ function DashboardTable({ candidates }: { candidates: Candidate[] }) {
             disabled={isDeleting}
             sx={{ borderRadius: 2, fontWeight: 600, boxShadow: "none" }}
           >
-            {isDeleting ? "Deleting..." : "Delete"}
+            {isDeleting ? (
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                <CircularProgress size={16} color="inherit" />
+                Deleting...
+              </Box>
+            ) : (
+              "Delete"
+            )}
           </Button>
         </DialogActions>
       </Dialog>

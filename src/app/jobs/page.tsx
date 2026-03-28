@@ -31,6 +31,7 @@ import {
   Menu,
   ListItemIcon,
   ListItemText,
+  Skeleton,
 } from "@mui/material";
 import {
   Plus,
@@ -45,8 +46,8 @@ import {
   History,
   MoreVertical,
 } from "lucide-react";
+import dynamic from "next/dynamic";
 import AddJobForm from "@/components/Dashboard/AddJobForm";
-import JobHistoryDrawer from "@/components/Dashboard/JobHistoryDrawer";
 import { useAuth } from "@/components/Providers/AuthContext";
 import { useJobs, type Job } from "@/hooks/useJobs";
 import { useQueryClient } from "@tanstack/react-query";
@@ -54,14 +55,101 @@ import DOMPurify from "isomorphic-dompurify";
 import { useDeleteJob } from "@/hooks/useDeleteJob";
 import type { JobHistoryEntry } from "@/types/job";
 
+const JobHistoryDrawer = dynamic(
+  () => import("@/components/Dashboard/JobHistoryDrawer"),
+  { ssr: false },
+);
+
+function JobsTableSkeleton() {
+  return (
+    <Box>
+      <Box sx={{ display: "flex", gap: 2, mb: 3 }}>
+        <Skeleton
+          variant="rounded"
+          width="100%"
+          height={40}
+          sx={{ borderRadius: 1, flexGrow: 1 }}
+        />
+        <Skeleton
+          variant="rounded"
+          width={200}
+          height={40}
+          sx={{ borderRadius: 1 }}
+        />
+      </Box>
+      <TableContainer component={Paper} sx={{ borderRadius: 2, boxShadow: 1 }}>
+        <Table>
+          <TableHead sx={{ bgcolor: "#F9FAFB" }}>
+            <TableRow>
+              <TableCell sx={{ width: "15%" }}>
+                <Skeleton variant="text" width={70} />
+              </TableCell>
+              <TableCell sx={{ width: "10%" }}>
+                <Skeleton variant="text" width={50} />
+              </TableCell>
+              <TableCell sx={{ width: "10%" }}>
+                <Skeleton variant="text" width={50} />
+              </TableCell>
+              <TableCell sx={{ width: "55%" }}>
+                <Skeleton variant="text" width={80} />
+              </TableCell>
+              <TableCell sx={{ width: "10%" }} align="right">
+                <Skeleton variant="text" width={50} sx={{ ml: "auto" }} />
+              </TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {Array.from({ length: 5 }).map((_, i) => (
+              <TableRow key={i}>
+                <TableCell>
+                  <Skeleton variant="text" width="80%" />
+                </TableCell>
+                <TableCell>
+                  <Skeleton
+                    variant="rounded"
+                    width={60}
+                    height={24}
+                    sx={{ borderRadius: 2 }}
+                  />
+                </TableCell>
+                <TableCell>
+                  <Skeleton
+                    variant="rounded"
+                    width={70}
+                    height={24}
+                    sx={{ borderRadius: 2 }}
+                  />
+                </TableCell>
+                <TableCell>
+                  <Skeleton variant="text" width="95%" />
+                  <Skeleton variant="text" width="60%" />
+                </TableCell>
+                <TableCell align="right">
+                  <Skeleton
+                    variant="circular"
+                    width={28}
+                    height={28}
+                    sx={{ ml: "auto" }}
+                  />
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </TableContainer>
+    </Box>
+  );
+}
+
 export default function JobLibraryPage() {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [isViewDrawerOpen, setIsViewDrawerOpen] = useState(false);
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
 
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const queryClient = useQueryClient();
   const { data: jobs = [], isLoading, error: queryError } = useJobs();
+  const loading = authLoading || isLoading;
   const error = queryError?.message || null;
 
   const [searchTerm, setSearchTerm] = useState("");
@@ -205,10 +293,8 @@ export default function JobLibraryPage() {
             create the jobs table.
           </Typography>
         </Box>
-      ) : isLoading ? (
-        <Box sx={{ display: "flex", justifyContent: "center", p: 4 }}>
-          <CircularProgress />
-        </Box>
+      ) : loading ? (
+        <JobsTableSkeleton />
       ) : jobs.length === 0 ? (
         <Box
           sx={{
@@ -773,7 +859,14 @@ export default function JobLibraryPage() {
             disabled={isDeleting}
             sx={{ borderRadius: 2, fontWeight: 600, boxShadow: "none" }}
           >
-            {isDeleting ? "Deleting..." : "Delete"}
+            {isDeleting ? (
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                <CircularProgress size={16} color="inherit" />
+                Deleting...
+              </Box>
+            ) : (
+              "Delete"
+            )}
           </Button>
         </DialogActions>
       </Dialog>

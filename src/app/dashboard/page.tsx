@@ -15,6 +15,7 @@ import DashboardTable from "@/components/Dashboard/DashboardTable";
 import UploadResume from "@/components/Dashboard/UploadResume";
 
 import { useCandidates } from "@/hooks/useCandidates";
+import { useAuth } from "@/components/Providers/AuthContext";
 import type { Candidate } from "@/components/Dashboard/DashboardTable";
 
 const TabLabel = memo(function TabLabel({
@@ -46,7 +47,9 @@ function StatCardSkeleton() {
 }
 
 export default function DashboardPage() {
+  const { loading: authLoading } = useAuth();
   const { data, isLoading, error } = useCandidates();
+  const loading = authLoading || isLoading;
   const candidates: Candidate[] = useMemo(
     () => (Array.isArray(data) ? data : []),
     [data],
@@ -117,7 +120,7 @@ export default function DashboardPage() {
       </Box>
 
       <Grid container spacing={3} sx={{ mb: 1 }}>
-        {isLoading
+        {loading
           ? Array.from({ length: 4 }).map((_, i) => (
               <Grid size={{ xs: 12, sm: 6, md: 3 }} key={i}>
                 <StatCardSkeleton />
@@ -171,7 +174,7 @@ export default function DashboardPage() {
           />
         </Tabs>
       </Box>
-      {isLoading ? (
+      {loading ? (
         <Box sx={{ display: "flex", justifyContent: "center", p: 2 }}>
           <CircularProgress aria-label="Loading dashboard" role="status" />
         </Box>

@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
+import { useAuth } from "@/components/Providers/AuthContext";
 import type { JobHistoryEntry } from "@/types/job";
 
 export interface Job {
@@ -14,8 +15,12 @@ export interface Job {
 }
 
 export const useJobs = () => {
+  const { user } = useAuth();
+
   return useQuery<Job[]>({
     queryKey: ["jobs"],
+    enabled: !!user,
+    staleTime: 10 * 60 * 1000, // 10 minutes — jobs change infrequently
     queryFn: async () => {
       const supabase = createSupabaseBrowserClient();
       const { data, error } = await supabase
