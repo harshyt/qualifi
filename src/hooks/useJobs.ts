@@ -18,7 +18,7 @@ export const useJobs = () => {
   const { user } = useAuth();
 
   return useQuery<Job[]>({
-    queryKey: ["jobs"],
+    queryKey: ["jobs", user?.id],
     enabled: !!user,
     staleTime: 10 * 60 * 1000, // 10 minutes — jobs change infrequently
     queryFn: async () => {

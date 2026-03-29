@@ -24,6 +24,7 @@ function NavigationProgress() {
 
   return (
     <LinearProgress
+      aria-label="Loading"
       sx={{
         position: "absolute",
         top: 0,
