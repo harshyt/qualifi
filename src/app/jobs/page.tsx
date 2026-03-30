@@ -32,6 +32,8 @@ import {
   ListItemIcon,
   ListItemText,
   Skeleton,
+  useTheme,
+  useMediaQuery,
 } from "@mui/material";
 import {
   Plus,
@@ -145,6 +147,9 @@ export default function JobLibraryPage() {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [isViewDrawerOpen, setIsViewDrawerOpen] = useState(false);
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
+
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
   const { user, loading: authLoading } = useAuth();
   const queryClient = useQueryClient();
@@ -557,7 +562,15 @@ export default function JobLibraryPage() {
           setEditingJob(null);
         }}
         PaperProps={{
-          sx: { width: { xs: "100%", sm: 500 }, p: 3 },
+          sx: {
+            width: { xs: "100vw", sm: 500 },
+            height: "100vh",
+            display: "flex",
+            flexDirection: "column",
+            p: 0,
+            borderTopLeftRadius: { xs: 16, sm: 0 },
+            borderTopRightRadius: { xs: 16, sm: 0 },
+          },
         }}
       >
         <Box
@@ -565,9 +578,10 @@ export default function JobLibraryPage() {
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
-            mb: 3,
+            p: { xs: 2, sm: 3 },
             pb: 2,
             borderBottom: "1px solid #E0E0E0",
+            flexShrink: 0,
           }}
         >
           <Typography variant="h6" sx={{ fontWeight: 600 }}>
@@ -588,6 +602,7 @@ export default function JobLibraryPage() {
             sx={{
               textAlign: "center",
               p: 4,
+              m: { xs: 2, sm: 3 },
               mt: 4,
               bgcolor: "#ffebee",
               borderRadius: 2,
@@ -620,21 +635,35 @@ export default function JobLibraryPage() {
         open={isViewDrawerOpen}
         onClose={() => setIsViewDrawerOpen(false)}
         PaperProps={{
-          sx: { width: { xs: "100%", sm: 600 }, p: 0 },
+          sx: {
+            width: { xs: "100vw", sm: 600 },
+            height: "100vh",
+            display: "flex",
+            flexDirection: "column",
+            p: 0,
+            borderTopLeftRadius: { xs: 16, sm: 0 },
+            borderTopRightRadius: { xs: 16, sm: 0 },
+          },
         }}
       >
         {selectedJob && (
           <Box
-            sx={{ display: "flex", flexDirection: "column", height: "100%" }}
+            sx={{
+              display: "flex",
+              flexDirection: "column",
+              height: "100%",
+              overflow: "hidden",
+            }}
           >
             <Box
               sx={{
                 display: "flex",
                 justifyContent: "space-between",
                 alignItems: "flex-start",
-                p: 3,
+                p: { xs: 2, sm: 3 },
                 pb: 2,
                 borderBottom: "1px solid #E0E0E0",
+                flexShrink: 0,
               }}
             >
               <Box sx={{ flex: 1, mr: 2 }}>
@@ -680,7 +709,7 @@ export default function JobLibraryPage() {
               </Box>
             </Box>
 
-            <Box sx={{ p: 3, overflow: "auto", flexGrow: 1 }}>
+            <Box sx={{ p: { xs: 2, sm: 3 }, overflowY: "auto", flexGrow: 1 }}>
               <Box sx={{ mb: 3 }}>
                 <Box
                   sx={{

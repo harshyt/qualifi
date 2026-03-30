@@ -177,8 +177,11 @@ export default function JobHistoryDrawer({
       onClose={onClose}
       PaperProps={{
         sx: {
-          width: { xs: "100%", sm: 1200 },
+          width: { xs: "100vw", sm: 1200 },
+          height: "100vh",
           p: 0,
+          borderTopLeftRadius: { xs: 16, sm: 0 },
+          borderTopRightRadius: { xs: 16, sm: 0 },
           bgcolor: "#F9FAFB",
           display: "flex",
           flexDirection: "column",

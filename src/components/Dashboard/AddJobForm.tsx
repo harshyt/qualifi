@@ -115,90 +115,110 @@ export default function AddJobForm({
   };
 
   return (
-    <Box component="form" onSubmit={handleSubmit} sx={{ mt: 2 }}>
-      <TextField
-        fullWidth
-        label="Job Title"
-        variant="outlined"
-        value={title}
-        onChange={(e) => setTitle(e.target.value)}
-        required
-        sx={{ mb: 3 }}
-      />
-
-      <FormControl fullWidth sx={{ mb: 3 }}>
-        <InputLabel id="client-select-label">Client</InputLabel>
-        <Select
-          labelId="client-select-label"
-          id="client-select"
-          value={selectedClient}
-          label="Client"
-          onChange={(e) => setSelectedClient(e.target.value)}
-          MenuProps={MenuProps}
-        >
-          {CLIENTS.map((client) => (
-            <MenuItem key={client} value={client}>
-              {client}
-            </MenuItem>
-          ))}
-        </Select>
-      </FormControl>
-
-      <FormControl fullWidth sx={{ mb: 3 }}>
-        <InputLabel id="role-select-label">Job Role Profile</InputLabel>
-        <Select
-          labelId="role-select-label"
-          id="role-select"
-          value={roleKey}
-          label="Job Role Profile"
-          onChange={(e) => setRoleKey(e.target.value)}
-        >
-          {Object.entries(ROLE_CONFIGS).map(([key, config]) => (
-            <MenuItem key={key} value={key} sx={{ py: 1.5 }}>
-              <Box>
-                <Typography variant="body1" sx={{ fontWeight: 500 }}>
-                  {config.title}
-                </Typography>
-                <Typography
-                  variant="caption"
-                  color="text.secondary"
-                  sx={{ display: "block" }}
-                >
-                  {config.persona}
-                </Typography>
-              </Box>
-            </MenuItem>
-          ))}
-        </Select>
-      </FormControl>
-
-      <Typography variant="subtitle2" sx={{ mb: 1, color: "text.secondary" }}>
-        Job Description
-      </Typography>
-      <Box sx={{ mb: 3, ".ql-container": { minHeight: "200px" } }}>
-        <ReactQuill
-          theme="snow"
-          value={description}
-          onChange={setDescription}
-          style={{ height: "250px", marginBottom: "40px" }}
+    <Box
+      component="form"
+      onSubmit={handleSubmit}
+      sx={{
+        display: "flex",
+        flexDirection: "column",
+        height: "100%",
+        overflow: "hidden",
+      }}
+    >
+      <Box sx={{ flexGrow: 1, overflowY: "auto", p: { xs: 2, sm: 3 } }}>
+        <TextField
+          fullWidth
+          label="Job Title"
+          variant="outlined"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          required
+          sx={{ mb: 3 }}
         />
+
+        <FormControl fullWidth sx={{ mb: 3 }}>
+          <InputLabel id="client-select-label">Client</InputLabel>
+          <Select
+            labelId="client-select-label"
+            id="client-select"
+            value={selectedClient}
+            label="Client"
+            onChange={(e) => setSelectedClient(e.target.value)}
+            MenuProps={MenuProps}
+          >
+            {CLIENTS.map((client) => (
+              <MenuItem key={client} value={client}>
+                {client}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+
+        <FormControl fullWidth sx={{ mb: 3 }}>
+          <InputLabel id="role-select-label">Job Role Profile</InputLabel>
+          <Select
+            labelId="role-select-label"
+            id="role-select"
+            value={roleKey}
+            label="Job Role Profile"
+            onChange={(e) => setRoleKey(e.target.value)}
+          >
+            {Object.entries(ROLE_CONFIGS).map(([key, config]) => (
+              <MenuItem key={key} value={key} sx={{ py: 1.5 }}>
+                <Box>
+                  <Typography variant="body1" sx={{ fontWeight: 500 }}>
+                    {config.title}
+                  </Typography>
+                  <Typography
+                    variant="caption"
+                    color="text.secondary"
+                    sx={{ display: "block" }}
+                  >
+                    {config.persona}
+                  </Typography>
+                </Box>
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+
+        <Typography variant="subtitle2" sx={{ mb: 1, color: "text.secondary" }}>
+          Job Description
+        </Typography>
+        <Box sx={{ mb: 3, ".ql-container": { minHeight: "200px" } }}>
+          <ReactQuill
+            theme="snow"
+            value={description}
+            onChange={setDescription}
+            style={{ height: "250px", marginBottom: "40px" }}
+          />
+        </Box>
       </Box>
 
-      <Button
-        type="submit"
-        variant="contained"
-        disabled={isSubmitting}
+      <Box
         sx={{
-          bgcolor: "#2196F3",
-          color: "white",
-          "&:hover": { bgcolor: "#1976D2" },
-          px: 4,
-          py: 1,
-          mt: 2,
+          flexShrink: 0,
+          p: { xs: 2, sm: 3 },
+          borderTop: "1px solid #E0E0E0",
+          bgcolor: "white",
         }}
       >
-        {isSubmitting ? "Saving..." : initialData ? "Update Job" : "Save Job"}
-      </Button>
+        <Button
+          type="submit"
+          variant="contained"
+          disabled={isSubmitting}
+          sx={{
+            bgcolor: "#2196F3",
+            color: "white",
+            "&:hover": { bgcolor: "#1976D2" },
+            px: 4,
+            py: 1,
+            width: "100%",
+          }}
+        >
+          {isSubmitting ? "Saving..." : initialData ? "Update Job" : "Save Job"}
+        </Button>
+      </Box>
     </Box>
   );
 }
