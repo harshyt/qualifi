@@ -98,15 +98,22 @@ export default function DashboardPage() {
       <Box
         sx={{
           display: "flex",
+          flexDirection: { xs: "column", sm: "row" },
           justifyContent: "space-between",
-          alignItems: "center",
-          mb: 1,
+          alignItems: { xs: "flex-start", sm: "center" },
+          gap: { xs: 2, sm: 0 },
+          mb: 2,
         }}
       >
         <Box>
           <Typography
             variant="h4"
-            sx={{ fontWeight: 700, color: "#37474F", mb: 1 }}
+            sx={{
+              fontWeight: 700,
+              color: "#37474F",
+              mb: 1,
+              fontSize: { xs: "1.5rem", sm: "2.125rem" },
+            }}
           >
             Dashboard
           </Typography>
@@ -154,6 +161,9 @@ export default function DashboardPage() {
             _: React.SyntheticEvent,
             v: "ALL" | "PENDING" | "SHORTLIST" | "REJECT",
           ) => setActiveTab(v)}
+          variant="scrollable"
+          scrollButtons="auto"
+          allowScrollButtonsMobile
           sx={{ "& .MuiTab-root": { textTransform: "none", fontWeight: 600 } }}
         >
           <Tab

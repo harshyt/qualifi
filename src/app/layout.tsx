@@ -6,7 +6,7 @@ import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Analytics } from "@vercel/analytics/next";
 
 export const metadata: Metadata = {
-  title: "Qualifi - AI-powered resume screening tool",
+  title: "Qualifi",
   description: "AI-powered resume screening tool",
 };
 

@@ -62,7 +62,7 @@ function CandidateView({ candidate }: CandidateViewProps) {
   return (
     <Box
       sx={{
-        height: "calc(100vh - 100px)",
+        height: { xs: "auto", md: "calc(100vh - 100px)" },
         display: "flex",
         flexDirection: "column",
       }}
@@ -71,8 +71,10 @@ function CandidateView({ candidate }: CandidateViewProps) {
         sx={{
           mb: 3,
           display: "flex",
+          flexDirection: { xs: "column", sm: "row" },
           justifyContent: "space-between",
-          alignItems: "center",
+          alignItems: { xs: "flex-start", sm: "center" },
+          gap: 2,
         }}
       >
         <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
@@ -97,10 +99,18 @@ function CandidateView({ candidate }: CandidateViewProps) {
           </Box>
         </Box>
         {candidate.status === CandidateStatus.PENDING && (
-          <Box sx={{ display: "flex", gap: 2 }}>
+          <Box
+            sx={{
+              display: "flex",
+              gap: 2,
+              width: { xs: "100%", sm: "auto" },
+              mt: { xs: 1, sm: 0 },
+            }}
+          >
             <Button
               variant="outlined"
               color="error"
+              fullWidth
               startIcon={
                 isPending ? (
                   <CircularProgress size={16} color="inherit" />
@@ -118,6 +128,7 @@ function CandidateView({ candidate }: CandidateViewProps) {
             <Button
               variant="contained"
               color="success"
+              fullWidth
               startIcon={
                 isPending ? (
                   <CircularProgress size={16} color="inherit" />
@@ -137,13 +148,20 @@ function CandidateView({ candidate }: CandidateViewProps) {
         )}
       </Box>
 
-      <Grid container spacing={3} sx={{ flexGrow: 1, overflow: "hidden" }}>
-        <Grid size={{ xs: 12, md: 6 }} sx={{ height: "100%" }}>
+      <Grid
+        container
+        spacing={3}
+        sx={{ flexGrow: 1, overflow: { xs: "visible", md: "hidden" } }}
+      >
+        <Grid
+          size={{ xs: 12, md: 6 }}
+          sx={{ height: { xs: "auto", md: "100%" } }}
+        >
           <Paper
             sx={{
               height: "100%",
               p: 3,
-              overflow: "auto",
+              overflow: { xs: "visible", md: "auto" },
               bgcolor: "#FFFFFF",
               border: "1px solid #E0E0E0",
             }}
@@ -302,12 +320,15 @@ function CandidateView({ candidate }: CandidateViewProps) {
           </Paper>
         </Grid>
 
-        <Grid size={{ xs: 12, md: 6 }} sx={{ height: "100%" }}>
+        <Grid
+          size={{ xs: 12, md: 6 }}
+          sx={{ height: { xs: "auto", md: "100%" } }}
+        >
           <Paper
             sx={{
               height: "100%",
               p: 3,
-              overflow: "auto",
+              overflow: { xs: "visible", md: "auto" },
               bgcolor: "#FFFFFF",
               border: "1px solid #E0E0E0",
             }}
@@ -341,7 +362,11 @@ function CandidateView({ candidate }: CandidateViewProps) {
                       : candidate.score >= 50
                         ? "#E65100"
                         : "#C62828",
-                  fontWeight: 700,
+                  fontWeight: 800,
+                  fontSize: { xs: "0.9rem", sm: "0.8125rem" },
+                  py: { xs: 2.5, sm: 1 },
+                  px: { xs: 1, sm: 0 },
+                  borderRadius: { xs: 2, sm: 16 },
                 }}
               />
             </Box>

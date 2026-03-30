@@ -30,7 +30,12 @@ const menuItems = [
   },
 ];
 
-function Sidebar() {
+interface SidebarProps {
+  mobileOpen: boolean;
+  onClose: () => void;
+}
+
+function Sidebar({ mobileOpen, onClose }: SidebarProps) {
   const router = useRouter();
   const pathname = usePathname();
   const { user } = useAuth();
@@ -53,22 +58,8 @@ function Sidebar() {
   const userInitial = user?.email?.charAt(0).toUpperCase() ?? "U";
   const userEmail = user?.email ?? "";
 
-  return (
-    <Drawer
-      variant="permanent"
-      sx={{
-        width: drawerWidth,
-        flexShrink: 0,
-        [`& .MuiDrawer-paper`]: {
-          width: drawerWidth,
-          boxSizing: "border-box",
-          borderRight: "1px solid #E0E0E0",
-          backgroundColor: "#F9FAFB",
-          display: "flex",
-          flexDirection: "column",
-        },
-      }}
-    >
+  const drawerContent = (
+    <>
       <Box sx={{ p: 3 }}>
         <Typography
           variant="h6"
@@ -84,7 +75,10 @@ function Sidebar() {
             <ListItem key={item.text} disablePadding>
               <ListItemButton
                 selected={pathname === item.path}
-                onClick={() => router.push(item.path)}
+                onClick={() => {
+                  router.push(item.path);
+                  onClose(); // Close drawer on mobile after navigation
+                }}
                 sx={{
                   borderRadius: 2,
                   mx: 1,
@@ -175,7 +169,51 @@ function Sidebar() {
           </>
         )}
       </Box>
-    </Drawer>
+    </>
+  );
+
+  return (
+    <Box
+      component="nav"
+      sx={{ width: { md: drawerWidth }, flexShrink: { md: 0 } }}
+    >
+      {/* Mobile Drawer */}
+      <Drawer
+        variant="temporary"
+        open={mobileOpen}
+        onClose={onClose}
+        ModalProps={{
+          keepMounted: true, // Better open performance on mobile.
+        }}
+        sx={{
+          display: { xs: "block", md: "none" },
+          "& .MuiDrawer-paper": {
+            boxSizing: "border-box",
+            width: drawerWidth,
+            borderRight: "1px solid #E0E0E0",
+            backgroundColor: "#F9FAFB",
+          },
+        }}
+      >
+        {drawerContent}
+      </Drawer>
+      {/* Desktop Drawer */}
+      <Drawer
+        variant="permanent"
+        sx={{
+          display: { xs: "none", md: "block" },
+          "& .MuiDrawer-paper": {
+            boxSizing: "border-box",
+            width: drawerWidth,
+            borderRight: "1px solid #E0E0E0",
+            backgroundColor: "#F9FAFB",
+          },
+        }}
+        open
+      >
+        {drawerContent}
+      </Drawer>
+    </Box>
   );
 }
 
