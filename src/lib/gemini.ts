@@ -88,7 +88,7 @@ export async function analyzeResume(
   jobDescription: string,
   role: RoleKey = "generic",
 ): Promise<AnalysisResult> {
-  const model = genAI.getGenerativeModel({ model: "gemini-3-flash" });
+  const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
 
   // Sanitize the job description to minimize injection severity and limit token exhaustion.
   const safeJobDesc = jobDescription.slice(0, 15000).replace(/```/g, "");
