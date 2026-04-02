@@ -32,8 +32,6 @@ import {
   ListItemIcon,
   ListItemText,
   Skeleton,
-  useTheme,
-  useMediaQuery,
 } from "@mui/material";
 import {
   Plus,
@@ -147,9 +145,6 @@ export default function JobLibraryPage() {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [isViewDrawerOpen, setIsViewDrawerOpen] = useState(false);
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
-
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
   const { user, loading: authLoading } = useAuth();
   const queryClient = useQueryClient();
@@ -564,7 +559,11 @@ export default function JobLibraryPage() {
         PaperProps={{
           sx: {
             width: { xs: "100vw", sm: 500 },
-            height: "100vh",
+            height: {
+              xs: "calc(var(--app-vh, 1vh) * 100)",
+              sm: "100%",
+              "@supports (height: 100dvh)": { xs: "100dvh" },
+            },
             display: "flex",
             flexDirection: "column",
             p: 0,
@@ -637,7 +636,11 @@ export default function JobLibraryPage() {
         PaperProps={{
           sx: {
             width: { xs: "100vw", sm: 600 },
-            height: "100vh",
+            height: {
+              xs: "calc(var(--app-vh, 1vh) * 100)",
+              sm: "100%",
+              "@supports (height: 100dvh)": { xs: "100dvh" },
+            },
             display: "flex",
             flexDirection: "column",
             p: 0,

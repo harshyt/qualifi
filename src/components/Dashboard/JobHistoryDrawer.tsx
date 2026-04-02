@@ -178,7 +178,11 @@ export default function JobHistoryDrawer({
       PaperProps={{
         sx: {
           width: { xs: "100vw", sm: 1200 },
-          height: "100vh",
+          height: {
+            xs: "calc(var(--app-vh, 1vh) * 100)",
+            sm: "100%",
+            "@supports (height: 100dvh)": { xs: "100dvh" },
+          },
           p: 0,
           borderTopLeftRadius: { xs: 16, sm: 0 },
           borderTopRightRadius: { xs: 16, sm: 0 },
