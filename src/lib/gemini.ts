@@ -1,11 +1,11 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { GoogleGenAI, ThinkingLevel } from "@google/genai";
 import mammoth from "mammoth";
 import { RoleKey, ROLE_CONFIGS } from "@/constants/roles";
 import { getServerEnv } from "@/lib/env";
 import { analysisResultSchema, type AnalysisResult } from "@/types/analysis";
 import { logger } from "@/lib/logger";
 
-const genAI = new GoogleGenerativeAI(getServerEnv().GEMINI_API_KEY);
+const ai = new GoogleGenAI({ apiKey: getServerEnv().GEMINI_API_KEY });
 
 function buildPrompt(
   role: RoleKey,
@@ -88,8 +88,6 @@ export async function analyzeResume(
   jobDescription: string,
   role: RoleKey = "generic",
 ): Promise<AnalysisResult> {
-  const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
-
   // Sanitize the job description to minimize injection severity and limit token exhaustion.
   const safeJobDesc = jobDescription.slice(0, 15000).replace(/```/g, "");
 
@@ -99,32 +97,40 @@ export async function analyzeResume(
       "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ||
     ext === "docx";
 
+  let contents: Parameters<typeof ai.models.generateContent>[0]["contents"];
+  if (isDocx) {
+    const { value: extractedText } = await mammoth.extractRawText({
+      buffer: fileBuffer,
+    });
+    if (!extractedText.trim()) {
+      throw new Error(
+        "Could not extract text from the uploaded document. The file may be corrupted or image-based.",
+      );
+    }
+    const safeResumeText = extractedText.slice(0, 15000).replace(/```/g, "");
+    const prompt = buildPrompt(role, safeJobDesc, true);
+    contents = [prompt, `RESUME TEXT:\n${safeResumeText}`];
+  } else {
+    const prompt = buildPrompt(role, safeJobDesc, false);
+    const base64Data = fileBuffer.toString("base64");
+    contents = [
+      { inlineData: { data: base64Data, mimeType: "application/pdf" } },
+      prompt,
+    ];
+  }
+
   let response;
   const t0 = Date.now();
   try {
-    if (isDocx) {
-      const { value: extractedText } = await mammoth.extractRawText({
-        buffer: fileBuffer,
-      });
-      if (!extractedText.trim()) {
-        throw new Error(
-          "Could not extract text from the uploaded document. The file may be corrupted or image-based.",
-        );
-      }
-      const safeResumeText = extractedText.slice(0, 15000).replace(/```/g, "");
-      const prompt = buildPrompt(role, safeJobDesc, true);
-      response = await model.generateContent([
-        prompt,
-        `RESUME TEXT:\n${safeResumeText}`,
-      ]);
-    } else {
-      const prompt = buildPrompt(role, safeJobDesc, false);
-      const base64Data = fileBuffer.toString("base64");
-      response = await model.generateContent([
-        { inlineData: { data: base64Data, mimeType: "application/pdf" } },
-        prompt,
-      ]);
-    }
+    response = await ai.models.generateContent({
+      model: "gemini-3-flash-preview",
+      contents,
+      config: {
+        thinkingConfig: {
+          thinkingLevel: ThinkingLevel.LOW,
+        },
+      },
+    });
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     throw new Error(`Gemini API call failed: ${message}`);
@@ -134,7 +140,7 @@ export async function analyzeResume(
     durationMs: Date.now() - t0,
   });
 
-  const text = response.response.text();
+  const text = response.text ?? "";
   const cleanedText = text.replace(/```json\n?|\n?```/g, "").trim();
 
   let parsed: unknown;
