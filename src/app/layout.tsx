@@ -6,8 +6,11 @@ import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Analytics } from "@vercel/analytics/next";
 
 export const metadata: Metadata = {
-  title: "Qualifi",
+  title: "Qualifi - AI Resume Screening Tool",
   description: "AI-powered resume screening tool",
+  icons: {
+    icon: [],
+  },
 };
 
 export default function RootLayout({

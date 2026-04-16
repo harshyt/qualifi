@@ -125,20 +125,22 @@ export default function SelectJobModal({
     const arr = Array.from(incoming).filter(
       (f) => f.type === "application/pdf" || f.name.endsWith(".docx"),
     );
+    let skipped = 0;
     setFiles((prev) => {
       const existing = new Set(prev.map((f) => f.name + f.size));
       const deduped = arr.filter((f) => !existing.has(f.name + f.size));
       const merged = [...prev, ...deduped];
       if (merged.length > MAX_FILES) {
-        const allowed = merged.slice(0, MAX_FILES);
-        const skipped = merged.length - MAX_FILES;
-        toast.error(
-          `Only ${MAX_FILES} files allowed. ${skipped} file${skipped > 1 ? "s" : ""} skipped.`,
-        );
-        return allowed;
+        skipped = merged.length - MAX_FILES;
+        return merged.slice(0, MAX_FILES);
       }
       return merged;
     });
+    if (skipped > 0) {
+      toast.error(
+        `Only ${MAX_FILES} files allowed. ${skipped} file${skipped > 1 ? "s" : ""} skipped.`,
+      );
+    }
   }, []);
 
   const handleFileInput = useCallback(

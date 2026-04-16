@@ -12,6 +12,7 @@ import {
   Avatar,
   Tooltip,
 } from "@mui/material";
+import Image from "next/image";
 import { Inbox, Briefcase, LogOut } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -61,13 +62,25 @@ function Sidebar({ mobileOpen, onClose }: SidebarProps) {
   const drawerContent = (
     <>
       <Box sx={{ p: 3 }}>
-        <Typography
-          variant="h6"
-          component="div"
-          sx={{ fontWeight: 700, color: "#2196F3" }}
-        >
-          Qualifi
-        </Typography>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+          <Image
+            src="/logos/gemini_logo.png"
+            alt="Qualifi Logo"
+            width={32}
+            height={32}
+            style={{ flexShrink: 0 }}
+          />
+          <Typography
+            variant="h6"
+            component="div"
+            sx={{
+              fontWeight: "bolder",
+              color: "#2196F3",
+            }}
+          >
+            Qualifi
+          </Typography>
+        </Box>
       </Box>
       <Box sx={{ overflow: "auto", flexGrow: 1 }}>
         <List>

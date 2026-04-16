@@ -1,5 +1,6 @@
 "use client";
 import { useState, useTransition } from "react";
+import Image from "next/image";
 import {
   Box,
   Button,
@@ -57,18 +58,33 @@ export default function LoginPage() {
     >
       <Card sx={{ maxWidth: 400, width: "100%", p: 2 }}>
         <CardContent>
-          <Typography
-            variant="h5"
-            component="div"
+          <Box
             sx={{
-              mb: 1,
-              fontWeight: 700,
-              color: "#2196F3",
-              textAlign: "center",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 1,
+              mb: 2,
             }}
           >
-            Qualifi
-          </Typography>
+            <Image
+              src="/logos/gemini_logo.png"
+              alt="Gemini Logo"
+              width={32}
+              height={32}
+              priority
+            />
+            <Typography
+              variant="h5"
+              component="div"
+              sx={{
+                fontWeight: 700,
+                color: "#2196F3",
+              }}
+            >
+              Qualifi
+            </Typography>
+          </Box>
           <Typography
             variant="body2"
             color="text.secondary"
