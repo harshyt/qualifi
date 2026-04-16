@@ -8,6 +8,7 @@ import {
   Divider,
   Grid,
   CircularProgress,
+  Avatar,
 } from "@mui/material";
 import { ArrowLeft, Check, X } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -33,6 +34,7 @@ interface CandidateViewProps {
     id: string;
     name: string;
     role: string;
+    email: string;
     created_at: string;
     analysis: {
       skills: string[];
@@ -53,20 +55,139 @@ interface CandidateViewProps {
   };
 }
 
+// Deterministic avatar color from name — same palette as DashboardTable
+const AVATAR_COLORS = [
+  { bg: "#EDE9FE", color: "#7C3AED" },
+  { bg: "#FCE7F3", color: "#BE185D" },
+  { bg: "#DBEAFE", color: "#1D4ED8" },
+  { bg: "#D1FAE5", color: "#065F46" },
+  { bg: "#FEF3C7", color: "#92400E" },
+  { bg: "#FFE4E6", color: "#BE123C" },
+  { bg: "#E0F2FE", color: "#0369A1" },
+  { bg: "#F3E8FF", color: "#7E22CE" },
+  { bg: "#DCFCE7", color: "#166534" },
+  { bg: "#FEF9C3", color: "#854D0E" },
+];
+
+function getAvatarColor(name: string) {
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) {
+    hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length];
+}
+
+function getInitials(name: string) {
+  const parts = name.trim().split(/\s+/);
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+}
+
+function getStatusStyle(status: CandidateStatus) {
+  switch (status) {
+    case CandidateStatus.SHORTLIST:
+      return { bg: "#F0FDF4", color: "#4CAF50", label: "Shortlisted" };
+    case CandidateStatus.REJECT:
+      return { bg: "#FFF1F2", color: "#F44336", label: "Rejected" };
+    default:
+      return { bg: "#FFF7ED", color: "#FF9800", label: "Pending Review" };
+  }
+}
+
+const ScoreWidget = memo(function ScoreWidget({ score }: { score: number }) {
+  let color = "#4CAF50";
+  if (score < 50) color = "#F44336";
+  else if (score < 75) color = "#FF9800";
+
+  const radius = 36;
+  const circumference = 2 * Math.PI * radius;
+  const offset = circumference - (circumference * score) / 100;
+
+  return (
+    <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+      <Box sx={{ position: "relative", width: 88, height: 88, flexShrink: 0 }}>
+        <svg width="88" height="88" style={{ transform: "rotate(-90deg)" }}>
+          <circle cx="44" cy="44" r={radius} fill="none" stroke="#E2E8F0" strokeWidth="5" />
+          <circle
+            cx="44"
+            cy="44"
+            r={radius}
+            fill="none"
+            stroke={color}
+            strokeWidth="5"
+            strokeDasharray={circumference}
+            strokeDashoffset={offset}
+            strokeLinecap="round"
+          />
+        </svg>
+        <Box
+          sx={{
+            position: "absolute",
+            inset: 0,
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <Typography sx={{ fontWeight: 800, fontSize: 22, color, lineHeight: 1 }}>
+            {score}
+          </Typography>
+          <Typography variant="caption" color="text.secondary" sx={{ fontSize: 10 }}>
+            /100
+          </Typography>
+        </Box>
+      </Box>
+      <Box>
+        <Typography variant="body2" fontWeight={600} color="text.primary">
+          AI Match Score
+        </Typography>
+        <Typography variant="caption" color="text.secondary">
+          {score >= 75 ? "Strong fit" : score >= 50 ? "Moderate fit" : "Low fit"}
+        </Typography>
+      </Box>
+    </Box>
+  );
+});
+
+const SectionLabel = memo(function SectionLabel({
+  children,
+  color = "#64748B",
+}: {
+  children: React.ReactNode;
+  color?: string;
+}) {
+  return (
+    <Typography
+      variant="caption"
+      sx={{
+        display: "block",
+        fontWeight: 700,
+        color,
+        textTransform: "uppercase",
+        letterSpacing: "0.06em",
+        fontSize: 11,
+        mb: 1.5,
+      }}
+    >
+      {children}
+    </Typography>
+  );
+});
+
 function CandidateView({ candidate }: CandidateViewProps) {
   const router = useRouter();
   const { mutate, isPending } = useUpdateCandidateStatus();
 
   if (!candidate) return <Typography>Candidate not found</Typography>;
 
+  const { bg: avatarBg, color: avatarColor } = getAvatarColor(candidate.name);
+  const statusStyle = getStatusStyle(candidate.status);
+
   return (
-    <Box
-      sx={{
-        height: { xs: "auto", md: "calc(100vh - 100px)" },
-        display: "flex",
-        flexDirection: "column",
-      }}
-    >
+    <Box sx={{ height: { xs: "auto", md: "calc(100vh - 100px)" }, display: "flex", flexDirection: "column" }}>
+
+      {/* ── Header ── */}
       <Box
         sx={{
           mb: 3,
@@ -77,51 +198,67 @@ function CandidateView({ candidate }: CandidateViewProps) {
           gap: 2,
         }}
       >
+        {/* Left: back + avatar + info */}
         <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
           <Button
             startIcon={<ArrowLeft size={18} />}
             onClick={() => router.back()}
-            sx={{ color: "#78909C" }}
+            sx={{ color: "text.secondary", minWidth: "auto" }}
           >
             Back
           </Button>
+
+          <Avatar
+            sx={{
+              width: 52,
+              height: 52,
+              bgcolor: avatarBg,
+              color: avatarColor,
+              fontWeight: 700,
+              fontSize: 18,
+            }}
+          >
+            {getInitials(candidate.name)}
+          </Avatar>
+
           <Box>
-            <Typography variant="h5" sx={{ fontWeight: 700, color: "#37474F" }}>
-              {candidate.name}
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              Applied for {candidate.role}
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1, flexWrap: "wrap" }}>
+              <Typography variant="h6" sx={{ fontWeight: 700, color: "text.primary", lineHeight: 1.2 }}>
+                {candidate.name}
+              </Typography>
+              <Chip
+                label={statusStyle.label}
+                size="small"
+                sx={{
+                  bgcolor: statusStyle.bg,
+                  color: statusStyle.color,
+                  fontWeight: 700,
+                  fontSize: 11,
+                  border: `1px solid ${statusStyle.color}30`,
+                }}
+              />
+            </Box>
+            <Typography variant="body2" color="text.secondary" sx={{ mt: 0.25 }}>
+              {candidate.role}
               {candidate.analysis?.experienceLevel &&
-                ` • ${candidate.analysis.experienceLevel} Level`}
-              {" • "}
-              {new Date(candidate.created_at).toLocaleDateString()}
+                ` · ${candidate.analysis.experienceLevel}`}
+              {candidate.email && ` · ${candidate.email}`}
             </Typography>
           </Box>
         </Box>
+
+        {/* Right: actions */}
         {candidate.status === CandidateStatus.PENDING && (
-          <Box
-            sx={{
-              display: "flex",
-              gap: 2,
-              width: { xs: "100%", sm: "auto" },
-              mt: { xs: 1, sm: 0 },
-            }}
-          >
+          <Box sx={{ display: "flex", gap: 1.5, width: { xs: "100%", sm: "auto" } }}>
             <Button
               variant="outlined"
               color="error"
               fullWidth
               startIcon={
-                isPending ? (
-                  <CircularProgress size={16} color="inherit" />
-                ) : (
-                  <X size={18} />
-                )
+                isPending ? <CircularProgress size={16} color="inherit" /> : <X size={16} />
               }
               disabled={isPending}
-              onClick={() =>
-                mutate({ id: candidate.id, status: CandidateStatus.REJECT })
-              }
+              onClick={() => mutate({ id: candidate.id, status: CandidateStatus.REJECT })}
             >
               {isPending ? "Updating..." : "Reject"}
             </Button>
@@ -130,17 +267,10 @@ function CandidateView({ candidate }: CandidateViewProps) {
               color="success"
               fullWidth
               startIcon={
-                isPending ? (
-                  <CircularProgress size={16} color="inherit" />
-                ) : (
-                  <Check size={18} />
-                )
+                isPending ? <CircularProgress size={16} color="inherit" /> : <Check size={16} />
               }
-              sx={{ color: "white" }}
               disabled={isPending}
-              onClick={() =>
-                mutate({ id: candidate.id, status: CandidateStatus.SHORTLIST })
-              }
+              onClick={() => mutate({ id: candidate.id, status: CandidateStatus.SHORTLIST })}
             >
               {isPending ? "Updating..." : "Shortlist"}
             </Button>
@@ -148,396 +278,270 @@ function CandidateView({ candidate }: CandidateViewProps) {
         )}
       </Box>
 
+      {/* ── Two-column body ── */}
       <Grid
         container
-        spacing={3}
+        spacing={2.5}
         sx={{ flexGrow: 1, overflow: { xs: "visible", md: "hidden" } }}
       >
-        <Grid
-          size={{ xs: 12, md: 6 }}
-          sx={{ height: { xs: "auto", md: "100%" } }}
-        >
+        {/* Left column: resume details */}
+        <Grid size={{ xs: 12, md: 6 }} sx={{ height: { xs: "auto", md: "100%" } }}>
           <Paper
             sx={{
               height: "100%",
               p: 3,
               overflow: { xs: "visible", md: "auto" },
-              bgcolor: "#FFFFFF",
-              border: "1px solid #E0E0E0",
             }}
           >
-            <Typography
-              variant="h6"
-              sx={{ mb: 2, fontWeight: 600, color: "#37474F" }}
-            >
-              Resume Details
-            </Typography>
+            {/* Executive Summary */}
+            {candidate.analysis?.summary && (
+              <Box sx={{ mb: 3 }}>
+                <SectionLabel>Executive Summary</SectionLabel>
+                <Typography variant="body2" color="text.primary" sx={{ lineHeight: 1.7 }}>
+                  {candidate.analysis.summary}
+                </Typography>
+              </Box>
+            )}
 
-            {candidate.analysis?.technologiesUsed &&
-              candidate.analysis.technologiesUsed.length > 0 && (
+            <Divider sx={{ my: 2.5 }} />
+
+            {/* Work Experience */}
+            {candidate.analysis?.workExperience &&
+              candidate.analysis.workExperience.length > 0 && (
                 <Box sx={{ mb: 3 }}>
-                  <Typography
-                    variant="subtitle2"
-                    sx={{ mb: 1, color: "#78909C" }}
-                  >
-                    TECHNOLOGIES
-                  </Typography>
-                  {candidate.analysis.technologiesUsed.map((techGroup, i) => (
-                    <Box key={i} sx={{ mb: 1.5 }}>
-                      <Typography
-                        variant="caption"
-                        sx={{
-                          color: "#546E7A",
-                          display: "block",
-                          mb: 0.5,
-                          fontWeight: 600,
-                        }}
-                      >
-                        {techGroup.category}
+                  <SectionLabel>Work Experience</SectionLabel>
+                  {candidate.analysis.workExperience.map((exp, i) => (
+                    <Box
+                      key={i}
+                      sx={{
+                        mb: 2.5,
+                        pl: 2,
+                        borderLeft: "2px solid #E2E8F0",
+                        "&:last-child": { mb: 0 },
+                      }}
+                    >
+                      <Typography variant="subtitle2" sx={{ fontWeight: 700, color: "text.primary" }}>
+                        {exp.role}
                       </Typography>
-                      <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
-                        {techGroup.technologies.map((tech, j) => (
-                          <Chip
-                            key={j}
-                            label={tech}
-                            size="small"
-                            sx={{
-                              bgcolor: "#E3F2FD",
-                              color: "#1565C0",
-                              fontWeight: 500,
-                            }}
-                          />
-                        ))}
-                      </Box>
+                      <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
+                        {exp.company} · {exp.duration}
+                      </Typography>
+                      {exp.description && (
+                        <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.6 }}>
+                          {exp.description}
+                        </Typography>
+                      )}
                     </Box>
                   ))}
                 </Box>
               )}
 
-            {candidate.analysis?.skills && (
-              <Box sx={{ mb: 3 }}>
-                <Typography
-                  variant="subtitle2"
-                  sx={{ mb: 1, color: "#78909C" }}
-                >
-                  SKILLS
-                </Typography>
-                <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
-                  {candidate.analysis.skills.map((skill: string, i: number) => (
-                    <Chip
-                      key={i}
-                      label={skill}
-                      size="small"
-                      sx={{ bgcolor: "#ECEFF1", color: "#455A64" }}
-                    />
-                  ))}
-                </Box>
+            {/* Education */}
+            {candidate.analysis?.education &&
+              candidate.analysis.education.length > 0 && (
+                <>
+                  <Divider sx={{ my: 2.5 }} />
+                  <Box sx={{ mb: 3 }}>
+                    <SectionLabel>Education</SectionLabel>
+                    {candidate.analysis.education.map((edu, i) => (
+                      <Box key={i} sx={{ mb: 1.5, "&:last-child": { mb: 0 } }}>
+                        <Typography variant="subtitle2" sx={{ fontWeight: 700, color: "text.primary" }}>
+                          {edu.degree}
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          {edu.institution} · {edu.year}
+                        </Typography>
+                      </Box>
+                    ))}
+                  </Box>
+                </>
+              )}
+
+            {/* Raw Resume Text */}
+            <Divider sx={{ my: 2.5 }} />
+            <Box>
+              <SectionLabel>Raw Text Extract</SectionLabel>
+              <Box
+                sx={{
+                  whiteSpace: "pre-wrap",
+                  fontFamily: "monospace",
+                  fontSize: 11,
+                  color: "text.secondary",
+                  bgcolor: "#F8FAFC",
+                  p: 2,
+                  borderRadius: 1.5,
+                  border: "1px solid #E2E8F0",
+                  maxHeight: 200,
+                  overflow: "auto",
+                }}
+              >
+                {candidate.resumeText || "No resume text available."}
               </Box>
-            )}
-
-            {candidate.analysis?.workExperience && (
-              <Box sx={{ mb: 3 }}>
-                <Typography
-                  variant="subtitle2"
-                  sx={{ mb: 1, color: "#78909C" }}
-                >
-                  EXPERIENCE
-                </Typography>
-                {candidate.analysis.workExperience.map(
-                  (exp: WorkExperience, i: number) => (
-                    <Box
-                      key={i}
-                      sx={{ mb: 2, pl: 2, borderLeft: "2px solid #ECEFF1" }}
-                    >
-                      <Typography
-                        variant="subtitle1"
-                        sx={{ fontWeight: 600, color: "#37474F" }}
-                      >
-                        {exp.role}
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        {exp.company} • {exp.duration}
-                      </Typography>
-                      <Typography
-                        variant="body2"
-                        sx={{ mt: 0.5, color: "#546E7A" }}
-                      >
-                        {exp.description}
-                      </Typography>
-                    </Box>
-                  ),
-                )}
-              </Box>
-            )}
-
-            {candidate.analysis?.education && (
-              <Box sx={{ mb: 3 }}>
-                <Typography
-                  variant="subtitle2"
-                  sx={{ mb: 1, color: "#78909C" }}
-                >
-                  EDUCATION
-                </Typography>
-                {candidate.analysis.education.map(
-                  (edu: Education, i: number) => (
-                    <Box key={i} sx={{ mb: 1 }}>
-                      <Typography
-                        variant="subtitle1"
-                        sx={{ fontWeight: 600, color: "#37474F" }}
-                      >
-                        {edu.degree}
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        {edu.institution} • {edu.year}
-                      </Typography>
-                    </Box>
-                  ),
-                )}
-              </Box>
-            )}
-
-            <Divider sx={{ my: 2 }} />
-
-            <Typography
-              variant="caption"
-              sx={{ color: "#90A4AE", display: "block", mb: 1 }}
-            >
-              RAW TEXT EXTRACT
-            </Typography>
-            <Box
-              sx={{
-                whiteSpace: "pre-wrap",
-                fontFamily: "monospace",
-                fontSize: 12,
-                color: "#78909C",
-                bgcolor: "#F5F5F5",
-                p: 2,
-                borderRadius: 1,
-              }}
-            >
-              {candidate.resumeText || "No resume text available."}
             </Box>
           </Paper>
         </Grid>
 
-        <Grid
-          size={{ xs: 12, md: 6 }}
-          sx={{ height: { xs: "auto", md: "100%" } }}
-        >
+        {/* Right column: AI analysis */}
+        <Grid size={{ xs: 12, md: 6 }} sx={{ height: { xs: "auto", md: "100%" } }}>
           <Paper
             sx={{
               height: "100%",
               p: 3,
               overflow: { xs: "visible", md: "auto" },
-              bgcolor: "#FFFFFF",
-              border: "1px solid #E0E0E0",
             }}
           >
-            <Box
-              sx={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                mb: 3,
-              }}
-            >
-              <Typography
-                variant="h6"
-                sx={{ fontWeight: 600, color: "#37474F" }}
-              >
-                AI Analysis
-              </Typography>
-              <Chip
-                label={`${candidate.score}/100 Match`}
-                sx={{
-                  bgcolor:
-                    candidate.score >= 75
-                      ? "#E8F5E9"
-                      : candidate.score >= 50
-                        ? "#FFF3E0"
-                        : "#FFEBEE",
-                  color:
-                    candidate.score >= 75
-                      ? "#2E7D32"
-                      : candidate.score >= 50
-                        ? "#E65100"
-                        : "#C62828",
-                  fontWeight: 800,
-                  fontSize: { xs: "0.9rem", sm: "0.8125rem" },
-                  py: { xs: 2.5, sm: 1 },
-                  px: { xs: 1, sm: 0 },
-                  borderRadius: { xs: 2, sm: 16 },
-                }}
-              />
+            {/* Score widget */}
+            <Box sx={{ mb: 3 }}>
+              <ScoreWidget score={candidate.score} />
             </Box>
 
-            <Box sx={{ mb: 4 }}>
-              <Typography
-                variant="subtitle2"
-                sx={{
-                  fontWeight: 600,
-                  color: "#78909C",
-                  mb: 1,
-                  textTransform: "uppercase",
-                  fontSize: 12,
-                }}
-              >
-                Executive Summary
-              </Typography>
-              <Typography
-                variant="body1"
-                sx={{ color: "#37474F", lineHeight: 1.6 }}
-              >
-                {candidate.analysis?.summary || "Pending analysis..."}
-              </Typography>
+            <Divider sx={{ mb: 3 }} />
+
+            {/* Key Strengths */}
+            <Box sx={{ mb: 3 }}>
+              <SectionLabel color="#4CAF50">Strengths</SectionLabel>
+              <Box component="ul" sx={{ m: 0, pl: 2.5 }}>
+                {candidate.analysis?.strengths && candidate.analysis.strengths.length > 0
+                  ? candidate.analysis.strengths.map((s, i) => (
+                      <Box component="li" key={i} sx={{ mb: 0.75 }}>
+                        <Typography variant="body2" color="text.primary">
+                          {s}
+                        </Typography>
+                      </Box>
+                    ))
+                  : <Box component="li"><Typography variant="body2" color="text.secondary">None identified</Typography></Box>}
+              </Box>
             </Box>
 
-            <Divider sx={{ my: 3 }} />
-
-            <Box sx={{ mb: 4 }}>
-              <Typography
-                variant="subtitle2"
-                sx={{
-                  fontWeight: 600,
-                  color: "#2E7D32",
-                  mb: 1,
-                  textTransform: "uppercase",
-                  fontSize: 12,
-                }}
-              >
-                Key Strengths
-              </Typography>
-              <ul style={{ paddingLeft: 20, margin: 0 }}>
-                {candidate.analysis?.strengths.map((str: string, i: number) => (
-                  <li key={i} style={{ color: "#37474F", marginBottom: 8 }}>
-                    {str}
-                  </li>
-                )) || <li style={{ color: "#78909C" }}>None identified</li>}
-              </ul>
-            </Box>
-
-            {candidate.analysis?.redFlags &&
-              candidate.analysis.redFlags.length > 0 && (
-                <Box sx={{ mb: 4 }}>
-                  <Typography
-                    variant="subtitle2"
-                    sx={{
-                      fontWeight: 600,
-                      color: "#D32F2F",
-                      mb: 1,
-                      textTransform: "uppercase",
-                      fontSize: 12,
-                    }}
-                  >
-                    Red Flags
-                  </Typography>
-                  <ul style={{ paddingLeft: 20, margin: 0 }}>
-                    {candidate.analysis.redFlags.map(
-                      (flag: string, i: number) => (
-                        <Box
-                          component="li"
-                          key={i}
-                          sx={{ mb: 1, color: "#B71C1C" }}
-                        >
-                          <Typography
-                            variant="body2"
-                            sx={{ color: "#B71C1C", fontWeight: 500 }}
-                          >
-                            {flag}
-                          </Typography>
-                        </Box>
-                      ),
-                    )}
-                  </ul>
-                </Box>
-              )}
-
-            <Box sx={{ mb: 4 }}>
-              <Typography
-                variant="subtitle2"
-                sx={{
-                  fontWeight: 600,
-                  color: "#C62828",
-                  mb: 1,
-                  textTransform: "uppercase",
-                  fontSize: 12,
-                }}
-              >
-                Possible Gaps
-              </Typography>
-              <ul style={{ paddingLeft: 20, margin: 0 }}>
-                {candidate.analysis?.gaps &&
-                candidate.analysis.gaps.length > 0 ? (
-                  candidate.analysis.gaps.map((gap: string, i: number) => (
-                    <Box key={i} sx={{ display: "flex", gap: 1.5, mb: 1 }}>
-                      <Typography variant="body2">• {gap}</Typography>
+            {/* Possible Gaps */}
+            {candidate.analysis?.gaps && candidate.analysis.gaps.length > 0 && (
+              <Box sx={{ mb: 3 }}>
+                <SectionLabel color="#FF9800">Skill Gaps</SectionLabel>
+                <Box component="ul" sx={{ m: 0, pl: 2.5 }}>
+                  {candidate.analysis.gaps.map((gap, i) => (
+                    <Box component="li" key={i} sx={{ mb: 0.75 }}>
+                      <Typography variant="body2" color="text.primary">
+                        {gap}
+                      </Typography>
                     </Box>
-                  ))
-                ) : (
-                  <li style={{ color: "#78909C" }}>None identified</li>
-                )}
-              </ul>
-            </Box>
+                  ))}
+                </Box>
+              </Box>
+            )}
 
+            {/* Red Flags */}
+            {candidate.analysis?.redFlags && candidate.analysis.redFlags.length > 0 && (
+              <Box sx={{ mb: 3 }}>
+                <SectionLabel color="#F44336">Red Flags</SectionLabel>
+                <Box component="ul" sx={{ m: 0, pl: 2.5 }}>
+                  {candidate.analysis.redFlags.map((flag, i) => (
+                    <Box component="li" key={i} sx={{ mb: 0.75 }}>
+                      <Typography variant="body2" sx={{ color: "#F44336" }}>
+                        {flag}
+                      </Typography>
+                    </Box>
+                  ))}
+                </Box>
+              </Box>
+            )}
+
+            {/* Interview Focus */}
             {candidate.analysis?.interviewFocusAreas &&
               candidate.analysis.interviewFocusAreas.length > 0 && (
-                <Box sx={{ mb: 4 }}>
-                  <Typography
-                    variant="subtitle2"
-                    sx={{
-                      fontWeight: 600,
-                      color: "#1976D2",
-                      mb: 1,
-                      textTransform: "uppercase",
-                      fontSize: 12,
-                    }}
-                  >
-                    Interview Focus Areas
-                  </Typography>
-                  <ul style={{ paddingLeft: 20, margin: 0 }}>
-                    {candidate.analysis.interviewFocusAreas.map(
-                      (area: string, i: number) => (
-                        <li
-                          key={i}
-                          style={{ color: "#37474F", marginBottom: 8 }}
-                        >
+                <Box sx={{ mb: 3 }}>
+                  <SectionLabel color="#2196F3">Interview Focus</SectionLabel>
+                  <Box component="ul" sx={{ m: 0, pl: 2.5 }}>
+                    {candidate.analysis.interviewFocusAreas.map((area, i) => (
+                      <Box component="li" key={i} sx={{ mb: 0.75 }}>
+                        <Typography variant="body2" color="text.primary">
                           {area}
-                        </li>
-                      ),
-                    )}
-                  </ul>
+                        </Typography>
+                      </Box>
+                    ))}
+                  </Box>
                 </Box>
               )}
 
+            {/* Culture Fit */}
             {candidate.analysis?.cultureFitIndicators &&
               candidate.analysis.cultureFitIndicators.length > 0 && (
-                <Box sx={{ mb: 4 }}>
-                  <Typography
-                    variant="subtitle2"
-                    sx={{
-                      fontWeight: 600,
-                      color: "#F57C00",
-                      mb: 1,
-                      textTransform: "uppercase",
-                      fontSize: 12,
-                    }}
-                  >
-                    Culture Fit Indicators
-                  </Typography>
-                  <ul style={{ paddingLeft: 20, margin: 0 }}>
-                    {candidate.analysis.cultureFitIndicators.map(
-                      (indicator: string, i: number) => (
-                        <li
-                          key={i}
-                          style={{ color: "#37474F", marginBottom: 8 }}
-                        >
+                <Box sx={{ mb: 3 }}>
+                  <SectionLabel color="#FF9800">Culture Fit</SectionLabel>
+                  <Box component="ul" sx={{ m: 0, pl: 2.5 }}>
+                    {candidate.analysis.cultureFitIndicators.map((indicator, i) => (
+                      <Box component="li" key={i} sx={{ mb: 0.75 }}>
+                        <Typography variant="body2" color="text.primary">
                           {indicator}
-                        </li>
-                      ),
-                    )}
-                  </ul>
+                        </Typography>
+                      </Box>
+                    ))}
+                  </Box>
                 </Box>
               )}
+
+            {/* Tech Stack — moved from left column */}
+            {candidate.analysis?.technologiesUsed &&
+              candidate.analysis.technologiesUsed.length > 0 && (
+                <>
+                  <Divider sx={{ mb: 3 }} />
+                  <Box>
+                    <SectionLabel>Tech Stack</SectionLabel>
+                    {candidate.analysis.technologiesUsed.map((group, i) => (
+                      <Box key={i} sx={{ mb: 2 }}>
+                        <Typography
+                          variant="caption"
+                          sx={{
+                            fontWeight: 700,
+                            color: "text.secondary",
+                            textTransform: "uppercase",
+                            fontSize: 10,
+                            letterSpacing: "0.05em",
+                            display: "block",
+                            mb: 0.75,
+                          }}
+                        >
+                          {group.category}
+                        </Typography>
+                        <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.75 }}>
+                          {group.technologies.map((tech, j) => (
+                            <Chip
+                              key={j}
+                              label={tech}
+                              size="small"
+                              sx={{
+                                bgcolor: "#EFF6FF",
+                                color: "#1D4ED8",
+                                fontWeight: 500,
+                                fontSize: 12,
+                              }}
+                            />
+                          ))}
+                        </Box>
+                      </Box>
+                    ))}
+                  </Box>
+                </>
+              )}
+
+            {/* Skills (general) */}
+            {candidate.analysis?.skills && candidate.analysis.skills.length > 0 && (
+              <>
+                <Divider sx={{ my: 2.5 }} />
+                <Box>
+                  <SectionLabel>Skills</SectionLabel>
+                  <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.75 }}>
+                    {candidate.analysis.skills.map((skill, i) => (
+                      <Chip
+                        key={i}
+                        label={skill}
+                        size="small"
+                        sx={{ bgcolor: "#F1F5F9", color: "#475569", fontWeight: 500 }}
+                      />
+                    ))}
+                  </Box>
+                </Box>
+              </>
+            )}
           </Paper>
         </Grid>
       </Grid>

@@ -16,21 +16,28 @@ const theme = createTheme({
     },
     background: {
       default: "#F9FAFB", // Cloud White
-      paper: "#FFFFFF", // Pure White
+      paper: "#FFFFFF",
     },
     text: {
-      primary: "#37474F", // Blue-Gray
-      secondary: "#78909C", // Muted Gray
+      primary: "#1A1A2E",   // DESIGN.md spec
+      secondary: "#64748B", // DESIGN.md spec
     },
     success: {
-      main: "#2E7D32",
-      light: "#E8F5E9",
+      main: "#4CAF50",    // SHORTLIST green
+      light: "#F0FDF4",
+      contrastText: "#FFFFFF",
     },
     warning: {
-      main: "#E65100",
-      light: "#FFF3E0",
+      main: "#FF9800",    // PENDING amber
+      light: "#FFF7ED",
+      contrastText: "#FFFFFF",
     },
-    divider: "#E0E0E0",
+    error: {
+      main: "#F44336",    // REJECT red
+      light: "#FFF1F2",
+      contrastText: "#FFFFFF",
+    },
+    divider: "#E2E8F0",   // DESIGN.md spec
   },
   typography: {
     fontFamily: inter.style.fontFamily,
@@ -62,7 +69,14 @@ const theme = createTheme({
         root: {
           backgroundImage: "none",
           boxShadow: "none",
-          border: "1px solid #E0E0E0",
+          border: "1px solid #E2E8F0",
+        },
+      },
+    },
+    MuiChip: {
+      styleOverrides: {
+        root: {
+          borderRadius: 6,
         },
       },
     },
@@ -78,7 +92,14 @@ const theme = createTheme({
     MuiTableCell: {
       styleOverrides: {
         root: {
-          borderBottom: "1px solid #E0E0E0",
+          borderBottom: "1px solid #E2E8F0",
+        },
+      },
+    },
+    MuiDivider: {
+      styleOverrides: {
+        root: {
+          borderColor: "#E2E8F0",
         },
       },
     },

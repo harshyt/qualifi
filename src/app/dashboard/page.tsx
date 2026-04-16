@@ -3,13 +3,9 @@ import { useMemo, useState, memo } from "react";
 import {
   Box,
   Typography,
-  Paper,
-  Grid,
-  CircularProgress,
-  Skeleton,
-  Tabs,
-  Tab,
   Chip,
+  ToggleButton,
+  ToggleButtonGroup,
 } from "@mui/material";
 import DashboardTable from "@/components/Dashboard/DashboardTable";
 import UploadResume from "@/components/Dashboard/UploadResume";
@@ -18,33 +14,63 @@ import { useCandidates } from "@/hooks/useCandidates";
 import { useAuth } from "@/components/Providers/AuthContext";
 import type { Candidate } from "@/components/Dashboard/DashboardTable";
 
-const TabLabel = memo(function TabLabel({
-  label,
-  count,
+type FilterTab = "ALL" | "PENDING" | "SHORTLIST" | "REJECT";
+
+const FILTERS: { label: string; value: FilterTab }[] = [
+  { label: "All", value: "ALL" },
+  { label: "Shortlist", value: "SHORTLIST" },
+  { label: "Pending", value: "PENDING" },
+  { label: "Reject", value: "REJECT" },
+];
+
+const FilterBar = memo(function FilterBar({
+  value,
+  onChange,
 }: {
-  label: string;
-  count: number;
+  value: FilterTab;
+  onChange: (v: FilterTab) => void;
 }) {
   return (
-    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-      {label}
-      <Chip
-        label={count}
-        size="small"
-        sx={{ height: 20, fontSize: 11, fontWeight: 600 }}
-      />
-    </Box>
+    <ToggleButtonGroup
+      value={value}
+      exclusive
+      onChange={(_, v: FilterTab | null) => v && onChange(v)}
+      size="small"
+      sx={{
+        bgcolor: "#F1F5F9",
+        borderRadius: "20px",
+        p: 0.5,
+        "& .MuiToggleButtonGroup-grouped": {
+          border: "none",
+          borderRadius: "16px !important",
+          mx: 0.25,
+          px: 2,
+          py: 0.5,
+          fontWeight: 600,
+          fontSize: 13,
+          color: "#64748B",
+          "&.Mui-selected": {
+            bgcolor: "#FFFFFF",
+            color: "#1A1A2E",
+            boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
+            "&:hover": {
+              bgcolor: "#FFFFFF",
+            },
+          },
+          "&:hover": {
+            bgcolor: "transparent",
+          },
+        },
+      }}
+    >
+      {FILTERS.map((f) => (
+        <ToggleButton key={f.value} value={f.value} disableRipple>
+          {f.label}
+        </ToggleButton>
+      ))}
+    </ToggleButtonGroup>
   );
 });
-
-function StatCardSkeleton() {
-  return (
-    <Paper sx={{ p: 2, borderRadius: 2 }}>
-      <Skeleton variant="text" width="60%" height={20} sx={{ mb: 1 }} />
-      <Skeleton variant="text" width="40%" height={40} />
-    </Paper>
-  );
-}
 
 export default function DashboardPage() {
   const { loading: authLoading } = useAuth();
@@ -55,28 +81,9 @@ export default function DashboardPage() {
     [data],
   );
 
-  const [activeTab, setActiveTab] = useState<
-    "ALL" | "PENDING" | "SHORTLIST" | "REJECT"
-  >("ALL");
+  const [activeTab, setActiveTab] = useState<FilterTab>("ALL");
 
-  const stats = useMemo(() => {
-    const total = candidates.length;
-    const shortlisted = candidates.filter(
-      (c: Candidate) => c.status === "SHORTLIST",
-    ).length;
-    const rejected = candidates.filter(
-      (c: Candidate) => c.status === "REJECT",
-    ).length;
-    const pending = candidates.filter(
-      (c: Candidate) => c.status === "PENDING",
-    ).length;
-    return [
-      { label: "Total Candidates", value: total },
-      { label: "Shortlisted", value: shortlisted },
-      { label: "Rejected", value: rejected },
-      { label: "Pending Review", value: pending },
-    ];
-  }, [candidates]);
+  const total = candidates.length;
 
   const filteredCandidates = useMemo(
     () =>
@@ -95,6 +102,7 @@ export default function DashboardPage() {
 
   return (
     <Box>
+      {/* Page header */}
       <Box
         sx={{
           display: "flex",
@@ -102,119 +110,92 @@ export default function DashboardPage() {
           justifyContent: "space-between",
           alignItems: { xs: "flex-start", sm: "center" },
           gap: { xs: 2, sm: 0 },
-          mb: 2,
+          mb: 3,
         }}
       >
-        <Box>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
           <Typography
-            variant="h4"
+            variant="h5"
             sx={{
               fontWeight: 700,
-              color: "#37474F",
-              mb: 1,
-              fontSize: { xs: "1.5rem", sm: "2.125rem" },
+              color: "text.primary",
+              fontSize: { xs: "1.25rem", sm: "1.5rem" },
             }}
           >
-            Dashboard
+            Candidates
           </Typography>
-          <Typography variant="body1" color="text.secondary">
-            Overview of recent applications and AI analysis.
-          </Typography>
+          {!loading && (
+            <Chip
+              label={`${total} Total`}
+              size="small"
+              sx={{
+                bgcolor: "#EFF6FF",
+                color: "#2196F3",
+                fontWeight: 600,
+                fontSize: 12,
+                borderRadius: "12px",
+              }}
+            />
+          )}
         </Box>
-        <Box sx={{ display: "flex", gap: 1 }}>
-          <UploadResume />
-        </Box>
+        <UploadResume />
       </Box>
 
-      <Grid container spacing={3} sx={{ mb: 1 }}>
-        {loading
-          ? Array.from({ length: 4 }).map((_, i) => (
-              <Grid size={{ xs: 12, sm: 6, md: 3 }} key={i}>
-                <StatCardSkeleton />
-              </Grid>
-            ))
-          : stats.map((stat) => (
-              <Grid size={{ xs: 12, sm: 6, md: 3 }} key={stat.label}>
-                <Paper sx={{ p: 2, borderRadius: 2 }}>
-                  <Typography
-                    variant="body2"
-                    color="text.secondary"
-                    sx={{ mb: 1 }}
-                  >
-                    {stat.label}
-                  </Typography>
-                  <Typography
-                    variant="h4"
-                    sx={{ fontWeight: 700, color: "#37474F" }}
-                  >
-                    {stat.value}
-                  </Typography>
-                </Paper>
-              </Grid>
-            ))}
-      </Grid>
-
-      <Box sx={{ borderBottom: 1, borderColor: "divider", mb: 0 }}>
-        <Tabs
-          value={activeTab}
-          onChange={(
-            _: React.SyntheticEvent,
-            v: "ALL" | "PENDING" | "SHORTLIST" | "REJECT",
-          ) => setActiveTab(v)}
-          variant="scrollable"
-          scrollButtons="auto"
-          allowScrollButtonsMobile
-          sx={{ "& .MuiTab-root": { textTransform: "none", fontWeight: 600 } }}
-        >
-          <Tab
-            label={<TabLabel label="All" count={stats[0].value} />}
-            value="ALL"
-          />
-          <Tab
-            label={<TabLabel label="Pending" count={stats[3].value} />}
-            value="PENDING"
-          />
-          <Tab
-            label={<TabLabel label="Shortlisted" count={stats[1].value} />}
-            value="SHORTLIST"
-          />
-          <Tab
-            label={<TabLabel label="Rejected" count={stats[2].value} />}
-            value="REJECT"
-          />
-        </Tabs>
-      </Box>
-      {loading ? (
-        <Box sx={{ display: "flex", justifyContent: "center", p: 2 }}>
-          <CircularProgress aria-label="Loading dashboard" role="status" />
-        </Box>
-      ) : filteredCandidates.length === 0 ? (
+      {/* Filters + table */}
+      <Box
+        sx={{
+          border: "1px solid #E2E8F0",
+          borderRadius: 2,
+          bgcolor: "#FFFFFF",
+          overflow: "hidden",
+        }}
+      >
+        {/* Filter bar */}
         <Box
           sx={{
-            textAlign: "center",
-            py: 6,
-            color: "text.secondary",
-            bgcolor: "#F9FAFB",
-            borderRadius: "0 0 8px 8px",
-            border: "1px solid #E0E0E0",
-            borderTop: 0,
+            px: 2,
+            py: 1.5,
+            borderBottom: "1px solid #E2E8F0",
+            display: "flex",
+            alignItems: "center",
           }}
         >
-          <Typography variant="body1">
-            No{" "}
-            {activeTab === "ALL"
-              ? ""
-              : activeTab === "PENDING"
-                ? "pending"
-                : activeTab === "SHORTLIST"
-                  ? "shortlisted"
-                  : "rejected"}{" "}
-            candidates yet.
-          </Typography>
+          <FilterBar value={activeTab} onChange={setActiveTab} />
         </Box>
-      ) : (
-        <DashboardTable candidates={filteredCandidates} />
-      )}
+
+        {/* Table or empty state */}
+        {loading ? (
+          <Box sx={{ display: "flex", justifyContent: "center", p: 4 }}>
+            <Box
+              sx={{
+                width: 32,
+                height: 32,
+                border: "3px solid #E2E8F0",
+                borderTopColor: "#2196F3",
+                borderRadius: "50%",
+                animation: "spin 0.8s linear infinite",
+                "@keyframes spin": { to: { transform: "rotate(360deg)" } },
+              }}
+            />
+          </Box>
+        ) : filteredCandidates.length === 0 ? (
+          <Box sx={{ textAlign: "center", py: 8, color: "text.secondary" }}>
+            <Typography variant="body2">
+              No{" "}
+              {activeTab === "ALL"
+                ? ""
+                : activeTab === "PENDING"
+                  ? "pending"
+                  : activeTab === "SHORTLIST"
+                    ? "shortlisted"
+                    : "rejected"}{" "}
+              candidates yet.
+            </Typography>
+          </Box>
+        ) : (
+          <DashboardTable candidates={filteredCandidates} />
+        )}
+      </Box>
     </Box>
   );
 }

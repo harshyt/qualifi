@@ -1,5 +1,5 @@
 "use client";
-import { useRef, useState, useCallback, useEffect, memo } from "react";
+import { useRef, useState, useCallback, useEffect } from "react";
 import {
   Button,
   CircularProgress,
@@ -8,17 +8,12 @@ import {
   Paper,
   LinearProgress,
 } from "@mui/material";
-import {
-  CloudUpload,
-  CheckCircle2,
-  AlertCircle,
-  FileText,
-  Loader2,
-} from "lucide-react";
+import { CloudUpload, CheckCircle2, AlertCircle, FileText, Loader2 } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { analyzeCandidateResume } from "@/actions/analyze";
 import { toast } from "sonner";
 import SelectJobModal from "./SelectJobModal";
+import { memo } from "react";
 
 type FileStatus = "pending" | "uploading" | "done" | "error";
 
@@ -34,10 +29,10 @@ const FileProgressItem = memo(function FileProgressItem({
   file: FileProgress;
 }) {
   const statusIcon = {
-    pending: <Loader2 size={16} color="#90A4AE" />,
+    pending: <Loader2 size={16} color="#94A3B8" />,
     uploading: <CircularProgress size={16} />,
-    done: <CheckCircle2 size={16} color="#2E7D32" />,
-    error: <AlertCircle size={16} color="#C62828" />,
+    done: <CheckCircle2 size={16} color="#4CAF50" />,
+    error: <AlertCircle size={16} color="#F44336" />,
   };
 
   const statusLabel = {
@@ -48,10 +43,10 @@ const FileProgressItem = memo(function FileProgressItem({
   };
 
   const statusColor = {
-    pending: "#90A4AE",
-    uploading: "#1976D2",
-    done: "#2E7D32",
-    error: "#C62828",
+    pending: "#94A3B8",
+    uploading: "#2196F3",
+    done: "#4CAF50",
+    error: "#F44336",
   };
 
   return (
@@ -63,10 +58,10 @@ const FileProgressItem = memo(function FileProgressItem({
         py: 1,
         px: 1.5,
         borderRadius: 1,
-        bgcolor: file.status === "error" ? "#FFF5F5" : "transparent",
+        bgcolor: file.status === "error" ? "#FFF1F2" : "transparent",
       }}
     >
-      <FileText size={16} color="#78909C" />
+      <FileText size={16} color="#94A3B8" />
       <Box sx={{ flex: 1, minWidth: 0 }}>
         <Typography
           variant="body2"
@@ -75,7 +70,7 @@ const FileProgressItem = memo(function FileProgressItem({
             overflow: "hidden",
             textOverflow: "ellipsis",
             whiteSpace: "nowrap",
-            color: "#37474F",
+            color: "text.primary",
           }}
         >
           {file.name}
@@ -100,12 +95,10 @@ const FileProgressItem = memo(function FileProgressItem({
 });
 
 export default function UploadResume() {
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const uploadTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const queryClient = useQueryClient();
   const [isUploading, setIsUploading] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [pendingFiles, setPendingFiles] = useState<FileList | null>(null);
   const [fileProgress, setFileProgress] = useState<FileProgress[]>([]);
 
   useEffect(() => {
@@ -116,36 +109,19 @@ export default function UploadResume() {
     };
   }, []);
 
-  const handleFileSelect = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      const files = e.target.files;
-      if (!files || files.length === 0) return;
-
-      if (files.length > 5) {
-        toast.error("Please select up to 5 files only.");
-        if (fileInputRef.current) fileInputRef.current.value = "";
-        return;
-      }
-
-      setPendingFiles(files);
-      setIsModalOpen(true);
-    },
-    [],
-  );
+  const handleOpenModal = useCallback(() => {
+    setIsModalOpen(true);
+  }, []);
 
   const handleModalClose = useCallback(() => {
     setIsModalOpen(false);
-    setPendingFiles(null);
-    if (fileInputRef.current) fileInputRef.current.value = "";
   }, []);
 
   const handleJobSelect = useCallback(
-    async (jobId: string, jobDescription: string, roleKey?: string) => {
+    async (jobId: string, jobDescription: string, roleKey?: string, files?: File[]) => {
       setIsModalOpen(false);
 
-      if (!pendingFiles || pendingFiles.length === 0) return;
-
-      const files = Array.from(pendingFiles);
+      if (!files || files.length === 0) return;
 
       // Initialize per-file progress
       const initialProgress: FileProgress[] = files.map((f) => ({
@@ -157,10 +133,8 @@ export default function UploadResume() {
 
       // Process files in parallel with a concurrency cap of 5
       const CONCURRENCY = 5;
-      const results: PromiseSettledResult<{
-        error?: string;
-        success?: boolean;
-      }>[] = new Array(files.length);
+      const results: PromiseSettledResult<{ error?: string; success?: boolean }>[] =
+        new Array(files.length);
       const queue = files.map((file, index) => ({ file, index }));
 
       async function processEntry(entry: { file: File; index: number }) {
@@ -175,9 +149,7 @@ export default function UploadResume() {
         formData.append("resume", file);
         formData.append("jobId", jobId);
         formData.append("jobDescription", jobDescription);
-        if (roleKey) {
-          formData.append("roleKey", roleKey);
-        }
+        if (roleKey) formData.append("roleKey", roleKey);
 
         try {
           const result: { error?: string; success?: boolean } =
@@ -190,16 +162,11 @@ export default function UploadResume() {
           );
           results[index] = { status: "fulfilled", value: result };
         } catch (err) {
-          const message =
-            err instanceof Error ? err.message : "Analysis failed";
+          const message = err instanceof Error ? err.message : "Analysis failed";
           setFileProgress((prev) =>
             prev.map((fp, i) =>
               i === index
-                ? {
-                    ...fp,
-                    status: "error" as FileStatus,
-                    errorMessage: message,
-                  }
+                ? { ...fp, status: "error" as FileStatus, errorMessage: message }
                 : fp,
             ),
           );
@@ -218,12 +185,9 @@ export default function UploadResume() {
         Array.from({ length: Math.min(CONCURRENCY, files.length) }, runWorker),
       );
 
-      // Invalidate candidates query once after all uploads complete
       queryClient.invalidateQueries({ queryKey: ["candidates"] });
 
-      const successCount = results.filter(
-        (r) => r.status === "fulfilled",
-      ).length;
+      const successCount = results.filter((r) => r.status === "fulfilled").length;
       const failCount = results.filter((r) => r.status === "rejected").length;
 
       if (successCount > 0) {
@@ -237,57 +201,32 @@ export default function UploadResume() {
         );
       }
 
-      // Clear upload state after a brief delay so user can see final status
       uploadTimeoutRef.current = setTimeout(() => {
         setIsUploading(false);
         setFileProgress([]);
-        setPendingFiles(null);
-        if (fileInputRef.current) {
-          fileInputRef.current.value = "";
-        }
       }, 3000);
     },
-    [pendingFiles, queryClient],
+    [queryClient],
   );
 
   const completedCount = fileProgress.filter(
     (f) => f.status === "done" || f.status === "error",
   ).length;
   const totalCount = fileProgress.length;
-  const progressPercent =
-    totalCount > 0 ? (completedCount / totalCount) * 100 : 0;
+  const progressPercent = totalCount > 0 ? (completedCount / totalCount) * 100 : 0;
 
   return (
     <>
-      <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-        <Button
-          component="label"
-          variant="outlined"
-          startIcon={
-            isUploading ? (
-              <CircularProgress size={20} />
-            ) : (
-              <CloudUpload size={20} />
-            )
-          }
-          disabled={isUploading || isModalOpen}
-        >
-          {isUploading ? "Analyzing..." : "Upload Resumes"}
-          <input
-            ref={fileInputRef}
-            type="file"
-            hidden
-            multiple
-            accept=".pdf,.docx"
-            onChange={handleFileSelect}
-          />
-        </Button>
-      </Box>
-      <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5 }}>
-        {isUploading
-          ? `Analyzing ${totalCount} resume${totalCount !== 1 ? "s" : ""}… please wait.`
-          : "Accepts PDF, DOCX · Up to 5 files at a time"}
-      </Typography>
+      <Button
+        variant="contained"
+        startIcon={
+          isUploading ? <CircularProgress size={18} color="inherit" /> : <CloudUpload size={18} />
+        }
+        onClick={handleOpenModal}
+        disabled={isUploading || isModalOpen}
+      >
+        {isUploading ? "Analyzing..." : "Upload Resume"}
+      </Button>
 
       {/* Per-file progress panel */}
       {isUploading && fileProgress.length > 0 && (
@@ -307,8 +246,8 @@ export default function UploadResume() {
             sx={{
               px: 2,
               py: 1.5,
-              bgcolor: "#F9FAFB",
-              borderBottom: "1px solid #E0E0E0",
+              bgcolor: "#F8FAFC",
+              borderBottom: "1px solid #E2E8F0",
             }}
           >
             <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
@@ -332,7 +271,6 @@ export default function UploadResume() {
         open={isModalOpen}
         onClose={handleModalClose}
         onConfirm={handleJobSelect}
-        fileCount={pendingFiles?.length || 0}
       />
     </>
   );

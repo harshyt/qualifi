@@ -1,262 +1,304 @@
 "use client";
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useRef, memo } from "react";
 import {
   Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
   Button,
-  TextField,
-  List,
-  ListItem,
-  ListItemButton,
-  ListItemText,
   Typography,
   Box,
-  Chip,
-  InputAdornment,
-  Skeleton,
+  IconButton,
+  Autocomplete,
+  TextField,
+  Grid,
 } from "@mui/material";
-import { Search } from "lucide-react";
+import { X, FileText, UploadCloud, Cpu } from "lucide-react";
 import { useJobs } from "@/hooks/useJobs";
 
 interface SelectJobModalProps {
   open: boolean;
   onClose: () => void;
-  onConfirm: (jobId: string, jobDescription: string, roleKey?: string) => void;
-  fileCount: number;
+  onConfirm: (jobId: string, jobDescription: string, roleKey?: string, files?: File[]) => void;
 }
 
-export default function SelectJobModal({
-  open,
-  onClose,
-  onConfirm,
-  fileCount,
-}: SelectJobModalProps) {
-  const { data: jobs = [], isLoading: loading } = useJobs();
-  const [search, setSearch] = useState("");
-  const [selectedJobId, setSelectedJobId] = useState<string | null>(null);
+function formatFileSize(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  return `${(bytes / 1024).toFixed(0)} KB`;
+}
 
-  const handleSearchChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      setSearch(e.target.value);
-    },
-    [],
+const FileCard = memo(function FileCard({
+  file,
+  onRemove,
+}: {
+  file: File;
+  onRemove: () => void;
+}) {
+  return (
+    <Box
+      sx={{
+        display: "flex",
+        alignItems: "center",
+        gap: 1,
+        p: 1.5,
+        border: "1px solid #E2E8F0",
+        borderRadius: 1.5,
+        bgcolor: "#F8FAFC",
+        position: "relative",
+        minWidth: 0,
+      }}
+    >
+      <Box
+        sx={{
+          width: 32,
+          height: 32,
+          borderRadius: 1,
+          bgcolor: "#EFF6FF",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          flexShrink: 0,
+        }}
+      >
+        <FileText size={16} color="#2196F3" />
+      </Box>
+      <Box sx={{ flex: 1, minWidth: 0 }}>
+        <Typography
+          variant="caption"
+          sx={{
+            fontWeight: 600,
+            color: "text.primary",
+            display: "block",
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap",
+          }}
+        >
+          {file.name}
+        </Typography>
+        <Typography variant="caption" color="text.secondary">
+          {formatFileSize(file.size)}
+        </Typography>
+      </Box>
+      <IconButton
+        size="small"
+        onClick={onRemove}
+        sx={{
+          width: 20,
+          height: 20,
+          color: "text.secondary",
+          flexShrink: 0,
+          "&:hover": { color: "error.main" },
+        }}
+      >
+        <X size={13} />
+      </IconButton>
+    </Box>
+  );
+});
+
+export default function SelectJobModal({ open, onClose, onConfirm }: SelectJobModalProps) {
+  const { data: jobs = [], isLoading: jobsLoading } = useJobs();
+  const [selectedJobId, setSelectedJobId] = useState<string | null>(null);
+  const [files, setFiles] = useState<File[]>([]);
+  const [isDragging, setIsDragging] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const selectedJob = useMemo(
+    () => jobs.find((j) => j.id === selectedJobId) ?? null,
+    [jobs, selectedJobId],
   );
 
-  const handleJobClick = useCallback((jobId: string) => {
-    setSelectedJobId(jobId);
+  const addFiles = useCallback((incoming: FileList | File[]) => {
+    const arr = Array.from(incoming).filter(
+      (f) => f.type === "application/pdf" || f.name.endsWith(".docx"),
+    );
+    setFiles((prev) => {
+      const existing = new Set(prev.map((f) => f.name + f.size));
+      const deduped = arr.filter((f) => !existing.has(f.name + f.size));
+      const merged = [...prev, ...deduped];
+      if (merged.length > 5) {
+        return merged.slice(0, 5);
+      }
+      return merged;
+    });
   }, []);
 
-  const handleConfirmClick = useCallback(() => {
-    if (selectedJobId) {
-      const selectedJob = jobs.find((j) => j.id === selectedJobId);
-      if (selectedJob) {
-        onConfirm(
-          selectedJobId,
-          selectedJob.description,
-          selectedJob.tags?.[0],
-        );
-        // Reset selection for next open
-        setSelectedJobId(null);
-        setSearch("");
-      }
-    }
-  }, [selectedJobId, jobs, onConfirm]);
+  const handleFileInput = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      if (e.target.files) addFiles(e.target.files);
+      e.target.value = "";
+    },
+    [addFiles],
+  );
+
+  const handleDrop = useCallback(
+    (e: React.DragEvent) => {
+      e.preventDefault();
+      setIsDragging(false);
+      if (e.dataTransfer.files) addFiles(e.dataTransfer.files);
+    },
+    [addFiles],
+  );
+
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+  }, []);
+
+  const handleDragLeave = useCallback(() => {
+    setIsDragging(false);
+  }, []);
+
+  const handleRemoveFile = useCallback((index: number) => {
+    setFiles((prev) => prev.filter((_, i) => i !== index));
+  }, []);
 
   const handleClose = useCallback(() => {
     setSelectedJobId(null);
-    setSearch("");
+    setFiles([]);
+    setIsDragging(false);
     onClose();
   }, [onClose]);
 
-  const filteredJobs = useMemo(
-    () =>
-      jobs.filter(
-        (job) =>
-          job.title.toLowerCase().includes(search.toLowerCase()) ||
-          job.client?.some((c) =>
-            c.toLowerCase().includes(search.toLowerCase()),
-          ),
-      ),
-    [jobs, search],
-  );
+  const handleConfirm = useCallback(() => {
+    if (!selectedJob || files.length === 0) return;
+    onConfirm(selectedJob.id, selectedJob.description, selectedJob.tags?.[0], files);
+    setSelectedJobId(null);
+    setFiles([]);
+  }, [selectedJob, files, onConfirm]);
+
+  const canConfirm = !!selectedJob && files.length > 0;
 
   return (
-    <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
-      <DialogTitle component="div">
-        <Typography variant="h6" component="h2" fontWeight={600}>
-          Select Job for Analysis
-        </Typography>
-        <Typography variant="body2" color="text.secondary">
-          You are uploading {fileCount} resume{fileCount > 1 ? "s" : ""}. Which
-          job are they applying for?
-        </Typography>
+    <Dialog
+      open={open}
+      onClose={handleClose}
+      maxWidth="sm"
+      fullWidth
+      PaperProps={{
+        sx: { borderRadius: 3, border: "1px solid #E2E8F0" },
+      }}
+    >
+      {/* Header */}
+      <DialogTitle component="div" sx={{ pb: 0.5 }}>
+        <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+          <Box>
+            <Typography variant="h6" fontWeight={700} color="text.primary">
+              Upload Resume
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+              Select a job position and upload candidate resumes for AI analysis.
+            </Typography>
+          </Box>
+          <IconButton size="small" onClick={handleClose} sx={{ mt: -0.5, color: "text.secondary" }}>
+            <X size={18} />
+          </IconButton>
+        </Box>
       </DialogTitle>
-      <DialogContent dividers>
-        <TextField
-          autoFocus
-          margin="dense"
-          placeholder="Search jobs or clients..."
-          type="text"
-          fullWidth
-          variant="outlined"
-          value={search}
-          onChange={handleSearchChange}
-          sx={{ mb: 2 }}
-          slotProps={{
-            input: {
-              startAdornment: (
-                <InputAdornment position="start">
-                  <Search size={20} color="#9e9e9e" />
-                </InputAdornment>
-              ),
-            },
-          }}
+
+      <DialogContent sx={{ pt: 2 }}>
+        {/* Job dropdown */}
+        <Typography variant="body2" fontWeight={600} color="text.primary" sx={{ mb: 1 }}>
+          Select Job Position
+        </Typography>
+        <Autocomplete
+          options={jobs}
+          loading={jobsLoading}
+          getOptionLabel={(option) => option.title}
+          value={selectedJob}
+          onChange={(_, value) => setSelectedJobId(value?.id ?? null)}
+          isOptionEqualToValue={(option, value) => option.id === value.id}
+          renderInput={(params) => (
+            <TextField
+              {...params}
+              placeholder="Select a job position..."
+              size="small"
+              sx={{ mb: 2.5 }}
+            />
+          )}
+          noOptionsText="No active jobs found. Please create a job first."
         />
 
-        {loading ? (
-          <List sx={{ pt: 0 }}>
-            {Array.from({ length: 4 }).map((_, i) => (
-              <ListItem disableGutters key={i}>
-                <ListItemButton
-                  sx={{
-                    borderRadius: 1,
-                    mb: 0.5,
-                    border: "1px solid transparent",
-                  }}
-                >
-                  <ListItemText
-                    primary={
-                      <Skeleton
-                        variant="text"
-                        width={`${60 + i * 8}%`}
-                        height={22}
-                      />
-                    }
-                    secondary={
-                      <Box sx={{ display: "flex", gap: 0.5, mt: 0.5 }}>
-                        <Skeleton
-                          variant="rounded"
-                          width={50}
-                          height={20}
-                          sx={{ borderRadius: 2 }}
-                        />
-                        <Skeleton
-                          variant="rounded"
-                          width={70}
-                          height={20}
-                          sx={{ borderRadius: 2 }}
-                        />
-                      </Box>
-                    }
-                  />
-                </ListItemButton>
-              </ListItem>
-            ))}
-          </List>
-        ) : filteredJobs.length === 0 ? (
-          <Typography textAlign="center" color="text.secondary" p={3}>
-            No active jobs found. Please create a job first.
+        {/* Drag-and-drop zone */}
+        <input
+          ref={fileInputRef}
+          type="file"
+          hidden
+          multiple
+          accept=".pdf,.docx"
+          onChange={handleFileInput}
+        />
+        <Box
+          onClick={() => fileInputRef.current?.click()}
+          onDrop={handleDrop}
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+          sx={{
+            border: `2px dashed ${isDragging ? "#2196F3" : "#CBD5E1"}`,
+            borderRadius: 2,
+            py: 4,
+            px: 3,
+            textAlign: "center",
+            cursor: "pointer",
+            bgcolor: isDragging ? "#EFF6FF" : "#F8FAFC",
+            transition: "all 0.15s ease",
+            "&:hover": {
+              borderColor: "#2196F3",
+              bgcolor: "#EFF6FF",
+            },
+          }}
+        >
+          <Box
+            sx={{
+              width: 44,
+              height: 44,
+              borderRadius: 2,
+              bgcolor: "#EFF6FF",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              mx: "auto",
+              mb: 1.5,
+            }}
+          >
+            <UploadCloud size={22} color="#2196F3" />
+          </Box>
+          <Typography variant="body2" fontWeight={600} color="text.primary">
+            Drag and drop PDF resumes or click to browse
           </Typography>
-        ) : (
-          <List sx={{ pt: 0, maxHeight: 300, overflow: "auto" }}>
-            {filteredJobs.map((job) => (
-              <ListItem disableGutters key={job.id}>
-                <ListItemButton
-                  selected={selectedJobId === job.id}
-                  onClick={() => handleJobClick(job.id)}
-                  sx={{
-                    borderRadius: 1,
-                    mb: 0.5,
-                    border: "1px solid",
-                    borderColor:
-                      selectedJobId === job.id ? "primary.main" : "transparent",
-                    bgcolor:
-                      selectedJobId === job.id ? "primary.50" : "transparent",
-                  }}
-                >
-                  <ListItemText
-                    primary={job.title}
-                    secondaryTypographyProps={{ component: "div" }}
-                    secondary={
-                      job.client && job.client.length > 0 ? (
-                        <Box
-                          sx={{
-                            display: "flex",
-                            gap: 0.5,
-                            mt: 0.5,
-                            flexWrap: "wrap",
-                          }}
-                        >
-                          {job.client.map((c) => (
-                            <Chip
-                              key={c}
-                              label={c}
-                              size="small"
-                              variant="outlined"
-                              sx={{ height: 20, fontSize: "0.7rem", mr: 0.5 }}
-                            />
-                          ))}
-                          {job.tags && job.tags.length > 0 && (
-                            <Chip
-                              label={`Role: ${job.tags[0]}`}
-                              size="small"
-                              color="secondary"
-                              variant="outlined"
-                              sx={{
-                                height: 20,
-                                fontSize: "0.7rem",
-                                fontWeight: 600,
-                              }}
-                            />
-                          )}
-                        </Box>
-                      ) : (
-                        <Box
-                          sx={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: 1,
-                            mt: 0.5,
-                          }}
-                        >
-                          <Typography variant="caption" color="text.secondary">
-                            No client specified
-                          </Typography>
-                          {job.tags && job.tags.length > 0 && (
-                            <Chip
-                              label={`Role: ${job.tags[0]}`}
-                              size="small"
-                              color="secondary"
-                              variant="outlined"
-                              sx={{
-                                height: 20,
-                                fontSize: "0.7rem",
-                                fontWeight: 600,
-                              }}
-                            />
-                          )}
-                        </Box>
-                      )
-                    }
-                  />
-                </ListItemButton>
-              </ListItem>
+          <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: "block" }}>
+            Accepts PDF, DOCX · Up to 5 files
+          </Typography>
+        </Box>
+
+        {/* Selected files */}
+        {files.length > 0 && (
+          <Grid container spacing={1} sx={{ mt: 1.5 }}>
+            {files.map((file, i) => (
+              <Grid size={{ xs: 12, sm: 6 }} key={`${file.name}-${file.size}`}>
+                <FileCard file={file} onRemove={() => handleRemoveFile(i)} />
+              </Grid>
             ))}
-          </List>
+          </Grid>
         )}
       </DialogContent>
-      <DialogActions sx={{ p: 2 }}>
-        <Button onClick={handleClose} color="inherit">
+
+      <DialogActions sx={{ px: 3, pb: 3, pt: 1, gap: 1 }}>
+        <Button
+          onClick={handleClose}
+          sx={{ color: "text.secondary", fontWeight: 600 }}
+        >
           Cancel
         </Button>
         <Button
-          onClick={handleConfirmClick}
+          onClick={handleConfirm}
           variant="contained"
-          disabled={!selectedJobId}
+          disabled={!canConfirm}
+          startIcon={<Cpu size={16} />}
+          sx={{ fontWeight: 600, borderRadius: 2, px: 3 }}
         >
-          Confirm & Upload
+          Analyze All Resumes
         </Button>
       </DialogActions>
     </Dialog>

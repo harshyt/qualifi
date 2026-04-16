@@ -24,6 +24,7 @@ import {
   Button,
   Checkbox,
   CircularProgress,
+  Avatar,
 } from "@mui/material";
 import { Eye, MoreHorizontal, Trash2, Mail } from "lucide-react";
 import { useState, useCallback, memo, useMemo } from "react";
@@ -48,21 +49,49 @@ export interface Candidate {
   } | null;
 }
 
-function getStatusColor(status: string) {
+// Deterministic avatar color from candidate name
+const AVATAR_COLORS = [
+  { bg: "#EDE9FE", color: "#7C3AED" },
+  { bg: "#FCE7F3", color: "#BE185D" },
+  { bg: "#DBEAFE", color: "#1D4ED8" },
+  { bg: "#D1FAE5", color: "#065F46" },
+  { bg: "#FEF3C7", color: "#92400E" },
+  { bg: "#FFE4E6", color: "#BE123C" },
+  { bg: "#E0F2FE", color: "#0369A1" },
+  { bg: "#F3E8FF", color: "#7E22CE" },
+  { bg: "#DCFCE7", color: "#166534" },
+  { bg: "#FEF9C3", color: "#854D0E" },
+];
+
+function getAvatarColor(name: string) {
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) {
+    hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length];
+}
+
+function getInitials(name: string) {
+  const parts = name.trim().split(/\s+/);
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+}
+
+function getStatusStyle(status: string) {
   switch (status) {
     case "SHORTLIST":
-      return { bg: "#E8F5E9", color: "#2E7D32", label: "Shortlisted" };
+      return { bg: "#F0FDF4", color: "#4CAF50", label: "Shortlist" };
     case "REJECT":
-      return { bg: "#FBE9E7", color: "#C62828", label: "Rejected" };
+      return { bg: "#FFF1F2", color: "#F44336", label: "Reject" };
     default:
-      return { bg: "#FFF3E0", color: "#E65100", label: "Pending" };
+      return { bg: "#FFF7ED", color: "#FF9800", label: "Pending" };
   }
 }
 
 const ScoreGauge = memo(function ScoreGauge({ score }: { score: number }) {
-  let color = "#2E7D32";
-  if (score < 50) color = "#C62828";
-  else if (score < 75) color = "#E65100";
+  let color = "#4CAF50";
+  if (score < 50) color = "#F44336";
+  else if (score < 75) color = "#FF9800";
 
   return (
     <Box sx={{ display: "flex", alignItems: "center" }}>
@@ -71,30 +100,38 @@ const ScoreGauge = memo(function ScoreGauge({ score }: { score: number }) {
           width: 40,
           height: 40,
           borderRadius: "50%",
-          border: `3px solid ${color}20`,
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
           position: "relative",
         }}
       >
-        <Typography variant="caption" sx={{ fontWeight: 700, color }}>
+        <Typography variant="caption" sx={{ fontWeight: 700, color, zIndex: 1 }}>
           {score}
         </Typography>
         <svg
           width="40"
           height="40"
           style={{ position: "absolute", transform: "rotate(-90deg)" }}
+          aria-hidden="true"
         >
           <circle
             cx="20"
             cy="20"
-            r="18.5"
+            r="18"
+            fill="none"
+            stroke="#E2E8F0"
+            strokeWidth="3"
+          />
+          <circle
+            cx="20"
+            cy="20"
+            r="18"
             fill="none"
             stroke={color}
             strokeWidth="3"
-            strokeDasharray="116"
-            strokeDashoffset={116 - (116 * score) / 100}
+            strokeDasharray="113"
+            strokeDashoffset={113 - (113 * score) / 100}
             strokeLinecap="round"
           />
         </svg>
@@ -103,15 +140,30 @@ const ScoreGauge = memo(function ScoreGauge({ score }: { score: number }) {
   );
 });
 
+const CandidateAvatar = memo(function CandidateAvatar({ name }: { name: string }) {
+  const { bg, color } = getAvatarColor(name);
+  return (
+    <Avatar
+      sx={{
+        width: 36,
+        height: 36,
+        bgcolor: bg,
+        color,
+        fontWeight: 700,
+        fontSize: 13,
+      }}
+    >
+      {getInitials(name)}
+    </Avatar>
+  );
+});
+
 function DashboardTable({ candidates }: { candidates: Candidate[] }) {
   const router = useRouter();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-  const [selectedCandidate, setSelectedCandidate] = useState<Candidate | null>(
-    null,
-  );
+  const [selectedCandidate, setSelectedCandidate] = useState<Candidate | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const { mutate: deleteCandidate, isPending: isDeleting } =
-    useDeleteCandidate();
+  const { mutate: deleteCandidate, isPending: isDeleting } = useDeleteCandidate();
   const open = Boolean(anchorEl);
 
   // Selection state
@@ -221,13 +273,9 @@ function DashboardTable({ candidates }: { candidates: Candidate[] }) {
 
   return (
     <>
-      <TableContainer
-        component={Paper}
-        elevation={0}
-        sx={{ border: "1px solid #E0E0E0", borderRadius: 2 }}
-      >
+      <TableContainer component={Paper} elevation={0} sx={{ border: "none", borderRadius: 0 }}>
         <Table sx={{ minWidth: 650 }} aria-label="candidate table">
-          <TableHead sx={{ bgcolor: "#F9FAFB" }}>
+          <TableHead sx={{ bgcolor: "#F8FAFC" }}>
             <TableRow>
               <TableCell padding="checkbox">
                 <Checkbox
@@ -238,32 +286,32 @@ function DashboardTable({ candidates }: { candidates: Candidate[] }) {
                   disabled={selectableCandidates.length === 0}
                 />
               </TableCell>
-              <TableCell sx={{ fontWeight: 600, color: "#78909C" }}>
-                Candidate
+              <TableCell sx={{ fontWeight: 600, color: "text.secondary", fontSize: 12, textTransform: "uppercase", letterSpacing: "0.04em" }}>
+                Candidate Name
               </TableCell>
-              <TableCell sx={{ fontWeight: 600, color: "#78909C" }}>
+              <TableCell sx={{ fontWeight: 600, color: "text.secondary", fontSize: 12, textTransform: "uppercase", letterSpacing: "0.04em" }}>
                 Role
               </TableCell>
-              <TableCell sx={{ fontWeight: 600, color: "#78909C" }}>
-                AI Score
+              <TableCell sx={{ fontWeight: 600, color: "text.secondary", fontSize: 12, textTransform: "uppercase", letterSpacing: "0.04em" }}>
+                Score
               </TableCell>
-              <TableCell sx={{ fontWeight: 600, color: "#78909C" }}>
-                Status
+              <TableCell sx={{ fontWeight: 600, color: "text.secondary", fontSize: 12, textTransform: "uppercase", letterSpacing: "0.04em" }}>
+                Verdict
               </TableCell>
-              <TableCell sx={{ fontWeight: 600, color: "#78909C" }}>
+              <TableCell sx={{ fontWeight: 600, color: "text.secondary", fontSize: 12, textTransform: "uppercase", letterSpacing: "0.04em" }}>
+                Experience
+              </TableCell>
+              <TableCell sx={{ fontWeight: 600, color: "text.secondary", fontSize: 12, textTransform: "uppercase", letterSpacing: "0.04em" }}>
                 Date Applied
               </TableCell>
-              <TableCell
-                align="right"
-                sx={{ fontWeight: 600, color: "#78909C" }}
-              >
+              <TableCell align="right" sx={{ fontWeight: 600, color: "text.secondary", fontSize: 12, textTransform: "uppercase", letterSpacing: "0.04em" }}>
                 Actions
               </TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
             {candidates.map((row) => {
-              const statusStyle = getStatusColor(row.status);
+              const statusStyle = getStatusStyle(row.status);
               const isPending = row.status === "PENDING";
               return (
                 <TableRow
@@ -271,8 +319,9 @@ function DashboardTable({ candidates }: { candidates: Candidate[] }) {
                   sx={{
                     "&:last-child td, &:last-child th": { border: 0 },
                     cursor: "pointer",
-                    "&:hover": { bgcolor: "#F5F5F5" },
-                    ...(selectedIds.has(row.id) && { bgcolor: "#F0F7FF" }),
+                    "&:hover": { bgcolor: "#F8FAFC" },
+                    ...(selectedIds.has(row.id) && { bgcolor: "#EFF6FF" }),
+                    transition: "background-color 0.15s ease",
                   }}
                   onClick={() => handleRowClick(row.id)}
                 >
@@ -284,24 +333,27 @@ function DashboardTable({ candidates }: { candidates: Candidate[] }) {
                       size="small"
                       checked={selectedIds.has(row.id)}
                       disabled={isPending}
-                      onChange={(e) =>
-                        handleToggleRow(row.id, e.target.checked)
-                      }
+                      onChange={(e) => handleToggleRow(row.id, e.target.checked)}
                       sx={{ opacity: isPending ? 0.3 : 1 }}
                     />
                   </TableCell>
                   <TableCell component="th" scope="row">
-                    <Typography
-                      variant="subtitle2"
-                      sx={{ fontWeight: 600, color: "#37474F" }}
-                    >
-                      {row.name}
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary">
-                      {row.email}
-                    </Typography>
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+                      <CandidateAvatar name={row.name} />
+                      <Box>
+                        <Typography
+                          variant="subtitle2"
+                          sx={{ fontWeight: 600, color: "text.primary", lineHeight: 1.3 }}
+                        >
+                          {row.name}
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          {row.email}
+                        </Typography>
+                      </Box>
+                    </Box>
                   </TableCell>
-                  <TableCell>{row.role}</TableCell>
+                  <TableCell sx={{ color: "text.primary", fontSize: 14 }}>{row.role}</TableCell>
                   <TableCell>
                     <ScoreGauge score={row.score} />
                   </TableCell>
@@ -312,26 +364,36 @@ function DashboardTable({ candidates }: { candidates: Candidate[] }) {
                       sx={{
                         bgcolor: statusStyle.bg,
                         color: statusStyle.color,
-                        fontWeight: 600,
-                        borderRadius: 1,
+                        fontWeight: 700,
+                        fontSize: 12,
+                        border: `1px solid ${statusStyle.color}30`,
                       }}
                     />
                   </TableCell>
-                  <TableCell sx={{ color: "#78909C" }}>
-                    {new Date(row.created_at).toLocaleDateString()}
+                  <TableCell sx={{ color: "text.secondary", fontSize: 14 }}>
+                    {row.analysis?.experienceLevel ?? "—"}
+                  </TableCell>
+                  <TableCell sx={{ color: "text.secondary", fontSize: 14 }}>
+                    {new Date(row.created_at).toLocaleDateString("en-US", {
+                      month: "short",
+                      day: "numeric",
+                      year: "numeric",
+                    })}
                   </TableCell>
                   <TableCell align="right">
                     <IconButton
                       size="small"
                       onClick={(e) => handleViewClick(e, row.id)}
+                      sx={{ color: "text.secondary" }}
                     >
-                      <Eye size={18} color="#78909C" />
+                      <Eye size={17} />
                     </IconButton>
                     <IconButton
                       size="small"
                       onClick={(e) => handleMenuClick(e, row)}
+                      sx={{ color: "text.secondary" }}
                     >
-                      <MoreHorizontal size={18} color="#78909C" />
+                      <MoreHorizontal size={17} />
                     </IconButton>
                   </TableCell>
                 </TableRow>
@@ -361,15 +423,15 @@ function DashboardTable({ candidates }: { candidates: Candidate[] }) {
               px: 3,
               py: 1.5,
               borderRadius: 3,
-              border: "1px solid #E3F2FD",
+              border: "1px solid #E2E8F0",
+              boxShadow: "0 8px 24px rgba(0,0,0,0.12)",
             }}
           >
             <Typography
               variant="body2"
-              sx={{ fontWeight: 600, color: "#37474F", whiteSpace: "nowrap" }}
+              sx={{ fontWeight: 600, color: "text.primary", whiteSpace: "nowrap" }}
             >
-              {selectedIds.size} candidate{selectedIds.size !== 1 ? "s" : ""}{" "}
-              selected
+              {selectedIds.size} candidate{selectedIds.size !== 1 ? "s" : ""} selected
             </Typography>
             <Button
               variant="contained"
@@ -379,9 +441,6 @@ function DashboardTable({ candidates }: { candidates: Candidate[] }) {
               sx={{
                 borderRadius: 2,
                 fontWeight: 600,
-                boxShadow: "none",
-                bgcolor: "#2196F3",
-                "&:hover": { bgcolor: "#1976D2", boxShadow: "none" },
                 whiteSpace: "nowrap",
               }}
             >
@@ -391,7 +450,7 @@ function DashboardTable({ candidates }: { candidates: Candidate[] }) {
               variant="text"
               size="small"
               onClick={() => setSelectedIdsRaw(new Set())}
-              sx={{ color: "#78909C", fontWeight: 600, whiteSpace: "nowrap" }}
+              sx={{ color: "text.secondary", fontWeight: 600, whiteSpace: "nowrap" }}
             >
               Clear
             </Button>
@@ -415,7 +474,7 @@ function DashboardTable({ candidates }: { candidates: Candidate[] }) {
         {selectedCandidate?.status !== "PENDING" && (
           <MenuItem onClick={handleSendEmailClick}>
             <ListItemIcon>
-              <Mail size={16} color="#1565C0" />
+              <Mail size={16} color="#2196F3" />
             </ListItemIcon>
             <ListItemText
               primary="Send Email"
@@ -425,15 +484,11 @@ function DashboardTable({ candidates }: { candidates: Candidate[] }) {
         )}
         <MenuItem onClick={handleDeleteClick}>
           <ListItemIcon>
-            <Trash2 size={16} color="#d32f2f" />
+            <Trash2 size={16} color="#F44336" />
           </ListItemIcon>
           <ListItemText
             primary="Delete"
-            primaryTypographyProps={{
-              color: "error",
-              variant: "body2",
-              fontWeight: 500,
-            }}
+            primaryTypographyProps={{ color: "error", variant: "body2", fontWeight: 500 }}
           />
         </MenuItem>
       </Menu>
@@ -443,11 +498,9 @@ function DashboardTable({ candidates }: { candidates: Candidate[] }) {
         open={isDeleteDialogOpen}
         onClose={handleDialogClose}
         onClick={(e) => e.stopPropagation()}
-        PaperProps={{
-          sx: { borderRadius: 3, padding: 1 },
-        }}
+        PaperProps={{ sx: { borderRadius: 3, padding: 1 } }}
       >
-        <DialogTitle sx={{ fontWeight: 700, color: "#37474F" }}>
+        <DialogTitle sx={{ fontWeight: 700, color: "text.primary" }}>
           Delete Candidate?
         </DialogTitle>
         <DialogContent>
@@ -460,7 +513,7 @@ function DashboardTable({ candidates }: { candidates: Candidate[] }) {
         <DialogActions sx={{ px: 3, pb: 3 }}>
           <Button
             onClick={handleDialogClose}
-            sx={{ color: "#78909C", fontWeight: 600 }}
+            sx={{ color: "text.secondary", fontWeight: 600 }}
           >
             Cancel
           </Button>
@@ -470,7 +523,7 @@ function DashboardTable({ candidates }: { candidates: Candidate[] }) {
             variant="contained"
             autoFocus
             disabled={isDeleting}
-            sx={{ borderRadius: 2, fontWeight: 600, boxShadow: "none" }}
+            sx={{ borderRadius: 2, fontWeight: 600 }}
           >
             {isDeleting ? (
               <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
