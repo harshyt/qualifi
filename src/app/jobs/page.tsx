@@ -786,7 +786,7 @@ export default function JobLibraryPage() {
                           key={c}
                           label={c}
                           size="small"
-                          sx={{ bgcolor: "#E3F2FD", color: "#1565C0" }}
+                          variant="outlined"
                         />
                       ))}
                     </Box>
@@ -841,13 +841,13 @@ export default function JobLibraryPage() {
                 </Box>
                 <Box
                   sx={{
-                    color: "#37474F",
+                    color: "text.primary",
                     lineHeight: 1.8,
                     "& p": { mt: 0, mb: 1.5 },
                     "& ul, & ol": { pl: 3, mb: 1.5 },
                     "& li": { mb: 0.5 },
                     "& h1, & h2, & h3": {
-                      color: "#37474F",
+                      color: "text.primary",
                       fontWeight: 600,
                       mt: 2,
                       mb: 1,
@@ -883,7 +883,7 @@ export default function JobLibraryPage() {
           sx: { borderRadius: 3, padding: 1 },
         }}
       >
-        <DialogTitle sx={{ fontWeight: 700, color: "#37474F" }}>
+        <DialogTitle sx={{ fontWeight: 700, color: "text.primary" }}>
           Delete Job?
         </DialogTitle>
         <DialogContent>

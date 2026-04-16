@@ -8,7 +8,6 @@ import {
   TableContainer,
   TableHead,
   TableRow,
-  Chip,
   Box,
   Typography,
   IconButton,
@@ -31,6 +30,25 @@ import { useState, useCallback, memo, useMemo } from "react";
 import { useDeleteCandidate } from "@/hooks/useDeleteCandidate";
 import { useRouter } from "next/navigation";
 import EmailComposeDrawer from "./EmailComposeDrawer";
+
+import { StatusChip } from "@/components/shared/StatusChip";
+
+// Define minimal interface matching Supabase
+export interface Candidate {
+  id: string;
+  name: string;
+  role: string;
+  score: number;
+  status: string;
+  created_at: string;
+  email: string;
+  analysis?: {
+    strengths: string[];
+    gaps: string[];
+    experienceLevel: string;
+    summary: string;
+  } | null;
+}
 
 // Define minimal interface matching Supabase
 export interface Candidate {
@@ -75,17 +93,6 @@ function getInitials(name: string) {
   const parts = name.trim().split(/\s+/);
   if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
   return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
-}
-
-function getStatusStyle(status: string) {
-  switch (status) {
-    case "SHORTLIST":
-      return { bg: "#F0FDF4", color: "#4CAF50", label: "Shortlist" };
-    case "REJECT":
-      return { bg: "#FFF1F2", color: "#F44336", label: "Reject" };
-    default:
-      return { bg: "#FFF7ED", color: "#FF9800", label: "Pending" };
-  }
 }
 
 const ScoreGauge = memo(function ScoreGauge({ score }: { score: number }) {
@@ -374,7 +381,6 @@ function DashboardTable({ candidates }: { candidates: Candidate[] }) {
           </TableHead>
           <TableBody>
             {candidates.map((row) => {
-              const statusStyle = getStatusStyle(row.status);
               const isPending = row.status === "PENDING";
               return (
                 <TableRow
@@ -431,16 +437,8 @@ function DashboardTable({ candidates }: { candidates: Candidate[] }) {
                     <ScoreGauge score={row.score} />
                   </TableCell>
                   <TableCell>
-                    <Chip
-                      label={statusStyle.label}
-                      size="small"
-                      sx={{
-                        bgcolor: statusStyle.bg,
-                        color: statusStyle.color,
-                        fontWeight: 700,
-                        fontSize: 12,
-                        border: `1px solid ${statusStyle.color}30`,
-                      }}
+                    <StatusChip
+                      status={row.status as "SHORTLIST" | "REJECT" | "PENDING"}
                     />
                   </TableCell>
                   <TableCell sx={{ color: "text.secondary", fontSize: 14 }}>
