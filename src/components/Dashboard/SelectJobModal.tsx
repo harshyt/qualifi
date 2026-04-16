@@ -15,11 +15,17 @@ import {
 } from "@mui/material";
 import { X, FileText, UploadCloud, Cpu } from "lucide-react";
 import { useJobs } from "@/hooks/useJobs";
+import { toast } from "sonner";
 
 interface SelectJobModalProps {
   open: boolean;
   onClose: () => void;
-  onConfirm: (jobId: string, jobDescription: string, roleKey?: string, files?: File[]) => void;
+  onConfirm: (
+    jobId: string,
+    jobDescription: string,
+    roleKey?: string,
+    files?: File[],
+  ) => void;
 }
 
 function formatFileSize(bytes: number): string {
@@ -97,7 +103,11 @@ const FileCard = memo(function FileCard({
   );
 });
 
-export default function SelectJobModal({ open, onClose, onConfirm }: SelectJobModalProps) {
+export default function SelectJobModal({
+  open,
+  onClose,
+  onConfirm,
+}: SelectJobModalProps) {
   const { data: jobs = [], isLoading: jobsLoading } = useJobs();
   const [selectedJobId, setSelectedJobId] = useState<string | null>(null);
   const [files, setFiles] = useState<File[]>([]);
@@ -109,6 +119,8 @@ export default function SelectJobModal({ open, onClose, onConfirm }: SelectJobMo
     [jobs, selectedJobId],
   );
 
+  const MAX_FILES = 5;
+
   const addFiles = useCallback((incoming: FileList | File[]) => {
     const arr = Array.from(incoming).filter(
       (f) => f.type === "application/pdf" || f.name.endsWith(".docx"),
@@ -117,8 +129,13 @@ export default function SelectJobModal({ open, onClose, onConfirm }: SelectJobMo
       const existing = new Set(prev.map((f) => f.name + f.size));
       const deduped = arr.filter((f) => !existing.has(f.name + f.size));
       const merged = [...prev, ...deduped];
-      if (merged.length > 5) {
-        return merged.slice(0, 5);
+      if (merged.length > MAX_FILES) {
+        const allowed = merged.slice(0, MAX_FILES);
+        const skipped = merged.length - MAX_FILES;
+        toast.error(
+          `Only ${MAX_FILES} files allowed. ${skipped} file${skipped > 1 ? "s" : ""} skipped.`,
+        );
+        return allowed;
       }
       return merged;
     });
@@ -163,7 +180,12 @@ export default function SelectJobModal({ open, onClose, onConfirm }: SelectJobMo
 
   const handleConfirm = useCallback(() => {
     if (!selectedJob || files.length === 0) return;
-    onConfirm(selectedJob.id, selectedJob.description, selectedJob.tags?.[0], files);
+    onConfirm(
+      selectedJob.id,
+      selectedJob.description,
+      selectedJob.tags?.[0],
+      files,
+    );
     setSelectedJobId(null);
     setFiles([]);
   }, [selectedJob, files, onConfirm]);
@@ -182,16 +204,27 @@ export default function SelectJobModal({ open, onClose, onConfirm }: SelectJobMo
     >
       {/* Header */}
       <DialogTitle component="div" sx={{ pb: 0.5 }}>
-        <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "flex-start",
+          }}
+        >
           <Box>
             <Typography variant="h6" fontWeight={700} color="text.primary">
               Upload Resume
             </Typography>
             <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-              Select a job position and upload candidate resumes for AI analysis.
+              Select a job position and upload candidate resumes for AI
+              analysis.
             </Typography>
           </Box>
-          <IconButton size="small" onClick={handleClose} sx={{ mt: -0.5, color: "text.secondary" }}>
+          <IconButton
+            size="small"
+            onClick={handleClose}
+            sx={{ mt: -0.5, color: "text.secondary" }}
+          >
             <X size={18} />
           </IconButton>
         </Box>
@@ -199,7 +232,12 @@ export default function SelectJobModal({ open, onClose, onConfirm }: SelectJobMo
 
       <DialogContent sx={{ pt: 2 }}>
         {/* Job dropdown */}
-        <Typography variant="body2" fontWeight={600} color="text.primary" sx={{ mb: 1 }}>
+        <Typography
+          variant="body2"
+          fontWeight={600}
+          color="text.primary"
+          sx={{ mb: 1 }}
+        >
           Select Job Position
         </Typography>
         <Autocomplete
@@ -267,7 +305,11 @@ export default function SelectJobModal({ open, onClose, onConfirm }: SelectJobMo
           <Typography variant="body2" fontWeight={600} color="text.primary">
             Drag and drop PDF resumes or click to browse
           </Typography>
-          <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: "block" }}>
+          <Typography
+            variant="caption"
+            color="text.secondary"
+            sx={{ mt: 0.5, display: "block" }}
+          >
             Accepts PDF, DOCX · Up to 5 files
           </Typography>
         </Box>
