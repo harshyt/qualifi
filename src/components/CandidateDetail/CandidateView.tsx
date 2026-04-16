@@ -107,7 +107,14 @@ const ScoreWidget = memo(function ScoreWidget({ score }: { score: number }) {
     <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
       <Box sx={{ position: "relative", width: 88, height: 88, flexShrink: 0 }}>
         <svg width="88" height="88" style={{ transform: "rotate(-90deg)" }}>
-          <circle cx="44" cy="44" r={radius} fill="none" stroke="#E2E8F0" strokeWidth="5" />
+          <circle
+            cx="44"
+            cy="44"
+            r={radius}
+            fill="none"
+            stroke="#E2E8F0"
+            strokeWidth="5"
+          />
           <circle
             cx="44"
             cy="44"
@@ -130,10 +137,16 @@ const ScoreWidget = memo(function ScoreWidget({ score }: { score: number }) {
             justifyContent: "center",
           }}
         >
-          <Typography sx={{ fontWeight: 800, fontSize: 22, color, lineHeight: 1 }}>
+          <Typography
+            sx={{ fontWeight: 800, fontSize: 22, color, lineHeight: 1 }}
+          >
             {score}
           </Typography>
-          <Typography variant="caption" color="text.secondary" sx={{ fontSize: 10 }}>
+          <Typography
+            variant="caption"
+            color="text.secondary"
+            sx={{ fontSize: 10 }}
+          >
             /100
           </Typography>
         </Box>
@@ -143,7 +156,11 @@ const ScoreWidget = memo(function ScoreWidget({ score }: { score: number }) {
           AI Match Score
         </Typography>
         <Typography variant="caption" color="text.secondary">
-          {score >= 75 ? "Strong fit" : score >= 50 ? "Moderate fit" : "Low fit"}
+          {score >= 75
+            ? "Strong fit"
+            : score >= 50
+              ? "Moderate fit"
+              : "Low fit"}
         </Typography>
       </Box>
     </Box>
@@ -185,8 +202,13 @@ function CandidateView({ candidate }: CandidateViewProps) {
   const statusStyle = getStatusStyle(candidate.status);
 
   return (
-    <Box sx={{ height: { xs: "auto", md: "calc(100vh - 100px)" }, display: "flex", flexDirection: "column" }}>
-
+    <Box
+      sx={{
+        height: { xs: "auto", md: "calc(100vh - 100px)" },
+        display: "flex",
+        flexDirection: "column",
+      }}
+    >
       {/* ── Header ── */}
       <Box
         sx={{
@@ -222,8 +244,18 @@ function CandidateView({ candidate }: CandidateViewProps) {
           </Avatar>
 
           <Box>
-            <Box sx={{ display: "flex", alignItems: "center", gap: 1, flexWrap: "wrap" }}>
-              <Typography variant="h6" sx={{ fontWeight: 700, color: "text.primary", lineHeight: 1.2 }}>
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                gap: 1,
+                flexWrap: "wrap",
+              }}
+            >
+              <Typography
+                variant="h6"
+                sx={{ fontWeight: 700, color: "text.primary", lineHeight: 1.2 }}
+              >
                 {candidate.name}
               </Typography>
               <Chip
@@ -238,7 +270,11 @@ function CandidateView({ candidate }: CandidateViewProps) {
                 }}
               />
             </Box>
-            <Typography variant="body2" color="text.secondary" sx={{ mt: 0.25 }}>
+            <Typography
+              variant="body2"
+              color="text.secondary"
+              sx={{ mt: 0.25 }}
+            >
               {candidate.role}
               {candidate.analysis?.experienceLevel &&
                 ` · ${candidate.analysis.experienceLevel}`}
@@ -249,16 +285,28 @@ function CandidateView({ candidate }: CandidateViewProps) {
 
         {/* Right: actions */}
         {candidate.status === CandidateStatus.PENDING && (
-          <Box sx={{ display: "flex", gap: 1.5, width: { xs: "100%", sm: "auto" } }}>
+          <Box
+            sx={{
+              display: "flex",
+              gap: 1.5,
+              width: { xs: "100%", sm: "auto" },
+            }}
+          >
             <Button
               variant="outlined"
               color="error"
               fullWidth
               startIcon={
-                isPending ? <CircularProgress size={16} color="inherit" /> : <X size={16} />
+                isPending ? (
+                  <CircularProgress size={16} color="inherit" />
+                ) : (
+                  <X size={16} />
+                )
               }
               disabled={isPending}
-              onClick={() => mutate({ id: candidate.id, status: CandidateStatus.REJECT })}
+              onClick={() =>
+                mutate({ id: candidate.id, status: CandidateStatus.REJECT })
+              }
             >
               {isPending ? "Updating..." : "Reject"}
             </Button>
@@ -267,10 +315,16 @@ function CandidateView({ candidate }: CandidateViewProps) {
               color="success"
               fullWidth
               startIcon={
-                isPending ? <CircularProgress size={16} color="inherit" /> : <Check size={16} />
+                isPending ? (
+                  <CircularProgress size={16} color="inherit" />
+                ) : (
+                  <Check size={16} />
+                )
               }
               disabled={isPending}
-              onClick={() => mutate({ id: candidate.id, status: CandidateStatus.SHORTLIST })}
+              onClick={() =>
+                mutate({ id: candidate.id, status: CandidateStatus.SHORTLIST })
+              }
             >
               {isPending ? "Updating..." : "Shortlist"}
             </Button>
@@ -285,7 +339,10 @@ function CandidateView({ candidate }: CandidateViewProps) {
         sx={{ flexGrow: 1, overflow: { xs: "visible", md: "hidden" } }}
       >
         {/* Left column: resume details */}
-        <Grid size={{ xs: 12, md: 6 }} sx={{ height: { xs: "auto", md: "100%" } }}>
+        <Grid
+          size={{ xs: 12, md: 6 }}
+          sx={{ height: { xs: "auto", md: "100%" } }}
+        >
           <Paper
             sx={{
               height: "100%",
@@ -297,7 +354,11 @@ function CandidateView({ candidate }: CandidateViewProps) {
             {candidate.analysis?.summary && (
               <Box sx={{ mb: 3 }}>
                 <SectionLabel>Executive Summary</SectionLabel>
-                <Typography variant="body2" color="text.primary" sx={{ lineHeight: 1.7 }}>
+                <Typography
+                  variant="body2"
+                  color="text.primary"
+                  sx={{ lineHeight: 1.7 }}
+                >
                   {candidate.analysis.summary}
                 </Typography>
               </Box>
@@ -320,14 +381,25 @@ function CandidateView({ candidate }: CandidateViewProps) {
                         "&:last-child": { mb: 0 },
                       }}
                     >
-                      <Typography variant="subtitle2" sx={{ fontWeight: 700, color: "text.primary" }}>
+                      <Typography
+                        variant="subtitle2"
+                        sx={{ fontWeight: 700, color: "text.primary" }}
+                      >
                         {exp.role}
                       </Typography>
-                      <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
+                      <Typography
+                        variant="body2"
+                        color="text.secondary"
+                        sx={{ mb: 0.5 }}
+                      >
                         {exp.company} · {exp.duration}
                       </Typography>
                       {exp.description && (
-                        <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.6 }}>
+                        <Typography
+                          variant="body2"
+                          color="text.secondary"
+                          sx={{ lineHeight: 1.6 }}
+                        >
                           {exp.description}
                         </Typography>
                       )}
@@ -345,7 +417,10 @@ function CandidateView({ candidate }: CandidateViewProps) {
                     <SectionLabel>Education</SectionLabel>
                     {candidate.analysis.education.map((edu, i) => (
                       <Box key={i} sx={{ mb: 1.5, "&:last-child": { mb: 0 } }}>
-                        <Typography variant="subtitle2" sx={{ fontWeight: 700, color: "text.primary" }}>
+                        <Typography
+                          variant="subtitle2"
+                          sx={{ fontWeight: 700, color: "text.primary" }}
+                        >
                           {edu.degree}
                         </Typography>
                         <Typography variant="body2" color="text.secondary">
@@ -382,7 +457,10 @@ function CandidateView({ candidate }: CandidateViewProps) {
         </Grid>
 
         {/* Right column: AI analysis */}
-        <Grid size={{ xs: 12, md: 6 }} sx={{ height: { xs: "auto", md: "100%" } }}>
+        <Grid
+          size={{ xs: 12, md: 6 }}
+          sx={{ height: { xs: "auto", md: "100%" } }}
+        >
           <Paper
             sx={{
               height: "100%",
@@ -401,15 +479,22 @@ function CandidateView({ candidate }: CandidateViewProps) {
             <Box sx={{ mb: 3 }}>
               <SectionLabel color="#4CAF50">Strengths</SectionLabel>
               <Box component="ul" sx={{ m: 0, pl: 2.5 }}>
-                {candidate.analysis?.strengths && candidate.analysis.strengths.length > 0
-                  ? candidate.analysis.strengths.map((s, i) => (
-                      <Box component="li" key={i} sx={{ mb: 0.75 }}>
-                        <Typography variant="body2" color="text.primary">
-                          {s}
-                        </Typography>
-                      </Box>
-                    ))
-                  : <Box component="li"><Typography variant="body2" color="text.secondary">None identified</Typography></Box>}
+                {candidate.analysis?.strengths &&
+                candidate.analysis.strengths.length > 0 ? (
+                  candidate.analysis.strengths.map((s, i) => (
+                    <Box component="li" key={i} sx={{ mb: 0.75 }}>
+                      <Typography variant="body2" color="text.primary">
+                        {s}
+                      </Typography>
+                    </Box>
+                  ))
+                ) : (
+                  <Box component="li">
+                    <Typography variant="body2" color="text.secondary">
+                      None identified
+                    </Typography>
+                  </Box>
+                )}
               </Box>
             </Box>
 
@@ -430,20 +515,21 @@ function CandidateView({ candidate }: CandidateViewProps) {
             )}
 
             {/* Red Flags */}
-            {candidate.analysis?.redFlags && candidate.analysis.redFlags.length > 0 && (
-              <Box sx={{ mb: 3 }}>
-                <SectionLabel color="#F44336">Red Flags</SectionLabel>
-                <Box component="ul" sx={{ m: 0, pl: 2.5 }}>
-                  {candidate.analysis.redFlags.map((flag, i) => (
-                    <Box component="li" key={i} sx={{ mb: 0.75 }}>
-                      <Typography variant="body2" sx={{ color: "#F44336" }}>
-                        {flag}
-                      </Typography>
-                    </Box>
-                  ))}
+            {candidate.analysis?.redFlags &&
+              candidate.analysis.redFlags.length > 0 && (
+                <Box sx={{ mb: 3 }}>
+                  <SectionLabel color="#F44336">Red Flags</SectionLabel>
+                  <Box component="ul" sx={{ m: 0, pl: 2.5 }}>
+                    {candidate.analysis.redFlags.map((flag, i) => (
+                      <Box component="li" key={i} sx={{ mb: 0.75 }}>
+                        <Typography variant="body2" sx={{ color: "#F44336" }}>
+                          {flag}
+                        </Typography>
+                      </Box>
+                    ))}
+                  </Box>
                 </Box>
-              </Box>
-            )}
+              )}
 
             {/* Interview Focus */}
             {candidate.analysis?.interviewFocusAreas &&
@@ -468,13 +554,15 @@ function CandidateView({ candidate }: CandidateViewProps) {
                 <Box sx={{ mb: 3 }}>
                   <SectionLabel color="#FF9800">Culture Fit</SectionLabel>
                   <Box component="ul" sx={{ m: 0, pl: 2.5 }}>
-                    {candidate.analysis.cultureFitIndicators.map((indicator, i) => (
-                      <Box component="li" key={i} sx={{ mb: 0.75 }}>
-                        <Typography variant="body2" color="text.primary">
-                          {indicator}
-                        </Typography>
-                      </Box>
-                    ))}
+                    {candidate.analysis.cultureFitIndicators.map(
+                      (indicator, i) => (
+                        <Box component="li" key={i} sx={{ mb: 0.75 }}>
+                          <Typography variant="body2" color="text.primary">
+                            {indicator}
+                          </Typography>
+                        </Box>
+                      ),
+                    )}
                   </Box>
                 </Box>
               )}
@@ -502,7 +590,9 @@ function CandidateView({ candidate }: CandidateViewProps) {
                         >
                           {group.category}
                         </Typography>
-                        <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.75 }}>
+                        <Box
+                          sx={{ display: "flex", flexWrap: "wrap", gap: 0.75 }}
+                        >
                           {group.technologies.map((tech, j) => (
                             <Chip
                               key={j}
@@ -524,24 +614,29 @@ function CandidateView({ candidate }: CandidateViewProps) {
               )}
 
             {/* Skills (general) */}
-            {candidate.analysis?.skills && candidate.analysis.skills.length > 0 && (
-              <>
-                <Divider sx={{ my: 2.5 }} />
-                <Box>
-                  <SectionLabel>Skills</SectionLabel>
-                  <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.75 }}>
-                    {candidate.analysis.skills.map((skill, i) => (
-                      <Chip
-                        key={i}
-                        label={skill}
-                        size="small"
-                        sx={{ bgcolor: "#F1F5F9", color: "#475569", fontWeight: 500 }}
-                      />
-                    ))}
+            {candidate.analysis?.skills &&
+              candidate.analysis.skills.length > 0 && (
+                <>
+                  <Divider sx={{ my: 2.5 }} />
+                  <Box>
+                    <SectionLabel>Skills</SectionLabel>
+                    <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.75 }}>
+                      {candidate.analysis.skills.map((skill, i) => (
+                        <Chip
+                          key={i}
+                          label={skill}
+                          size="small"
+                          sx={{
+                            bgcolor: "#F1F5F9",
+                            color: "#475569",
+                            fontWeight: 500,
+                          }}
+                        />
+                      ))}
+                    </Box>
                   </Box>
-                </Box>
-              </>
-            )}
+                </>
+              )}
           </Paper>
         </Grid>
       </Grid>

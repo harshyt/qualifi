@@ -263,12 +263,17 @@ export default function JobLibraryPage() {
       >
         <Box>
           <Typography
-            variant="h4"
-            sx={{ fontWeight: 700, color: "#37474F", mb: 1 }}
+            variant="h5"
+            sx={{
+              fontWeight: 700,
+              color: "text.primary",
+              fontSize: { xs: "1.25rem", sm: "1.5rem" },
+              mb: 1,
+            }}
           >
             Job Library
           </Typography>
-          <Typography variant="body1" color="text.secondary">
+          <Typography variant="body2" color="text.secondary">
             Manage open positions and job descriptions.
           </Typography>
         </Box>
@@ -289,7 +294,14 @@ export default function JobLibraryPage() {
       </Box>
 
       {error ? (
-        <Box sx={{ p: 3, bgcolor: "#ffebee", borderRadius: 2 }}>
+        <Box
+          sx={{
+            p: 3,
+            bgcolor: "#FFF1F2",
+            border: "1px solid #FECDD3",
+            borderRadius: 2,
+          }}
+        >
           <Typography color="error" sx={{ fontWeight: 600 }}>
             Error loading jobs: {error}
           </Typography>
@@ -306,11 +318,11 @@ export default function JobLibraryPage() {
             textAlign: "center",
             p: 6,
             bgcolor: "#F9FAFB",
+            border: "1px solid #E2E8F0",
             borderRadius: 2,
-            border: "1px dashed #E0E0E0",
           }}
         >
-          <Typography variant="h6" color="text.secondary" gutterBottom>
+          <Typography variant="body1" color="text.secondary" gutterBottom>
             No jobs found
           </Typography>
           <Typography variant="body2" color="text.disabled">
@@ -385,7 +397,7 @@ export default function JobLibraryPage() {
                 {filteredJobs.length === 0 ? (
                   <TableRow>
                     <TableCell
-                      colSpan={4}
+                      colSpan={5}
                       align="center"
                       sx={{ py: 4, color: "text.secondary" }}
                     >
@@ -584,7 +596,10 @@ export default function JobLibraryPage() {
             flexShrink: 0,
           }}
         >
-          <Typography variant="h6" sx={{ fontWeight: 600 }}>
+          <Typography
+            variant="h6"
+            sx={{ fontWeight: 600, color: "text.primary" }}
+          >
             {editingJob ? "Edit Job" : "Create New Job"}
           </Typography>
           <IconButton
@@ -604,20 +619,20 @@ export default function JobLibraryPage() {
               p: 4,
               m: { xs: 2, sm: 3 },
               mt: 4,
-              bgcolor: "#ffebee",
+              bgcolor: "#FFF1F2",
+              border: "1px solid #FECDD3",
               borderRadius: 2,
-              border: "1px solid #ffcdd2",
             }}
           >
             <Typography
-              variant="h6"
+              variant="body1"
               color="error"
               gutterBottom
               sx={{ fontWeight: 600 }}
             >
               Access Denied
             </Typography>
-            <Typography variant="body1" color="text.secondary">
+            <Typography variant="body2" color="text.secondary">
               You do not have permission to add jobs. Please ask an ADMIN to do
               so.
             </Typography>
@@ -668,8 +683,12 @@ export default function JobLibraryPage() {
             >
               <Box sx={{ flex: 1, mr: 2 }}>
                 <Typography
-                  variant="h5"
-                  sx={{ fontWeight: 700, color: "#37474F", mb: 0.5 }}
+                  variant="h6"
+                  sx={{
+                    fontWeight: 700,
+                    color: "text.primary",
+                    mb: 0.5,
+                  }}
                 >
                   {selectedJob.title}
                 </Typography>
@@ -678,7 +697,7 @@ export default function JobLibraryPage() {
                     display: "flex",
                     alignItems: "center",
                     gap: 1,
-                    color: "#78909C",
+                    color: "text.secondary",
                   }}
                 >
                   <Calendar size={14} />

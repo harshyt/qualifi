@@ -26,7 +26,7 @@ import {
   CircularProgress,
   Avatar,
 } from "@mui/material";
-import { Eye, MoreHorizontal, Trash2, Mail } from "lucide-react";
+import { MoreHorizontal, Trash2, Mail } from "lucide-react";
 import { useState, useCallback, memo, useMemo } from "react";
 import { useDeleteCandidate } from "@/hooks/useDeleteCandidate";
 import { useRouter } from "next/navigation";
@@ -106,7 +106,10 @@ const ScoreGauge = memo(function ScoreGauge({ score }: { score: number }) {
           position: "relative",
         }}
       >
-        <Typography variant="caption" sx={{ fontWeight: 700, color, zIndex: 1 }}>
+        <Typography
+          variant="caption"
+          sx={{ fontWeight: 700, color, zIndex: 1 }}
+        >
           {score}
         </Typography>
         <svg
@@ -140,7 +143,11 @@ const ScoreGauge = memo(function ScoreGauge({ score }: { score: number }) {
   );
 });
 
-const CandidateAvatar = memo(function CandidateAvatar({ name }: { name: string }) {
+const CandidateAvatar = memo(function CandidateAvatar({
+  name,
+}: {
+  name: string;
+}) {
   const { bg, color } = getAvatarColor(name);
   return (
     <Avatar
@@ -161,9 +168,12 @@ const CandidateAvatar = memo(function CandidateAvatar({ name }: { name: string }
 function DashboardTable({ candidates }: { candidates: Candidate[] }) {
   const router = useRouter();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-  const [selectedCandidate, setSelectedCandidate] = useState<Candidate | null>(null);
+  const [selectedCandidate, setSelectedCandidate] = useState<Candidate | null>(
+    null,
+  );
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const { mutate: deleteCandidate, isPending: isDeleting } = useDeleteCandidate();
+  const { mutate: deleteCandidate, isPending: isDeleting } =
+    useDeleteCandidate();
   const open = Boolean(anchorEl);
 
   // Selection state
@@ -263,17 +273,13 @@ function DashboardTable({ candidates }: { candidates: Candidate[] }) {
     [router],
   );
 
-  const handleViewClick = useCallback(
-    (e: React.MouseEvent, id: string) => {
-      e.stopPropagation();
-      router.push(`/dashboard/candidate/${id}`);
-    },
-    [router],
-  );
-
   return (
     <>
-      <TableContainer component={Paper} elevation={0} sx={{ border: "none", borderRadius: 0 }}>
+      <TableContainer
+        component={Paper}
+        elevation={0}
+        sx={{ border: "none", borderRadius: 0 }}
+      >
         <Table sx={{ minWidth: 650 }} aria-label="candidate table">
           <TableHead sx={{ bgcolor: "#F8FAFC" }}>
             <TableRow>
@@ -286,25 +292,82 @@ function DashboardTable({ candidates }: { candidates: Candidate[] }) {
                   disabled={selectableCandidates.length === 0}
                 />
               </TableCell>
-              <TableCell sx={{ fontWeight: 600, color: "text.secondary", fontSize: 12, textTransform: "uppercase", letterSpacing: "0.04em" }}>
+              <TableCell
+                sx={{
+                  fontWeight: 600,
+                  color: "text.secondary",
+                  fontSize: 12,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.04em",
+                }}
+              >
                 Candidate Name
               </TableCell>
-              <TableCell sx={{ fontWeight: 600, color: "text.secondary", fontSize: 12, textTransform: "uppercase", letterSpacing: "0.04em" }}>
+              <TableCell
+                sx={{
+                  fontWeight: 600,
+                  color: "text.secondary",
+                  fontSize: 12,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.04em",
+                }}
+              >
                 Role
               </TableCell>
-              <TableCell sx={{ fontWeight: 600, color: "text.secondary", fontSize: 12, textTransform: "uppercase", letterSpacing: "0.04em" }}>
+              <TableCell
+                sx={{
+                  fontWeight: 600,
+                  color: "text.secondary",
+                  fontSize: 12,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.04em",
+                }}
+              >
                 Score
               </TableCell>
-              <TableCell sx={{ fontWeight: 600, color: "text.secondary", fontSize: 12, textTransform: "uppercase", letterSpacing: "0.04em" }}>
+              <TableCell
+                sx={{
+                  fontWeight: 600,
+                  color: "text.secondary",
+                  fontSize: 12,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.04em",
+                }}
+              >
                 Verdict
               </TableCell>
-              <TableCell sx={{ fontWeight: 600, color: "text.secondary", fontSize: 12, textTransform: "uppercase", letterSpacing: "0.04em" }}>
+              <TableCell
+                sx={{
+                  fontWeight: 600,
+                  color: "text.secondary",
+                  fontSize: 12,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.04em",
+                }}
+              >
                 Experience
               </TableCell>
-              <TableCell sx={{ fontWeight: 600, color: "text.secondary", fontSize: 12, textTransform: "uppercase", letterSpacing: "0.04em" }}>
+              <TableCell
+                sx={{
+                  fontWeight: 600,
+                  color: "text.secondary",
+                  fontSize: 12,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.04em",
+                }}
+              >
                 Date Applied
               </TableCell>
-              <TableCell align="right" sx={{ fontWeight: 600, color: "text.secondary", fontSize: 12, textTransform: "uppercase", letterSpacing: "0.04em" }}>
+              <TableCell
+                align="right"
+                sx={{
+                  fontWeight: 600,
+                  color: "text.secondary",
+                  fontSize: 12,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.04em",
+                }}
+              >
                 Actions
               </TableCell>
             </TableRow>
@@ -333,17 +396,25 @@ function DashboardTable({ candidates }: { candidates: Candidate[] }) {
                       size="small"
                       checked={selectedIds.has(row.id)}
                       disabled={isPending}
-                      onChange={(e) => handleToggleRow(row.id, e.target.checked)}
+                      onChange={(e) =>
+                        handleToggleRow(row.id, e.target.checked)
+                      }
                       sx={{ opacity: isPending ? 0.3 : 1 }}
                     />
                   </TableCell>
                   <TableCell component="th" scope="row">
-                    <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+                    <Box
+                      sx={{ display: "flex", alignItems: "center", gap: 1.5 }}
+                    >
                       <CandidateAvatar name={row.name} />
                       <Box>
                         <Typography
                           variant="subtitle2"
-                          sx={{ fontWeight: 600, color: "text.primary", lineHeight: 1.3 }}
+                          sx={{
+                            fontWeight: 600,
+                            color: "text.primary",
+                            lineHeight: 1.3,
+                          }}
                         >
                           {row.name}
                         </Typography>
@@ -353,7 +424,9 @@ function DashboardTable({ candidates }: { candidates: Candidate[] }) {
                       </Box>
                     </Box>
                   </TableCell>
-                  <TableCell sx={{ color: "text.primary", fontSize: 14 }}>{row.role}</TableCell>
+                  <TableCell sx={{ color: "text.primary", fontSize: 14 }}>
+                    {row.role}
+                  </TableCell>
                   <TableCell>
                     <ScoreGauge score={row.score} />
                   </TableCell>
@@ -380,14 +453,7 @@ function DashboardTable({ candidates }: { candidates: Candidate[] }) {
                       year: "numeric",
                     })}
                   </TableCell>
-                  <TableCell align="right">
-                    <IconButton
-                      size="small"
-                      onClick={(e) => handleViewClick(e, row.id)}
-                      sx={{ color: "text.secondary" }}
-                    >
-                      <Eye size={17} />
-                    </IconButton>
+                  <TableCell align="center">
                     <IconButton
                       size="small"
                       onClick={(e) => handleMenuClick(e, row)}
@@ -429,9 +495,14 @@ function DashboardTable({ candidates }: { candidates: Candidate[] }) {
           >
             <Typography
               variant="body2"
-              sx={{ fontWeight: 600, color: "text.primary", whiteSpace: "nowrap" }}
+              sx={{
+                fontWeight: 600,
+                color: "text.primary",
+                whiteSpace: "nowrap",
+              }}
             >
-              {selectedIds.size} candidate{selectedIds.size !== 1 ? "s" : ""} selected
+              {selectedIds.size} candidate{selectedIds.size !== 1 ? "s" : ""}{" "}
+              selected
             </Typography>
             <Button
               variant="contained"
@@ -450,7 +521,11 @@ function DashboardTable({ candidates }: { candidates: Candidate[] }) {
               variant="text"
               size="small"
               onClick={() => setSelectedIdsRaw(new Set())}
-              sx={{ color: "text.secondary", fontWeight: 600, whiteSpace: "nowrap" }}
+              sx={{
+                color: "text.secondary",
+                fontWeight: 600,
+                whiteSpace: "nowrap",
+              }}
             >
               Clear
             </Button>
@@ -488,7 +563,11 @@ function DashboardTable({ candidates }: { candidates: Candidate[] }) {
           </ListItemIcon>
           <ListItemText
             primary="Delete"
-            primaryTypographyProps={{ color: "error", variant: "body2", fontWeight: 500 }}
+            primaryTypographyProps={{
+              color: "error",
+              variant: "body2",
+              fontWeight: 500,
+            }}
           />
         </MenuItem>
       </Menu>
