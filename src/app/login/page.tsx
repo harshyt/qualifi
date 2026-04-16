@@ -12,6 +12,7 @@ import {
 } from "@mui/material";
 import { useRouter } from "next/navigation";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
+import { DotPattern } from "@/components/ui/dot-pattern";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -54,9 +55,20 @@ export default function LoginPage() {
         alignItems: "center",
         justifyContent: "center",
         bgcolor: "#F9FAFB",
+        position: "relative",
+        overflow: "hidden",
       }}
     >
-      <Card sx={{ maxWidth: 400, width: "100%", p: 2 }}>
+      <DotPattern className="[mask-image:radial-gradient(300px_circle_at_center,white,transparent)]" />
+      <Card
+        sx={{
+          maxWidth: 400,
+          width: "100%",
+          p: 2,
+          position: "relative",
+          zIndex: 1,
+        }}
+      >
         <CardContent>
           <Box
             sx={{
