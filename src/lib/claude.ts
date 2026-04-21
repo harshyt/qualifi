@@ -1,11 +1,11 @@
-import { GoogleGenAI, ThinkingLevel } from "@google/genai";
+import Anthropic from "@anthropic-ai/sdk";
 import mammoth from "mammoth";
 import { RoleKey, ROLE_CONFIGS } from "@/constants/roles";
 import { getServerEnv } from "@/lib/env";
 import { analysisResultSchema, type AnalysisResult } from "@/types/analysis";
 import { logger } from "@/lib/logger";
 
-const ai = new GoogleGenAI({ apiKey: getServerEnv().GEMINI_API_KEY });
+const client = new Anthropic({ apiKey: getServerEnv().ANTHROPIC_API_KEY });
 
 function buildPrompt(
   role: RoleKey,
@@ -74,8 +74,8 @@ Use this exact structure:
 }
 
 /**
- * Analyzes a resume against a job description using Gemini.
- * - PDF files are sent as inline base64 data (multimodal).
+ * Analyzes a resume against a job description using Claude.
+ * - PDF files are sent as inline base64 documents (multimodal).
  * - DOC/DOCX files have text extracted via mammoth, then sent as a text part.
  *
  * NOTE: `jobDescription` is untrusted user input and poses a prompt injection risk.
@@ -88,7 +88,6 @@ export async function analyzeResume(
   jobDescription: string,
   role: RoleKey = "generic",
 ): Promise<AnalysisResult> {
-  // Sanitize the job description to minimize injection severity and limit token exhaustion.
   const safeJobDesc = jobDescription.slice(0, 15000).replace(/```/g, "");
 
   const ext = fileName.split(".").pop()?.toLowerCase() ?? "";
@@ -97,7 +96,8 @@ export async function analyzeResume(
       "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ||
     ext === "docx";
 
-  let contents: Parameters<typeof ai.models.generateContent>[0]["contents"];
+  let messages: Anthropic.MessageParam[];
+
   if (isDocx) {
     const { value: extractedText } = await mammoth.extractRawText({
       buffer: fileBuffer,
@@ -109,51 +109,65 @@ export async function analyzeResume(
     }
     const safeResumeText = extractedText.slice(0, 15000).replace(/```/g, "");
     const prompt = buildPrompt(role, safeJobDesc, true);
-    contents = [prompt, `RESUME TEXT:\n${safeResumeText}`];
+    messages = [
+      { role: "user", content: `${prompt}\n\nRESUME TEXT:\n${safeResumeText}` },
+    ];
   } else {
     const prompt = buildPrompt(role, safeJobDesc, false);
     const base64Data = fileBuffer.toString("base64");
-    contents = [
-      { inlineData: { data: base64Data, mimeType: "application/pdf" } },
-      prompt,
+    messages = [
+      {
+        role: "user",
+        content: [
+          {
+            type: "document",
+            source: {
+              type: "base64",
+              media_type: "application/pdf",
+              data: base64Data,
+            },
+          },
+          { type: "text", text: prompt },
+        ],
+      },
     ];
   }
 
-  let response;
+  let response: Anthropic.Message;
   const t0 = Date.now();
   try {
-    response = await ai.models.generateContent({
-      model: "gemini-3-flash-preview",
-      contents,
-      config: {
-        thinkingConfig: {
-          thinkingLevel: ThinkingLevel.LOW,
-        },
-      },
+    response = await client.messages.create({
+      model: "claude-sonnet-4-6",
+      max_tokens: 4096,
+      messages,
     });
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
-    throw new Error(`Gemini API call failed: ${message}`);
+    throw new Error(`Claude API call failed: ${message}`);
   }
-  logger.info("Gemini API call complete", {
+  logger.info("Claude API call complete", {
     role,
     durationMs: Date.now() - t0,
   });
 
-  const text = response.text ?? "";
-  const cleanedText = text.replace(/```json\n?|\n?```/g, "").trim();
+  const textBlock = response.content.find(
+    (b): b is Anthropic.TextBlock => b.type === "text",
+  );
+  if (!textBlock) {
+    throw new Error("Claude returned no text output.");
+  }
+
+  const cleanedText = textBlock.text.replace(/```json\n?|\n?```/g, "").trim();
 
   let parsed: unknown;
   try {
     parsed = JSON.parse(cleanedText);
   } catch {
     throw new Error(
-      "Gemini returned non-JSON output. The model may have violated the response format.",
+      "Claude returned non-JSON output. The model may have violated the response format.",
     );
   }
 
-  // Validate the AI response against our schema before trusting it
-  // ZodError is intentionally uncaught here — analyze.ts handles it specifically
   const validated = analysisResultSchema.parse(parsed);
   return validated;
 }

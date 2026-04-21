@@ -1,5 +1,5 @@
 "use server";
-import { analyzeResume } from "@/lib/gemini";
+import { analyzeResume } from "@/lib/claude";
 import { createSupabaseServerClient } from "@/lib/supabase-server";
 import { RoleKey, ROLE_CONFIGS } from "@/constants/roles";
 import { ZodError } from "zod";
