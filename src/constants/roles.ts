@@ -4,6 +4,7 @@ export type RoleKey =
   | "react-native"
   | "qa-playwright"
   | "manual-tester"
+  | "senior-data-engineer"
   | "generic";
 
 export interface RoleConfig {
@@ -105,6 +106,26 @@ export const ROLE_CONFIGS: Record<RoleKey, RoleConfig> = {
 - 60–74: Functional manual tester, basic documentation, limited API/SQL skills
 - 45–59: Junior-level manual testing, vague process descriptions
 - 0–44: Insufficient QA experience or no evidence of structured testing`,
+  },
+
+  "senior-data-engineer": {
+    persona:
+      "Senior Data Engineer and Big Data Platform Architect with 10+ years of experience building production-grade data pipelines at TB-scale",
+    title: "Senior Data Engineer",
+    evaluationCriteria: `
+- MUST-HAVE: PySpark / Spark SQL, Apache Kafka (hands-on streaming), Azure Databricks or equivalent cloud-native compute, Azure Data Factory or Airflow for orchestration, Python + SQL proficiency, Delta Lake / ACID-compliant data lakes, CI/CD for data pipelines (Azure DevOps / GitHub Actions), production pipeline ownership (not just POCs)
+- STRONG PLUS: Medallion Architecture (Bronze / Silver / Gold on ADLS Gen2 or S3), Spark optimization (partitioning, Z-ordering, caching, data skew mitigation), CDC ingestion, SCD Type 1/2, Star Schema / dimensional modeling, Snowflake or Azure Synapse Dedicated SQL Pool, data quality frameworks (schema validation, deduplication, merge operations)
+- ASSESS: Scale of pipelines built (TB-level?), ownership level (designed vs. maintained?), Spark internals understanding (DAG, shuffle, catalyst optimizer), distributed computing depth, experience migrating on-prem / legacy systems to cloud with zero data loss
+- CHECK: Real-time vs batch experience ratio, workflow orchestration maturity (Airflow DAGs, dependency management, fault tolerance), monitoring setup (Grafana, Splunk or equivalent), metadata-driven / reusable framework design
+- CLOUD DEPTH: Azure-first (Databricks > ADF > Synapse > ADLS Gen2 > Azure SQL); AWS equivalents (S3, EMR, Glue, Redshift) and GCP (BigQuery, Dataproc, Dataflow) are a plus
+- BONUS: DBT or DBTx, Microsoft Fabric, Snowflake Delta Live Tables, Power BI, NLP/ML workflow integration (scikit-learn, NLTK), NoSQL (HBase, Cassandra), domain expertise in Healthcare / Finance / Telecom / Supply Chain, certifications (DP-203, Databricks Certified DE Professional, Snowflake/AWS/GCP data certs)
+- RED FLAGS: Only POC-level experience with no production deployments, ADF-only without Spark/Databricks depth, no Kafka or streaming experience, no orchestration tool beyond cron jobs, no understanding of ACID semantics or data quality, purely SQL-focused with no distributed computing exposure, no CI/CD for data workflows`,
+    scoringRubric: `
+- 90–100: TB-scale production pipelines, PySpark + Databricks expert, Kafka streaming, Medallion Architecture, Airflow orchestration, CI/CD, Delta Lake ACID ops, monitoring, cross-cloud exposure, strong framework design
+- 75–89: Solid data engineering depth — PySpark, Databricks, batch + streaming, orchestration, Delta Lake, cloud-native (Azure or AWS), good CI/CD hygiene
+- 60–74: Competent data engineer but gaps in streaming (Kafka), Spark optimization, or production-grade orchestration; possibly ADF-heavy without sufficient Databricks/Spark depth
+- 45–59: Primarily ETL/SQL-focused, limited distributed computing, minimal Spark or streaming, mostly POC work or legacy tooling (Sqoop, Hive only)
+- 0–44: Insufficient data engineering experience — BI/analytics role misrepresented as data engineering, no big data or cloud pipeline work`,
   },
 
   generic: {
