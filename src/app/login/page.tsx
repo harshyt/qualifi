@@ -81,7 +81,7 @@ export default function LoginPage() {
           >
             <Image
               src="/logos/gemini_logo.png"
-              alt="Gemini Logo"
+              alt="Claude Logo"
               width={32}
               height={32}
               priority
@@ -91,7 +91,7 @@ export default function LoginPage() {
               component="div"
               sx={{
                 fontWeight: 700,
-                color: "#2196F3",
+                color: "primary.main",
               }}
             >
               Qualifi

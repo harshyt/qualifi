@@ -282,8 +282,6 @@ export default function JobLibraryPage() {
           startIcon={<Plus size={20} />}
           onClick={() => setIsDrawerOpen(true)}
           sx={{
-            bgcolor: "#2196F3",
-            "&:hover": { bgcolor: "#1976D2" },
             textTransform: "none",
             borderRadius: 2,
             px: 3,
@@ -338,7 +336,7 @@ export default function JobLibraryPage() {
               size="small"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              sx={{ flexGrow: 1, bgcolor: "white" }}
+              sx={{ flexGrow: 1, bgcolor: "background.paper" }}
               slotProps={{
                 input: {
                   startAdornment: (
@@ -349,7 +347,10 @@ export default function JobLibraryPage() {
                 },
               }}
             />
-            <FormControl size="small" sx={{ minWidth: 200, bgcolor: "white" }}>
+            <FormControl
+              size="small"
+              sx={{ minWidth: 200, bgcolor: "background.paper" }}
+            >
               <InputLabel>Filter by Client</InputLabel>
               <Select
                 value={selectedClientFilter}

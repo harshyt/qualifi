@@ -75,7 +75,7 @@ function Sidebar({ mobileOpen, onClose }: SidebarProps) {
             component="div"
             sx={{
               fontWeight: "bolder",
-              color: "#2196F3",
+              color: "primary.main",
             }}
           >
             Qualifi
@@ -97,24 +97,27 @@ function Sidebar({ mobileOpen, onClose }: SidebarProps) {
                   mx: 1,
                   mb: 0.5,
                   "&.Mui-selected": {
-                    backgroundColor: "#E3F2FD",
-                    color: "#2196F3",
+                    backgroundColor: "primary.50",
+                    color: "primary.main",
                     "&:hover": {
-                      backgroundColor: "#BBDEFB",
+                      backgroundColor: "primary.100",
                     },
                     "& .lucide": {
-                      color: "#2196F3",
+                      color: "primary.main",
                     },
                   },
                   "&:hover": {
-                    backgroundColor: "#F5F5F5",
+                    backgroundColor: "action.hover",
                   },
                 }}
               >
                 <ListItemIcon
                   sx={{
                     minWidth: 40,
-                    color: pathname === item.path ? "#2196F3" : "#78909C",
+                    color:
+                      pathname === item.path
+                        ? "primary.main"
+                        : "text.secondary",
                   }}
                 >
                   {item.icon}
@@ -146,7 +149,12 @@ function Sidebar({ mobileOpen, onClose }: SidebarProps) {
               }}
             >
               <Avatar
-                sx={{ width: 32, height: 32, bgcolor: "#2196F3", fontSize: 14 }}
+                sx={{
+                  width: 32,
+                  height: 32,
+                  bgcolor: "primary.main",
+                  fontSize: 14,
+                }}
               >
                 {userInitial}
               </Avatar>
@@ -155,7 +163,7 @@ function Sidebar({ mobileOpen, onClose }: SidebarProps) {
                   variant="body2"
                   sx={{
                     fontSize: 12,
-                    color: "#546E7A",
+                    color: "text.secondary",
                     overflow: "hidden",
                     textOverflow: "ellipsis",
                     whiteSpace: "nowrap",
@@ -171,7 +179,7 @@ function Sidebar({ mobileOpen, onClose }: SidebarProps) {
               disabled={isPending}
               sx={{ borderRadius: 2 }}
             >
-              <ListItemIcon sx={{ minWidth: 40, color: "#78909C" }}>
+              <ListItemIcon sx={{ minWidth: 40, color: "text.secondary" }}>
                 <LogOut size={20} />
               </ListItemIcon>
               <ListItemText
@@ -204,7 +212,7 @@ function Sidebar({ mobileOpen, onClose }: SidebarProps) {
             boxSizing: "border-box",
             width: drawerWidth,
             borderRight: "1px solid #E0E0E0",
-            backgroundColor: "#F9FAFB",
+            backgroundColor: "background.default",
           },
         }}
       >
@@ -219,7 +227,7 @@ function Sidebar({ mobileOpen, onClose }: SidebarProps) {
             boxSizing: "border-box",
             width: drawerWidth,
             borderRight: "1px solid #E0E0E0",
-            backgroundColor: "#F9FAFB",
+            backgroundColor: "background.default",
           },
         }}
         open

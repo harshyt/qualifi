@@ -13,3 +13,49 @@ a {
 * {
   box-sizing: border-box;
 }
+
+* {
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease;
+}
+
+svg,
+img,
+video {
+  transition: none !important;
+}
+
+::selection {
+  background: #eef2ff;
+  color: #3b5bdb;
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #d4cfc8 transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  background-color: #d4cfc8;
+  border-radius: 3px;
+}
+
+:focus-visible {
+  outline: 2px solid #3b5bdb;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+:focus:not(:focus-visible) {
+  outline: none;
+}

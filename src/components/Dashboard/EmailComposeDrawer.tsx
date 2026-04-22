@@ -154,8 +154,7 @@ export default function EmailComposeDrawer({
               fontWeight: 600,
               flex: 1,
               boxShadow: "none",
-              bgcolor: "#2196F3",
-              "&:hover": { bgcolor: "#1976D2", boxShadow: "none" },
+              "&:hover": { boxShadow: "none" },
             }}
           >
             Open in Outlook

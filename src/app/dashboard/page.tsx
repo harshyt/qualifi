@@ -130,7 +130,7 @@ export default function DashboardPage() {
               size="small"
               sx={{
                 bgcolor: "#EFF6FF",
-                color: "#2196F3",
+                color: "primary.main",
                 fontWeight: 600,
                 fontSize: 12,
                 borderRadius: "12px",
@@ -144,9 +144,10 @@ export default function DashboardPage() {
       {/* Filters + table */}
       <Box
         sx={{
-          border: "1px solid #E2E8F0",
+          border: "1px solid",
+          borderColor: "divider",
           borderRadius: 2,
-          bgcolor: "#FFFFFF",
+          bgcolor: "background.paper",
           overflow: "hidden",
         }}
       >
@@ -155,7 +156,8 @@ export default function DashboardPage() {
           sx={{
             px: 2,
             py: 1.5,
-            borderBottom: "1px solid #E2E8F0",
+            borderBottom: "1px solid",
+            borderColor: "divider",
             display: "flex",
             alignItems: "center",
           }}
@@ -170,8 +172,9 @@ export default function DashboardPage() {
               sx={{
                 width: 32,
                 height: 32,
-                border: "3px solid #E2E8F0",
-                borderTopColor: "#2196F3",
+                border: "3px solid",
+                borderColor: "divider",
+                borderTopColor: "primary.main",
                 borderRadius: "50%",
                 animation: "spin 0.8s linear infinite",
                 "@keyframes spin": { to: { transform: "rotate(360deg)" } },

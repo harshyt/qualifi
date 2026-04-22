@@ -200,7 +200,7 @@ export default function AddJobForm({
           flexShrink: 0,
           p: { xs: 2, sm: 3 },
           borderTop: "1px solid #E0E0E0",
-          bgcolor: "white",
+          bgcolor: "background.paper",
         }}
       >
         <Button
@@ -208,9 +208,7 @@ export default function AddJobForm({
           variant="contained"
           disabled={isSubmitting}
           sx={{
-            bgcolor: "#2196F3",
-            color: "white",
-            "&:hover": { bgcolor: "#1976D2" },
+            color: "#fff",
             px: 4,
             py: 1,
             width: "100%",
