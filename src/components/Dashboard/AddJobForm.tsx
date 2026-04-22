@@ -17,9 +17,7 @@ import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { ROLE_CONFIGS } from "@/constants/roles";
 
-// Dynamically import ReactQuill to avoid SSR issues
-const ReactQuill = dynamic(() => import("react-quill-new"), { ssr: false });
-import "react-quill-new/dist/quill.snow.css";
+const ReactQuill = dynamic(() => import("./QuillEditor"), { ssr: false });
 
 const ITEM_HEIGHT = 48;
 const ITEM_PADDING_TOP = 8;

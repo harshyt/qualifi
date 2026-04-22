@@ -162,10 +162,6 @@ export async function updateJob(jobId: string, formData: FormData) {
       return { error: "Job not found" };
     }
 
-    if (currentJob.user_id !== user.id) {
-      return { error: "Unauthorized" };
-    }
-
     // Build field diffs
     const arrKey = (a: string[]) => JSON.stringify([...(a ?? [])].sort());
 
