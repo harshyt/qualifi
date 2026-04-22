@@ -13,7 +13,7 @@ import {
   Tooltip,
 } from "@mui/material";
 import Image from "next/image";
-import { Inbox, Briefcase, LogOut } from "lucide-react";
+import { LayoutDashboard, Users, Briefcase, LogOut } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { useAuth } from "@/components/Providers/AuthContext";
@@ -23,12 +23,9 @@ import { useTransition, useCallback, memo } from "react";
 const drawerWidth = 240;
 
 const menuItems = [
-  { text: "Dashboard", icon: <Inbox size={20} />, path: "/dashboard" },
-  {
-    text: "Job Library",
-    icon: <Briefcase size={20} />,
-    path: "/jobs",
-  },
+  { text: "Dashboard", icon: <LayoutDashboard size={20} />, path: "/dashboard" },
+  { text: "Candidates", icon: <Users size={20} />, path: "/candidates" },
+  { text: "Job Library", icon: <Briefcase size={20} />, path: "/jobs" },
 ];
 
 interface SidebarProps {

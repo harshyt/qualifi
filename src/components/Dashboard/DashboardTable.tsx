@@ -275,7 +275,7 @@ function DashboardTable({ candidates }: { candidates: Candidate[] }) {
 
   const handleRowClick = useCallback(
     (id: string) => {
-      router.push(`/dashboard/candidate/${id}`);
+      router.push(`/candidate/${id}`);
     },
     [router],
   );
