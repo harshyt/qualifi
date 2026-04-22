@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 /**
- * Zod schema for the structured analysis result returned by Gemini.
+ * Zod schema for the structured analysis result returned by Claude.
  * Used to validate the LLM's JSON output before persisting to the database.
  */
 export const analysisResultSchema = z.object({
