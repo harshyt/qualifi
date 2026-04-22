@@ -6,6 +6,14 @@ import {
   Chip,
   ToggleButton,
   ToggleButtonGroup,
+  Skeleton,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
 } from "@mui/material";
 import DashboardTable from "@/components/Dashboard/DashboardTable";
 import UploadResume from "@/components/Dashboard/UploadResume";
@@ -71,6 +79,100 @@ const FilterBar = memo(function FilterBar({
     </ToggleButtonGroup>
   );
 });
+
+function DashboardTableSkeleton() {
+  return (
+    <TableContainer
+      component={Paper}
+      elevation={0}
+      sx={{ border: "none", borderRadius: 0 }}
+    >
+      <Table sx={{ minWidth: 650 }}>
+        <TableHead sx={{ bgcolor: "#F8FAFC" }}>
+          <TableRow>
+            <TableCell padding="checkbox">
+              <Skeleton
+                variant="rectangular"
+                width={18}
+                height={18}
+                sx={{ borderRadius: 0.5 }}
+              />
+            </TableCell>
+            {[
+              "Candidate Name",
+              "Role",
+              "Score",
+              "Verdict",
+              "Experience",
+              "Date",
+            ].map((col) => (
+              <TableCell key={col}>
+                <Skeleton variant="text" width={80} />
+              </TableCell>
+            ))}
+            <TableCell />
+          </TableRow>
+        </TableHead>
+        <TableBody>
+          {Array.from({ length: 6 }).map((_, i) => (
+            <TableRow key={i}>
+              <TableCell padding="checkbox">
+                <Skeleton
+                  variant="rectangular"
+                  width={18}
+                  height={18}
+                  sx={{ borderRadius: 0.5 }}
+                />
+              </TableCell>
+              <TableCell>
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+                  <Skeleton variant="circular" width={36} height={36} />
+                  <Box>
+                    <Skeleton variant="text" width={120} height={16} />
+                    <Skeleton
+                      variant="text"
+                      width={80}
+                      height={13}
+                      sx={{ mt: 0.5 }}
+                    />
+                  </Box>
+                </Box>
+              </TableCell>
+              <TableCell>
+                <Skeleton variant="text" width={90} />
+              </TableCell>
+              <TableCell>
+                <Skeleton variant="circular" width={40} height={40} />
+              </TableCell>
+              <TableCell>
+                <Skeleton
+                  variant="rounded"
+                  width={72}
+                  height={24}
+                  sx={{ borderRadius: 3 }}
+                />
+              </TableCell>
+              <TableCell>
+                <Skeleton variant="text" width={70} />
+              </TableCell>
+              <TableCell>
+                <Skeleton variant="text" width={80} />
+              </TableCell>
+              <TableCell>
+                <Skeleton
+                  variant="circular"
+                  width={28}
+                  height={28}
+                  sx={{ ml: "auto" }}
+                />
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </TableContainer>
+  );
+}
 
 export default function DashboardPage() {
   const { loading: authLoading } = useAuth();
@@ -167,20 +269,7 @@ export default function DashboardPage() {
 
         {/* Table or empty state */}
         {loading ? (
-          <Box sx={{ display: "flex", justifyContent: "center", p: 4 }}>
-            <Box
-              sx={{
-                width: 32,
-                height: 32,
-                border: "3px solid",
-                borderColor: "divider",
-                borderTopColor: "primary.main",
-                borderRadius: "50%",
-                animation: "spin 0.8s linear infinite",
-                "@keyframes spin": { to: { transform: "rotate(360deg)" } },
-              }}
-            />
-          </Box>
+          <DashboardTableSkeleton />
         ) : filteredCandidates.length === 0 ? (
           <Box sx={{ textAlign: "center", py: 8, color: "text.secondary" }}>
             <Typography variant="body2">

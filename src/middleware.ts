@@ -12,47 +12,50 @@ export async function middleware(request: NextRequest) {
     return supabaseResponse;
   }
 
-  const supabase = createServerClient(
-    supabaseUrl,
-    supabaseAnonKey,
-    {
-      cookies: {
-        getAll() {
-          return request.cookies.getAll();
-        },
-        setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value }) =>
-            request.cookies.set(name, value)
-          );
-          supabaseResponse = NextResponse.next({ request });
-          cookiesToSet.forEach(({ name, value, options }) =>
-            supabaseResponse.cookies.set(name, value, options)
-          );
-        },
+  const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
+    cookies: {
+      getAll() {
+        return request.cookies.getAll();
       },
-    }
-  );
+      setAll(cookiesToSet) {
+        cookiesToSet.forEach(({ name, value }) =>
+          request.cookies.set(name, value),
+        );
+        supabaseResponse = NextResponse.next({ request });
+        cookiesToSet.forEach(({ name, value, options }) =>
+          supabaseResponse.cookies.set(name, value, options),
+        );
+      },
+    },
+  });
 
-  // Refresh session if expired - IMPORTANT: do not remove!
+  // getSession() decodes the JWT from the cookie locally — no network call.
+  // RLS at the DB level enforces actual authorization; this gate just redirects guests.
   const {
-    data: { user },
-  } = await supabase.auth.getUser();
+    data: { session },
+  } = await supabase.auth.getSession();
+  const user = session?.user ?? null;
 
   const { pathname } = request.nextUrl;
 
   const copySetCookieHeaders = (source: NextResponse, target: NextResponse) => {
     const cookiesToSet = source.headers.getSetCookie();
-    cookiesToSet.forEach((cookie) => target.headers.append("Set-Cookie", cookie));
+    cookiesToSet.forEach((cookie) =>
+      target.headers.append("Set-Cookie", cookie),
+    );
     return target;
   };
 
   // Redirect unauthenticated users away from protected routes
-  if (!user && (pathname.startsWith("/dashboard") || pathname.startsWith("/jobs"))) {
+  if (
+    !user &&
+    (pathname.startsWith("/dashboard") || pathname.startsWith("/jobs"))
+  ) {
     const redirectUrl = request.nextUrl.clone();
     redirectUrl.pathname = "/login";
     return copySetCookieHeaders(
       supabaseResponse,
-      NextResponse.redirect(redirectUrl)
+      NextResponse.redirect(redirectUrl),
     );
   }
 
@@ -62,7 +65,7 @@ export async function middleware(request: NextRequest) {
     redirectUrl.pathname = "/dashboard";
     return copySetCookieHeaders(
       supabaseResponse,
-      NextResponse.redirect(redirectUrl)
+      NextResponse.redirect(redirectUrl),
     );
   }
 
@@ -72,7 +75,7 @@ export async function middleware(request: NextRequest) {
     redirectUrl.pathname = user ? "/dashboard" : "/login";
     return copySetCookieHeaders(
       supabaseResponse,
-      NextResponse.redirect(redirectUrl)
+      NextResponse.redirect(redirectUrl),
     );
   }
 
