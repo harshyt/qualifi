@@ -5,6 +5,7 @@ const nextConfig: NextConfig = {
     serverActions: {
       bodySizeLimit: "4mb",
     },
+    optimizePackageImports: ["@mui/material", "@mui/icons-material"],
   },
   async headers() {
     return [

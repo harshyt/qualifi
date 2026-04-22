@@ -197,7 +197,7 @@ export default function JobHistoryDrawer({
           p: 3,
           pb: 2,
           borderBottom: "1px solid #E0E0E0",
-          bgcolor: "white",
+          bgcolor: "background.paper",
           flexShrink: 0,
         }}
       >
@@ -233,7 +233,7 @@ export default function JobHistoryDrawer({
             sx={{
               textAlign: "center",
               p: 6,
-              bgcolor: "white",
+              bgcolor: "background.paper",
               borderRadius: 2,
               border: "1px dashed #E0E0E0",
             }}
@@ -251,7 +251,7 @@ export default function JobHistoryDrawer({
                 p: 2.5,
                 mb: 2,
                 borderRadius: 2,
-                bgcolor: "white",
+                bgcolor: "background.paper",
                 borderColor: "#E0E0E0",
               }}
             >

@@ -197,22 +197,16 @@ export default function AddJobForm({
         sx={{
           flexShrink: 0,
           p: { xs: 2, sm: 3 },
-          borderTop: "1px solid #E0E0E0",
-          bgcolor: "white",
+          borderTop: "1px solid",
+          borderColor: "divider",
+          bgcolor: "background.paper",
         }}
       >
         <Button
           type="submit"
           variant="contained"
           disabled={isSubmitting}
-          sx={{
-            bgcolor: "#2196F3",
-            color: "white",
-            "&:hover": { bgcolor: "#1976D2" },
-            px: 4,
-            py: 1,
-            width: "100%",
-          }}
+          sx={{ px: 4, py: 1, width: "100%" }}
         >
           {isSubmitting ? "Saving..." : initialData ? "Update Job" : "Save Job"}
         </Button>

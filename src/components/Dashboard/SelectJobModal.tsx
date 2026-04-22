@@ -66,7 +66,7 @@ const FileCard = memo(function FileCard({
           flexShrink: 0,
         }}
       >
-        <FileText size={16} color="#2196F3" />
+        <FileText size={16} color="#3B5BDB" />
       </Box>
       <Box sx={{ flex: 1, minWidth: 0 }}>
         <Typography
@@ -275,7 +275,7 @@ export default function SelectJobModal({
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
           sx={{
-            border: `2px dashed ${isDragging ? "#2196F3" : "#CBD5E1"}`,
+            border: `2px dashed ${isDragging ? "#3B5BDB" : "#CBD5E1"}`,
             borderRadius: 2,
             py: 4,
             px: 3,
@@ -284,7 +284,7 @@ export default function SelectJobModal({
             bgcolor: isDragging ? "#EFF6FF" : "#F8FAFC",
             transition: "all 0.15s ease",
             "&:hover": {
-              borderColor: "#2196F3",
+              borderColor: "#3B5BDB",
               bgcolor: "#EFF6FF",
             },
           }}
@@ -302,7 +302,7 @@ export default function SelectJobModal({
               mb: 1.5,
             }}
           >
-            <UploadCloud size={22} color="#2196F3" />
+            <UploadCloud size={22} color="#3B5BDB" />
           </Box>
           <Typography variant="body2" fontWeight={600} color="text.primary">
             Drag and drop PDF resumes or click to browse

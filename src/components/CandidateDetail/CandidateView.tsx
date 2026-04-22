@@ -535,7 +535,9 @@ function CandidateView({ candidate }: CandidateViewProps) {
             {candidate.analysis?.interviewFocusAreas &&
               candidate.analysis.interviewFocusAreas.length > 0 && (
                 <Box sx={{ mb: 3 }}>
-                  <SectionLabel color="#2196F3">Interview Focus</SectionLabel>
+                  <SectionLabel color="primary.main">
+                    Interview Focus
+                  </SectionLabel>
                   <Box component="ul" sx={{ m: 0, pl: 2.5 }}>
                     {candidate.analysis.interviewFocusAreas.map((area, i) => (
                       <Box component="li" key={i} sx={{ mb: 0.75 }}>

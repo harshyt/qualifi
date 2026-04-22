@@ -547,7 +547,7 @@ function DashboardTable({ candidates }: { candidates: Candidate[] }) {
         {selectedCandidate?.status !== "PENDING" && (
           <MenuItem onClick={handleSendEmailClick}>
             <ListItemIcon>
-              <Mail size={16} color="#2196F3" />
+              <Mail size={16} color="#3B5BDB" />
             </ListItemIcon>
             <ListItemText
               primary="Send Email"

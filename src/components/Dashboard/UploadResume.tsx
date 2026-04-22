@@ -8,7 +8,13 @@ import {
   Paper,
   LinearProgress,
 } from "@mui/material";
-import { CloudUpload, CheckCircle2, AlertCircle, FileText, Loader2 } from "lucide-react";
+import {
+  CloudUpload,
+  CheckCircle2,
+  AlertCircle,
+  FileText,
+  Loader2,
+} from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { analyzeCandidateResume } from "@/actions/analyze";
 import { toast } from "sonner";
@@ -44,7 +50,7 @@ const FileProgressItem = memo(function FileProgressItem({
 
   const statusColor = {
     pending: "#94A3B8",
-    uploading: "#2196F3",
+    uploading: "#3B5BDB",
     done: "#4CAF50",
     error: "#F44336",
   };
@@ -118,7 +124,12 @@ export default function UploadResume() {
   }, []);
 
   const handleJobSelect = useCallback(
-    async (jobId: string, jobDescription: string, roleKey?: string, files?: File[]) => {
+    async (
+      jobId: string,
+      jobDescription: string,
+      roleKey?: string,
+      files?: File[],
+    ) => {
       setIsModalOpen(false);
 
       if (!files || files.length === 0) return;
@@ -133,8 +144,10 @@ export default function UploadResume() {
 
       // Process files in parallel with a concurrency cap of 5
       const CONCURRENCY = 5;
-      const results: PromiseSettledResult<{ error?: string; success?: boolean }>[] =
-        new Array(files.length);
+      const results: PromiseSettledResult<{
+        error?: string;
+        success?: boolean;
+      }>[] = new Array(files.length);
       const queue = files.map((file, index) => ({ file, index }));
 
       async function processEntry(entry: { file: File; index: number }) {
@@ -162,11 +175,16 @@ export default function UploadResume() {
           );
           results[index] = { status: "fulfilled", value: result };
         } catch (err) {
-          const message = err instanceof Error ? err.message : "Analysis failed";
+          const message =
+            err instanceof Error ? err.message : "Analysis failed";
           setFileProgress((prev) =>
             prev.map((fp, i) =>
               i === index
-                ? { ...fp, status: "error" as FileStatus, errorMessage: message }
+                ? {
+                    ...fp,
+                    status: "error" as FileStatus,
+                    errorMessage: message,
+                  }
                 : fp,
             ),
           );
@@ -187,7 +205,9 @@ export default function UploadResume() {
 
       queryClient.invalidateQueries({ queryKey: ["candidates"] });
 
-      const successCount = results.filter((r) => r.status === "fulfilled").length;
+      const successCount = results.filter(
+        (r) => r.status === "fulfilled",
+      ).length;
       const failCount = results.filter((r) => r.status === "rejected").length;
 
       if (successCount > 0) {
@@ -213,14 +233,19 @@ export default function UploadResume() {
     (f) => f.status === "done" || f.status === "error",
   ).length;
   const totalCount = fileProgress.length;
-  const progressPercent = totalCount > 0 ? (completedCount / totalCount) * 100 : 0;
+  const progressPercent =
+    totalCount > 0 ? (completedCount / totalCount) * 100 : 0;
 
   return (
     <>
       <Button
         variant="contained"
         startIcon={
-          isUploading ? <CircularProgress size={18} color="inherit" /> : <CloudUpload size={18} />
+          isUploading ? (
+            <CircularProgress size={18} color="inherit" />
+          ) : (
+            <CloudUpload size={18} />
+          )
         }
         onClick={handleOpenModal}
         disabled={isUploading || isModalOpen}
