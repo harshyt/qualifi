@@ -1,6 +1,5 @@
-"use client";
+import { Suspense } from "react";
 import AppLayout from "@/components/layout/AppLayout";
-import { Box } from "@mui/material";
 
 export default function DashboardShellLayout({
   children,
@@ -8,8 +7,8 @@ export default function DashboardShellLayout({
   children: React.ReactNode;
 }) {
   return (
-    <AppLayout>
-      <Box sx={{ p: { xs: 2, sm: 3 }, flexGrow: 1 }}>{children}</Box>
-    </AppLayout>
+    <Suspense>
+      <AppLayout>{children}</AppLayout>
+    </Suspense>
   );
 }

@@ -1,46 +1,38 @@
-"use client";
 import { createTheme } from "@mui/material/styles";
-import { Inter } from "next/font/google";
-
-const inter = Inter({
-  weight: ["300", "400", "500", "700"],
-  subsets: ["latin"],
-  display: "swap",
-});
 
 const theme = createTheme({
   palette: {
     mode: "light",
     primary: {
-      main: "#2196F3", // Soft Azure
+      main: "#2196F3",
     },
     background: {
-      default: "#F9FAFB", // Cloud White
+      default: "#F9FAFB",
       paper: "#FFFFFF",
     },
     text: {
-      primary: "#1A1A2E",   // DESIGN.md spec
-      secondary: "#64748B", // DESIGN.md spec
+      primary: "#1A1A2E",
+      secondary: "#64748B",
     },
     success: {
-      main: "#4CAF50",    // SHORTLIST green
+      main: "#4CAF50",
       light: "#F0FDF4",
       contrastText: "#FFFFFF",
     },
     warning: {
-      main: "#FF9800",    // PENDING amber
+      main: "#FF9800",
       light: "#FFF7ED",
       contrastText: "#FFFFFF",
     },
     error: {
-      main: "#F44336",    // REJECT red
+      main: "#F44336",
       light: "#FFF1F2",
       contrastText: "#FFFFFF",
     },
-    divider: "#E2E8F0",   // DESIGN.md spec
+    divider: "#E2E8F0",
   },
   typography: {
-    fontFamily: inter.style.fontFamily,
+    fontFamily: "var(--font-inter), sans-serif",
     button: {
       textTransform: "none",
       fontWeight: 500,
