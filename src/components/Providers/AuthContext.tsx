@@ -20,14 +20,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const supabase = createSupabaseBrowserClient();
 
-    // Get initial user
+    // getSession() reads from localStorage — no network call.
+    // Middleware already validates the JWT server-side via getUser().
     supabase.auth
-      .getUser()
+      .getSession()
       .then(({ data }) => {
-        setUser(data.user);
+        setUser(data.session?.user ?? null);
       })
       .catch((error) => {
-        console.error("Failed to get initial user:", error);
+        console.error("Failed to get initial session:", error);
       })
       .finally(() => {
         setLoading(false);
