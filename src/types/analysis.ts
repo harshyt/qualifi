@@ -50,7 +50,8 @@ export const analysisResultSchema = z.object({
   verdict: z
     .string()
     .transform((val) => val.trim().toUpperCase())
-    .pipe(z.enum(["SHORTLIST", "REJECT", "PENDING"])),
+    .pipe(z.enum(["SHORTLIST", "REJECT", "PENDING"]))
+    .default("PENDING"),
 });
 
 export type AnalysisResult = z.infer<typeof analysisResultSchema>;
