@@ -29,8 +29,8 @@ ${jobDescription}
 RESUME:
 ${
   isTextResume
-    ? "The candidate's resume text is provided at the end of this message. Extract all relevant information directly from it. Do not paraphrase, clean up, or interpret vague entries — preserve details and nuances exactly as written, as these often contain important signals. If a name or text appears in a non-Latin script, transliterate it to the closest Latin equivalent for the JSON output."
-    : "The candidate's resume is provided as an attached PDF. Extract all relevant information directly from it. Do not paraphrase, clean up, or interpret vague entries — preserve details and nuances exactly as written, as these often contain important signals. If a name or text appears in a non-Latin script, transliterate it to the closest Latin equivalent for the JSON output."
+    ? "The candidate's resume text is provided at the end of this message. Extract all relevant information directly from it. Do not paraphrase, clean up, or interpret vague entries — preserve details and nuances exactly as written, as these often contain important signals. If a name or text appears in a non-Latin script, transliterate it to the closest Latin equivalent for the output."
+    : "The candidate's resume is provided as an attached PDF. Extract all relevant information directly from it. Do not paraphrase, clean up, or interpret vague entries — preserve details and nuances exactly as written, as these often contain important signals. If a name or text appears in a non-Latin script, transliterate it to the closest Latin equivalent for the output."
 }
 
 ---
@@ -48,28 +48,7 @@ VERDICT RULES:
 - PENDING: Everything else — good potential but needs human review
 
 ---
-Return ONLY a raw JSON object. No markdown, no code fences, no explanation outside the JSON.
-Use this exact structure:
-
-{
-  "name": string (candidate's full name),
-  "email": string (candidate's email address),
-  "phone": string (candidate's phone number, if available, otherwise empty string),
-  "role": string (the role they are applying for or their latest role title),
-  "workExperience": { "role": string, "company": string, "duration": string, "description": string }[],
-  "education": { "degree": string, "institution": string, "year": string }[],
-  "skills": string[],
-  "technologiesUsed": { "category": string, "technologies": string[] }[],
-  "experienceLevel": "Junior" | "Mid" | "Senior" | "Lead" | "Unknown",
-  "score": number (0-100),
-  "summary": string (2-3 sentence executive summary a hiring manager can read in 10 seconds),
-  "strengths": string[] (specific strengths tied to the JD requirements),
-  "gaps": string[] (missing skills or experience gaps vs the JD),
-  "redFlags": string[] (concerns: e.g. frequent job changes, vague descriptions, inflated claims, unexplained gaps),
-  "interviewFocusAreas": string[] (suggested topics or question areas to probe based on this candidate's profile),
-  "cultureFitIndicators": string[] (soft skills and collaboration signals observed in the resume),
-  "verdict": "SHORTLIST" | "REJECT" | "PENDING"
-}
+Use the analyze_resume tool to return your structured analysis.
 `;
 }
 
@@ -77,6 +56,7 @@ Use this exact structure:
  * Analyzes a resume against a job description using Claude.
  * - PDF files are sent as inline base64 documents (multimodal).
  * - DOC/DOCX files have text extracted via mammoth, then sent as a text part.
+ * - Uses Claude's Tool Use feature for guaranteed structured output.
  *
  * NOTE: `jobDescription` is untrusted user input and poses a prompt injection risk.
  * We apply truncation and markdown-delimiter stripping below to mitigate extreme payloads.
@@ -133,12 +113,156 @@ export async function analyzeResume(
     ];
   }
 
+  const tools: Anthropic.Tool[] = [
+    {
+      name: "analyze_resume",
+      description: "Submit the structured resume analysis results",
+      input_schema: {
+        type: "object" as const,
+        properties: {
+          name: {
+            type: "string",
+            description: "Candidate's full name",
+          },
+          email: {
+            type: "string",
+            description: "Candidate's email address",
+          },
+          phone: {
+            type: "string",
+            description:
+              "Candidate's phone number, if available, otherwise empty string",
+          },
+          role: {
+            type: "string",
+            description:
+              "The role they are applying for or their latest role title",
+          },
+          workExperience: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                role: { type: "string" },
+                company: { type: "string" },
+                duration: { type: "string" },
+                description: { type: "string" },
+              },
+              required: ["role", "company", "duration", "description"],
+            },
+            description: "List of work experiences",
+          },
+          education: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                degree: { type: "string" },
+                institution: { type: "string" },
+                year: { type: "string" },
+              },
+              required: ["degree", "institution", "year"],
+            },
+            description: "List of education entries",
+          },
+          skills: {
+            type: "array",
+            items: { type: "string" },
+            description: "List of skills",
+          },
+          technologiesUsed: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                category: { type: "string" },
+                technologies: {
+                  type: "array",
+                  items: { type: "string" },
+                },
+              },
+              required: ["category", "technologies"],
+            },
+            description: "Technologies organized by category",
+          },
+          experienceLevel: {
+            type: "string",
+            enum: ["Junior", "Mid", "Senior", "Lead", "Unknown"],
+            description: "Overall experience level",
+          },
+          score: {
+            type: "number",
+            description: "Candidate score from 0-100",
+          },
+          summary: {
+            type: "string",
+            description:
+              "2-3 sentence executive summary a hiring manager can read in 10 seconds",
+          },
+          strengths: {
+            type: "array",
+            items: { type: "string" },
+            description: "Specific strengths tied to the JD requirements",
+          },
+          gaps: {
+            type: "array",
+            items: { type: "string" },
+            description: "Missing skills or experience gaps vs the JD",
+          },
+          redFlags: {
+            type: "array",
+            items: { type: "string" },
+            description:
+              "Concerns (e.g. frequent job changes, vague descriptions, inflated claims, unexplained gaps)",
+          },
+          interviewFocusAreas: {
+            type: "array",
+            items: { type: "string" },
+            description:
+              "Suggested topics or question areas to probe based on this candidate's profile",
+          },
+          cultureFitIndicators: {
+            type: "array",
+            items: { type: "string" },
+            description:
+              "Soft skills and collaboration signals observed in the resume",
+          },
+          verdict: {
+            type: "string",
+            enum: ["SHORTLIST", "REJECT", "PENDING"],
+            description: "Screening decision",
+          },
+        },
+        required: [
+          "name",
+          "email",
+          "phone",
+          "role",
+          "workExperience",
+          "education",
+          "skills",
+          "technologiesUsed",
+          "experienceLevel",
+          "score",
+          "summary",
+          "strengths",
+          "gaps",
+          "redFlags",
+          "interviewFocusAreas",
+          "cultureFitIndicators",
+          "verdict",
+        ],
+      },
+    },
+  ];
+
   let response: Anthropic.Message;
   const t0 = Date.now();
   try {
     response = await client.messages.create({
       model: "claude-sonnet-4-6",
       max_tokens: 4096,
+      tools,
       messages,
     });
   } catch (err) {
@@ -150,24 +274,49 @@ export async function analyzeResume(
     durationMs: Date.now() - t0,
   });
 
-  const textBlock = response.content.find(
-    (b): b is Anthropic.TextBlock => b.type === "text",
+  // Extract tool use from response
+  const toolUseBlock = response.content.find(
+    (b): b is Anthropic.ToolUseBlock => b.type === "tool_use",
   );
-  if (!textBlock) {
-    throw new Error("Claude returned no text output.");
-  }
-
-  const cleanedText = textBlock.text.replace(/```json\n?|\n?```/g, "").trim();
-
-  let parsed: unknown;
-  try {
-    parsed = JSON.parse(cleanedText);
-  } catch {
+  if (!toolUseBlock) {
+    const textContent = response.content
+      .filter((b): b is Anthropic.TextBlock => b.type === "text")
+      .map((b) => b.text)
+      .join("\n");
     throw new Error(
-      "Claude returned non-JSON output. The model may have violated the response format.",
+      `Claude did not use the analyze_resume tool. Response: ${textContent.slice(0, 200)}`,
     );
   }
 
-  const validated = analysisResultSchema.parse(parsed);
-  return validated;
+  if (toolUseBlock.name !== "analyze_resume") {
+    throw new Error(
+      `Claude used wrong tool: ${toolUseBlock.name}. Expected: analyze_resume`,
+    );
+  }
+
+  let parsed: unknown;
+  try {
+    parsed = toolUseBlock.input;
+  } catch (err) {
+    logger.error("Tool input extraction failed", {
+      error: err instanceof Error ? err.message : String(err),
+      toolInput: JSON.stringify(toolUseBlock.input).slice(0, 200),
+    });
+    throw new Error(
+      `Failed to extract tool input: ${err instanceof Error ? err.message : "Unknown error"}`,
+    );
+  }
+
+  try {
+    const validated = analysisResultSchema.parse(parsed);
+    return validated;
+  } catch (err) {
+    logger.error("Schema validation failed", {
+      error: err instanceof Error ? err.message : String(err),
+      input: JSON.stringify(parsed).slice(0, 300),
+    });
+    throw new Error(
+      `Claude output failed validation: ${err instanceof Error ? err.message : "Unknown error"}`,
+    );
+  }
 }
