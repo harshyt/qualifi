@@ -48,7 +48,11 @@ VERDICT RULES:
 - PENDING: Everything else — good potential but needs human review
 
 ---
-Use the analyze_resume tool to return your structured analysis.
+CRITICAL: Use the analyze_resume tool to return your structured analysis.
+You MUST include all fields, especially:
+- verdict (REQUIRED): One of "SHORTLIST", "REJECT", or "PENDING" based on the rules above
+- score (REQUIRED): Integer 0-100
+All other fields are also required and must be populated from the resume.
 `;
 }
 
