@@ -229,8 +229,7 @@ export async function analyzeResume(
           },
           verdict: {
             type: "string",
-            enum: ["SHORTLIST", "REJECT", "PENDING"],
-            description: "Screening decision",
+            description: "Screening decision (SHORTLIST, REJECT, or PENDING)",
           },
         },
         required: [

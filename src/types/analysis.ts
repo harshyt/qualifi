@@ -47,7 +47,10 @@ export const analysisResultSchema = z.object({
   redFlags: z.array(z.string()).default([]),
   interviewFocusAreas: z.array(z.string()).default([]),
   cultureFitIndicators: z.array(z.string()).default([]),
-  verdict: z.enum(["SHORTLIST", "REJECT", "PENDING"]),
+  verdict: z
+    .string()
+    .transform((val) => val.trim().toUpperCase())
+    .pipe(z.enum(["SHORTLIST", "REJECT", "PENDING"])),
 });
 
 export type AnalysisResult = z.infer<typeof analysisResultSchema>;
