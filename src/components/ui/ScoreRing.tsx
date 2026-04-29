@@ -1,8 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-import { useTheme } from "@mui/material/styles";
 import Box from "@mui/material/Box";
-import { lightTokens, darkTokens } from "@/theme/tokens";
+import { lightTokens } from "@/theme/tokens";
 
 interface ScoreRingProps {
   score: number;
@@ -17,8 +16,7 @@ export default function ScoreRing({
   animate = true,
   showLabel = true,
 }: ScoreRingProps) {
-  const theme = useTheme();
-  const t = theme.palette.mode === "dark" ? darkTokens : lightTokens;
+  const t = lightTokens;
 
   const [animatedValue, setAnimatedValue] = useState(0);
   const displayed = animate ? animatedValue : score;
