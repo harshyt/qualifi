@@ -36,7 +36,7 @@ export default function DashboardPage() {
           minHeight: 320,
         }}
       >
-        <LayoutDashboard size={40} strokeWidth={1.2} color="#CBD5E1" />
+        <LayoutDashboard size={40} strokeWidth={1.2} color="#D4CFC8" />
         <Typography variant="body1" fontWeight={600} color="text.secondary">
           Coming soon
         </Typography>

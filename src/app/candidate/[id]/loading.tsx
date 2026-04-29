@@ -50,7 +50,7 @@ export default function CandidateDetailLoading() {
       <Grid container spacing={3} sx={{ flexGrow: 1, overflow: "hidden" }}>
         {/* Resume Details */}
         <Grid size={{ xs: 12, md: 6 }} sx={{ height: "100%" }}>
-          <Paper sx={{ height: "100%", p: 3, border: "1px solid #E0E0E0" }}>
+          <Paper sx={{ height: "100%", p: 3, border: "1px solid #E8E5E0" }}>
             <Skeleton variant="text" width={140} height={28} sx={{ mb: 2 }} />
 
             {/* Technologies */}
@@ -87,7 +87,7 @@ export default function CandidateDetailLoading() {
             {Array.from({ length: 3 }).map((_, i) => (
               <Box
                 key={i}
-                sx={{ mb: 2, pl: 2, borderLeft: "2px solid #ECEFF1" }}
+                sx={{ mb: 2, pl: 2, borderLeft: "2px solid #E8E5E0" }}
               >
                 <Skeleton variant="text" width="60%" height={22} />
                 <Skeleton variant="text" width="40%" height={18} />
@@ -99,7 +99,7 @@ export default function CandidateDetailLoading() {
 
         {/* AI Analysis */}
         <Grid size={{ xs: 12, md: 6 }} sx={{ height: "100%" }}>
-          <Paper sx={{ height: "100%", p: 3, border: "1px solid #E0E0E0" }}>
+          <Paper sx={{ height: "100%", p: 3, border: "1px solid #E8E5E0" }}>
             <Box
               sx={{
                 display: "flex",

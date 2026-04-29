@@ -1,6 +1,7 @@
 "use client";
 import { Chip } from "@mui/material";
 import { memo } from "react";
+import { lightTokens } from "@/theme/tokens";
 
 export type CandidateStatus = "SHORTLIST" | "REJECT" | "PENDING";
 
@@ -11,13 +12,14 @@ interface StatusStyle {
 }
 
 export function getCandidateStatusStyle(status: CandidateStatus): StatusStyle {
+  const t = lightTokens;
   switch (status) {
     case "SHORTLIST":
-      return { bg: "#F0FDF4", color: "#4CAF50", label: "Shortlist" };
+      return { bg: t.successSubtle, color: t.successText, label: "Shortlist" };
     case "REJECT":
-      return { bg: "#FFF1F2", color: "#F44336", label: "Reject" };
+      return { bg: t.dangerSubtle, color: t.dangerText, label: "Reject" };
     default:
-      return { bg: "#FFF7ED", color: "#FF9800", label: "Pending" };
+      return { bg: t.warningSubtle, color: t.warningText, label: "Pending" };
   }
 }
 

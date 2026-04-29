@@ -45,7 +45,7 @@ const FilterBar = memo(function FilterBar({
       onChange={(_, v: FilterTab | null) => v && onChange(v)}
       size="small"
       sx={{
-        bgcolor: "#F1F5F9",
+        bgcolor: "#F5F4F2",
         borderRadius: "20px",
         p: 0.5,
         "& .MuiToggleButtonGroup-grouped": {
@@ -56,10 +56,10 @@ const FilterBar = memo(function FilterBar({
           py: 0.5,
           fontWeight: 600,
           fontSize: 13,
-          color: "#64748B",
+          color: "#6B6560",
           "&.Mui-selected": {
             bgcolor: "#FFFFFF",
-            color: "#1A1A2E",
+            color: "#1A1714",
             boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
             "&:hover": {
               bgcolor: "#FFFFFF",
@@ -88,7 +88,7 @@ function DashboardTableSkeleton() {
       sx={{ border: "none", borderRadius: 0 }}
     >
       <Table sx={{ minWidth: 650 }}>
-        <TableHead sx={{ bgcolor: "#F8FAFC" }}>
+        <TableHead sx={{ bgcolor: "#F5F4F2" }}>
           <TableRow>
             <TableCell padding="checkbox">
               <Skeleton
@@ -230,8 +230,8 @@ export default function CandidatesPage() {
               label={`${total} Total`}
               size="small"
               sx={{
-                bgcolor: "#EFF6FF",
-                color: "#2196F3",
+                bgcolor: "#EEF2FF",
+                color: "#3B5BDB",
                 fontWeight: 600,
                 fontSize: 12,
                 borderRadius: "12px",
