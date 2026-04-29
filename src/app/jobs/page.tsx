@@ -27,8 +27,6 @@ import {
   ListItemIcon,
   ListItemText,
   Skeleton,
-  useTheme,
-  useMediaQuery,
 } from "@mui/material";
 import SearchField from "@/components/ui/SearchField";
 import AppSelect from "@/components/ui/AppSelect";
@@ -143,9 +141,6 @@ export default function JobLibraryPage() {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [isViewDrawerOpen, setIsViewDrawerOpen] = useState(false);
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
-
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
   const { user, loading: authLoading } = useAuth();
   const queryClient = useQueryClient();
