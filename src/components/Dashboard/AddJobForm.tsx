@@ -1,15 +1,9 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import {
-  Box,
-  TextField,
-  Button,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  Typography,
-} from "@mui/material";
+import { Box, MenuItem, Typography } from "@mui/material";
+import AppButton from "@/components/ui/AppButton";
+import AppTextField from "@/components/ui/AppTextField";
+import AppSelect from "@/components/ui/AppSelect";
 import dynamic from "next/dynamic";
 import { createJob, updateJob } from "@/actions/jobs";
 import type { Job } from "@/hooks/useJobs";
@@ -124,61 +118,51 @@ export default function AddJobForm({
       }}
     >
       <Box sx={{ flexGrow: 1, overflowY: "auto", p: { xs: 2, sm: 3 } }}>
-        <TextField
-          fullWidth
+        <AppTextField
           label="Job Title"
-          variant="outlined"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           required
           sx={{ mb: 3 }}
         />
 
-        <FormControl fullWidth sx={{ mb: 3 }}>
-          <InputLabel id="client-select-label">Client</InputLabel>
-          <Select
-            labelId="client-select-label"
-            id="client-select"
-            value={selectedClient}
-            label="Client"
-            onChange={(e) => setSelectedClient(e.target.value)}
-            MenuProps={MenuProps}
-          >
-            {CLIENTS.map((client) => (
-              <MenuItem key={client} value={client}>
-                {client}
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
+        <AppSelect
+          label="Client"
+          value={selectedClient}
+          onChange={(e) => setSelectedClient(e.target.value as string)}
+          MenuProps={MenuProps}
+          formControlSx={{ mb: 3 }}
+        >
+          {CLIENTS.map((client) => (
+            <MenuItem key={client} value={client}>
+              {client}
+            </MenuItem>
+          ))}
+        </AppSelect>
 
-        <FormControl fullWidth sx={{ mb: 3 }}>
-          <InputLabel id="role-select-label">Job Role Profile</InputLabel>
-          <Select
-            labelId="role-select-label"
-            id="role-select"
-            value={roleKey}
-            label="Job Role Profile"
-            onChange={(e) => setRoleKey(e.target.value)}
-          >
-            {Object.entries(ROLE_CONFIGS).map(([key, config]) => (
-              <MenuItem key={key} value={key} sx={{ py: 1.5 }}>
-                <Box>
-                  <Typography variant="body1" sx={{ fontWeight: 500 }}>
-                    {config.title}
-                  </Typography>
-                  <Typography
-                    variant="caption"
-                    color="text.secondary"
-                    sx={{ display: "block" }}
-                  >
-                    {config.persona}
-                  </Typography>
-                </Box>
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
+        <AppSelect
+          label="Job Role Profile"
+          value={roleKey}
+          onChange={(e) => setRoleKey(e.target.value as string)}
+          formControlSx={{ mb: 3 }}
+        >
+          {Object.entries(ROLE_CONFIGS).map(([key, config]) => (
+            <MenuItem key={key} value={key} sx={{ py: 1.5 }}>
+              <Box>
+                <Typography variant="body1" sx={{ fontWeight: 500 }}>
+                  {config.title}
+                </Typography>
+                <Typography
+                  variant="caption"
+                  color="text.secondary"
+                  sx={{ display: "block" }}
+                >
+                  {config.persona}
+                </Typography>
+              </Box>
+            </MenuItem>
+          ))}
+        </AppSelect>
 
         <Typography variant="subtitle2" sx={{ mb: 1, color: "text.secondary" }}>
           Job Description
@@ -197,25 +181,19 @@ export default function AddJobForm({
         sx={{
           flexShrink: 0,
           p: { xs: 2, sm: 3 },
-          borderTop: "1px solid #E0E0E0",
-          bgcolor: "white",
+          borderTop: "1px solid",
+          borderColor: "divider",
+          bgcolor: "background.paper",
         }}
       >
-        <Button
+        <AppButton
           type="submit"
           variant="contained"
           disabled={isSubmitting}
-          sx={{
-            bgcolor: "#2196F3",
-            color: "white",
-            "&:hover": { bgcolor: "#1976D2" },
-            px: 4,
-            py: 1,
-            width: "100%",
-          }}
+          sx={{ px: 4, py: 1, width: "100%" }}
         >
           {isSubmitting ? "Saving..." : initialData ? "Update Job" : "Save Job"}
-        </Button>
+        </AppButton>
       </Box>
     </Box>
   );
