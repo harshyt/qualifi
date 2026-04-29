@@ -1,8 +1,7 @@
 "use client";
-import { useTheme } from "@mui/material/styles";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
-import { lightTokens, darkTokens } from "@/theme/tokens";
+import { lightTokens } from "@/theme/tokens";
 
 interface VerdictBadgeProps {
   verdict: string;
@@ -19,8 +18,7 @@ export default function VerdictBadge({
   verdict,
   size = "md",
 }: VerdictBadgeProps) {
-  const theme = useTheme();
-  const t = theme.palette.mode === "dark" ? darkTokens : lightTokens;
+  const t = lightTokens;
 
   const key = verdict?.toUpperCase() as keyof typeof CONFIGS;
   const config = CONFIGS[key] ?? CONFIGS.PENDING;
