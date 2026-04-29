@@ -131,7 +131,7 @@ export function getTheme() {
       MuiOutlinedInput: {
         styleOverrides: {
           root: {
-            backgroundColor: t.bgSunken,
+            backgroundColor: t.bgSurface,
             borderRadius: 8,
             "& .MuiOutlinedInput-notchedOutline": {
               borderColor: t.borderDefault,
