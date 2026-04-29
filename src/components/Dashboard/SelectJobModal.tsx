@@ -10,9 +10,9 @@ import {
   Box,
   IconButton,
   Autocomplete,
-  TextField,
   Grid,
 } from "@mui/material";
+import AppTextField from "@/components/ui/AppTextField";
 import { X, FileText, UploadCloud, Cpu } from "lucide-react";
 import { useJobs } from "@/hooks/useJobs";
 import { toast } from "sonner";
@@ -250,7 +250,7 @@ export default function SelectJobModal({
           onChange={(_, value) => setSelectedJobId(value?.id ?? null)}
           isOptionEqualToValue={(option, value) => option.id === value.id}
           renderInput={(params) => (
-            <TextField
+            <AppTextField
               {...params}
               placeholder="Select a job position..."
               size="small"

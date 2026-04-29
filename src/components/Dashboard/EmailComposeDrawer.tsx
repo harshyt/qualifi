@@ -4,12 +4,12 @@ import {
   Drawer,
   Box,
   Typography,
-  TextField,
   Button,
   IconButton,
   Divider,
   Snackbar,
 } from "@mui/material";
+import AppTextField from "@/components/ui/AppTextField";
 import { X, Copy, Mail } from "lucide-react";
 import { useState } from "react";
 import type { Candidate } from "./DashboardTable";
@@ -95,26 +95,22 @@ export default function EmailComposeDrawer({
 
         <Divider />
 
-        <TextField
+        <AppTextField
           label="Subject"
           value={currentSubject}
           onChange={(e) => setSubject(e.target.value)}
-          fullWidth
           size="small"
-          sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }}
         />
 
-        <TextField
+        <AppTextField
           label="Email Body"
           value={currentBody}
           onChange={(e) => setBody(e.target.value)}
-          fullWidth
           multiline
           rows={20}
           sx={{
             flexGrow: 1,
             "& .MuiOutlinedInput-root": {
-              borderRadius: 2,
               fontFamily: "monospace",
               fontSize: 13,
               alignItems: "flex-start",

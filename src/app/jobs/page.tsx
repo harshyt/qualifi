@@ -15,12 +15,7 @@ import {
   TableHead,
   TableRow,
   Paper,
-  TextField,
-  FormControl,
-  InputLabel,
-  Select,
   MenuItem,
-  InputAdornment,
   Divider,
   Dialog,
   DialogTitle,
@@ -35,10 +30,11 @@ import {
   useTheme,
   useMediaQuery,
 } from "@mui/material";
+import SearchField from "@/components/ui/SearchField";
+import AppSelect from "@/components/ui/AppSelect";
 import {
   Plus,
   X,
-  Search,
   Eye,
   Trash2,
   Briefcase,
@@ -330,38 +326,29 @@ export default function JobLibraryPage() {
       ) : (
         <Box>
           <Box sx={{ display: "flex", gap: 2, mb: 3 }}>
-            <TextField
+            <SearchField
               placeholder="Search jobs..."
-              variant="outlined"
-              size="small"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              sx={{ flexGrow: 1, bgcolor: "background.paper" }}
-              slotProps={{
-                input: {
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <Search size={20} color="#9e9e9e" />
-                    </InputAdornment>
-                  ),
-                },
-              }}
+              sx={{ flexGrow: 1 }}
             />
-            <FormControl size="small" sx={{ minWidth: 200, bgcolor: "white" }}>
-              <InputLabel>Filter by Client</InputLabel>
-              <Select
-                value={selectedClientFilter}
-                label="Filter by Client"
-                onChange={(e) => setSelectedClientFilter(e.target.value)}
-              >
-                <MenuItem value="All">All Clients</MenuItem>
-                {allClients.map((client) => (
-                  <MenuItem key={client} value={client}>
-                    {client}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
+            <AppSelect
+              label="Filter by Client"
+              value={selectedClientFilter}
+              onChange={(e) =>
+                setSelectedClientFilter(e.target.value as string)
+              }
+              size="small"
+              fullWidth={false}
+              formControlSx={{ minWidth: 200 }}
+            >
+              <MenuItem value="All">All Clients</MenuItem>
+              {allClients.map((client) => (
+                <MenuItem key={client} value={client}>
+                  {client}
+                </MenuItem>
+              ))}
+            </AppSelect>
           </Box>
 
           <TableContainer
