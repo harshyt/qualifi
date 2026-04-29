@@ -14,7 +14,11 @@ function buildPrompt(
 ): string {
   const config = ROLE_CONFIGS[role] || ROLE_CONFIGS["generic"];
 
+  const today = new Date().toISOString().split("T")[0];
+
   return `
+Today's date is ${today}. Use this when evaluating employment dates, tenure durations, and whether any dates are in the future.
+
 You are a ${config.persona} conducting a thorough resume screening for a ${config.title} position.
 
 Your task is to deeply analyze the candidate's resume against the provided Job Description (JD).

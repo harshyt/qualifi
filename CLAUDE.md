@@ -16,23 +16,25 @@ No test suite is configured.
 ## Environment Variables
 
 Three required variables (see `.env.example`):
+
 - `NEXT_PUBLIC_SUPABASE_URL` — public, safe for browser
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY` — public, safe for browser
-- `GEMINI_API_KEY` — server-only, never expose to client
+- `ANTHROPIC_API_KEY` — server-only, never expose to client
 
 All are validated at startup via Zod in [src/lib/env.ts](src/lib/env.ts). Use `getServerEnv()` in server-side code and `publicEnv` on the client.
 
 ## Architecture
 
-**Stack:** Next.js 15 App Router + TypeScript + MUI v7 + Supabase (PostgreSQL + Auth) + Google Gemini AI
+**Stack:** Next.js 15 App Router + TypeScript + MUI v7 + Supabase (PostgreSQL + Auth) + Anthropic AI
 
 ### Data Flow
 
 Resume upload triggers this pipeline:
+
 1. User uploads PDF via `UploadResume` component
-2. Server Action `analyzeCandidateResume()` in [src/actions/analyze.ts](src/actions/analyze.ts) sends PDF to Gemini multimodal API for text extraction + analysis
+2. Server Action `analyzeCandidateResume()` in [src/actions/analyze.ts](src/actions/analyze.ts) sends PDF to Anthropic multimodal API for text extraction + analysis
 3. Role-specific prompt built from [src/constants/roles.ts](src/constants/roles.ts) (6 role configs: .NET, React/Next.js, React Native, QA Playwright, QA Manual, Generic)
-4. Gemini response validated with Zod against `analysisResultSchema` in [src/types/analysis.ts](src/types/analysis.ts)
+4. Anthropic response validated with Zod against `analysisResultSchema` in [src/types/analysis.ts](src/types/analysis.ts)
 5. Validated candidate stored in Supabase with `user_id` foreign key
 6. React Query cache invalidated → dashboard updates
 
@@ -47,11 +49,12 @@ Resume upload triggers this pipeline:
 **Data fetching:** TanStack React Query (5-min stale time) via custom hooks in [src/hooks/](src/hooks/). Mutations call Server Actions, then invalidate the relevant cache key.
 
 **AI scoring verdicts:**
+
 - `SHORTLIST`: score ≥ 70 AND no critical gaps
 - `REJECT`: score < 50 OR 2+ missing must-have skills
 - `PENDING`: everything else
 
-**Input sanitization:** Resume text and job descriptions are truncated to 15,000 chars and markdown delimiters stripped before sending to Gemini.
+**Input sanitization:** Resume text and job descriptions are truncated to 15,000 chars and markdown delimiters stripped before sending to Anthropic.
 
 ### Directory Layout
 
@@ -61,7 +64,7 @@ src/
   actions/       # Server Actions (analyze.ts, jobs.ts, jobList.ts)
   components/    # React components (Dashboard/, CandidateDetail/, Providers/, ThemeRegistry/)
   hooks/         # React Query hooks wrapping Server Actions and API calls
-  lib/           # Shared utilities (env.ts, gemini.ts, pdf.ts, supabase*.ts)
+  lib/           # Shared utilities (env.ts, claude.ts, pdf.ts, supabase*.ts)
   types/         # Zod schemas + TypeScript types
   constants/     # Role configs for AI prompts
   theme/         # MUI theme
