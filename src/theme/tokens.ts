@@ -28,34 +28,4 @@ export const lightTokens = {
   dangerText: "#B02020",
 } as const;
 
-export const darkTokens = {
-  bgBase: "#111110",
-  bgSurface: "#1A1A19",
-  bgSurfaceAlt: "#232321",
-  bgSunken: "#0D0D0C",
-  borderSubtle: "#2C2C2A",
-  borderDefault: "#3A3A37",
-  borderStrong: "#52524E",
-  textPrimary: "#EEEEEC",
-  textSecondary: "#A8A29E",
-  textMuted: "#6B6560",
-  textInverse: "#111110",
-  brandBase: "#748FFC",
-  brandHover: "#91A7FF",
-  brandSubtle: "#1E2345",
-  brandMuted: "#3451C7",
-  successBase: "#40C057",
-  successSubtle: "#0D2113",
-  successMuted: "#1A3A22",
-  successText: "#69DB7C",
-  warningBase: "#FAB005",
-  warningSubtle: "#261A00",
-  warningMuted: "#3D2C00",
-  warningText: "#FFD43B",
-  dangerBase: "#FA5252",
-  dangerSubtle: "#2A0D0D",
-  dangerMuted: "#3D1515",
-  dangerText: "#FF8787",
-} as const;
-
 export type ThemeTokens = typeof lightTokens;

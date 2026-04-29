@@ -1,13 +1,13 @@
 "use client";
 import { createTheme } from "@mui/material/styles";
-import { lightTokens, darkTokens } from "@/theme/tokens";
+import { lightTokens } from "@/theme/tokens";
 
-export function getTheme(mode: "light" | "dark") {
-  const t = mode === "dark" ? darkTokens : lightTokens;
+export function getTheme() {
+  const t = lightTokens;
 
   return createTheme({
     palette: {
-      mode,
+      mode: "light",
       primary: {
         main: t.brandBase,
         light: t.brandSubtle,
@@ -169,4 +169,4 @@ export function getTheme(mode: "light" | "dark") {
   });
 }
 
-export default getTheme("light");
+export default getTheme();
