@@ -119,7 +119,7 @@ export default function SelectJobModal({
     [jobs, selectedJobId],
   );
 
-  const MAX_FILES = 5;
+  const MAX_FILES = 20;
 
   const addFiles = useCallback((incoming: FileList | File[]) => {
     const arr = Array.from(incoming).filter(
@@ -312,7 +312,7 @@ export default function SelectJobModal({
             color="text.secondary"
             sx={{ mt: 0.5, display: "block" }}
           >
-            Accepts PDF, DOCX · Up to 5 files
+            Accepts PDF, DOCX · Up to 20 files
           </Typography>
         </Box>
 
