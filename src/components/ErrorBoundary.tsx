@@ -1,6 +1,7 @@
 "use client";
 import { useEffect } from "react";
-import { Box, Typography, Button } from "@mui/material";
+import { Box, Typography } from "@mui/material";
+import AppButton from "@/components/ui/AppButton";
 
 export default function ErrorBoundary({
   error,
@@ -35,13 +36,9 @@ export default function ErrorBoundary({
       >
         {error.message || "An unexpected error occurred. Please try again."}
       </Typography>
-      <Button
-        variant="outlined"
-        onClick={reset}
-        sx={{ mt: 1, borderRadius: 2, textTransform: "none" }}
-      >
+      <AppButton variant="outlined" onClick={reset} sx={{ mt: 1 }}>
         Try again
-      </Button>
+      </AppButton>
     </Box>
   );
 }

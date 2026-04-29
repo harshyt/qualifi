@@ -6,10 +6,10 @@ import {
   Button,
   Card,
   CardContent,
-  TextField,
   Typography,
   Alert,
 } from "@mui/material";
+import AppTextField from "@/components/ui/AppTextField";
 import { useRouter } from "next/navigation";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
 import { DotPattern } from "@/components/ui/dot-pattern";
@@ -91,7 +91,7 @@ export default function LoginPage() {
               component="div"
               sx={{
                 fontWeight: 700,
-                color: "#2196F3",
+                color: "primary.main",
               }}
             >
               Qualifi
@@ -111,19 +111,15 @@ export default function LoginPage() {
             </Alert>
           )}
 
-          <TextField
-            fullWidth
+          <AppTextField
             label="Email"
-            variant="outlined"
             margin="normal"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
           />
-          <TextField
-            fullWidth
+          <AppTextField
             label="Password"
             type="password"
-            variant="outlined"
             margin="normal"
             value={password}
             onChange={(e) => setPassword(e.target.value)}

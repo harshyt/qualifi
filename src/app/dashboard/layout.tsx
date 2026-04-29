@@ -43,7 +43,7 @@ function NavigationProgress() {
         height: 2,
         zIndex: 1300,
         "& .MuiLinearProgress-bar": {
-          bgcolor: "#2196F3",
+          bgcolor: "primary.main",
         },
       }}
     />
@@ -68,8 +68,8 @@ export default function DashboardLayout({
         position="fixed"
         sx={{
           display: { md: "none" },
-          bgcolor: "#FFFFFF",
-          color: "#37474F",
+          bgcolor: "background.paper",
+          color: "text.primary",
           boxShadow: "0px 1px 3px rgba(0, 0, 0, 0.1)",
           width: { md: `calc(100% - ${drawerWidth}px)` },
           ml: { md: `${drawerWidth}px` },
@@ -89,7 +89,7 @@ export default function DashboardLayout({
             variant="h6"
             noWrap
             component="div"
-            sx={{ fontWeight: 700, color: "#2196F3" }}
+            sx={{ fontWeight: 700, color: "primary.main" }}
           >
             Qualifi
           </Typography>
