@@ -8,12 +8,19 @@ import {
   Paper,
   LinearProgress,
 } from "@mui/material";
-import { CloudUpload, CheckCircle2, AlertCircle, FileText, Loader2 } from "lucide-react";
+import {
+  CloudUpload,
+  CheckCircle2,
+  AlertCircle,
+  FileText,
+  Loader2,
+} from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
-import { analyzeCandidateResume } from "@/actions/analyze";
 import { toast } from "sonner";
 import SelectJobModal from "./SelectJobModal";
 import { memo } from "react";
+import { useResumeJobs } from "@/hooks/useResumeJobs";
+import type { ResumeJobStatus } from "@/types/resumeJob";
 
 type FileStatus = "pending" | "uploading" | "done" | "error";
 
@@ -21,6 +28,7 @@ interface FileProgress {
   name: string;
   status: FileStatus;
   errorMessage?: string;
+  jobId?: string;
 }
 
 const FileProgressItem = memo(function FileProgressItem({
@@ -34,14 +42,12 @@ const FileProgressItem = memo(function FileProgressItem({
     done: <CheckCircle2 size={16} color="#4CAF50" />,
     error: <AlertCircle size={16} color="#F44336" />,
   };
-
   const statusLabel = {
     pending: "Queued",
     uploading: "Analyzing...",
     done: "Complete",
     error: "Failed",
   };
-
   const statusColor = {
     pending: "#94A3B8",
     uploading: "#2196F3",
@@ -94,106 +100,55 @@ const FileProgressItem = memo(function FileProgressItem({
   );
 });
 
+function remoteStatusToLocal(remote: ResumeJobStatus | undefined): FileStatus {
+  if (!remote) return "pending";
+  if (remote === "queued") return "pending";
+  if (remote === "processing") return "uploading";
+  if (remote === "done") return "done";
+  return "error";
+}
+
 export default function UploadResume() {
-  const uploadTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const clearRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const queryClient = useQueryClient();
   const [isUploading, setIsUploading] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [fileProgress, setFileProgress] = useState<FileProgress[]>([]);
 
+  // IDs of queued resume_jobs — drives polling
+  const [activeJobIds, setActiveJobIds] = useState<string[]>([]);
+  const { data: remoteJobs } = useResumeJobs(activeJobIds);
+
+  // Reconcile remote job status into local progress state
   useEffect(() => {
-    return () => {
-      if (uploadTimeoutRef.current) {
-        clearTimeout(uploadTimeoutRef.current);
-      }
-    };
-  }, []);
+    if (!remoteJobs || remoteJobs.length === 0) return;
 
-  const handleOpenModal = useCallback(() => {
-    setIsModalOpen(true);
-  }, []);
+    setFileProgress((prev) =>
+      prev.map((fp) => {
+        if (!fp.jobId) return fp;
+        const remote = remoteJobs.find((j) => j.id === fp.jobId);
+        if (!remote) return fp;
+        return {
+          ...fp,
+          status: remoteStatusToLocal(remote.status as ResumeJobStatus),
+          errorMessage: remote.error_message ?? fp.errorMessage,
+        };
+      }),
+    );
 
-  const handleModalClose = useCallback(() => {
-    setIsModalOpen(false);
-  }, []);
+    const allDone = remoteJobs.every(
+      (j) => j.status === "done" || j.status === "error",
+    );
 
-  const handleJobSelect = useCallback(
-    async (jobId: string, jobDescription: string, roleKey?: string, files?: File[]) => {
-      setIsModalOpen(false);
-
-      if (!files || files.length === 0) return;
-
-      // Initialize per-file progress
-      const initialProgress: FileProgress[] = files.map((f) => ({
-        name: f.name,
-        status: "pending" as FileStatus,
-      }));
-      setFileProgress(initialProgress);
-      setIsUploading(true);
-
-      // Process files in parallel with a concurrency cap of 5
-      const CONCURRENCY = 5;
-      const results: PromiseSettledResult<{ error?: string; success?: boolean }>[] =
-        new Array(files.length);
-      const queue = files.map((file, index) => ({ file, index }));
-
-      async function processEntry(entry: { file: File; index: number }) {
-        const { file, index } = entry;
-        setFileProgress((prev) =>
-          prev.map((fp, i) =>
-            i === index ? { ...fp, status: "uploading" as FileStatus } : fp,
-          ),
-        );
-
-        const formData = new FormData();
-        formData.append("resume", file);
-        formData.append("jobId", jobId);
-        formData.append("jobDescription", jobDescription);
-        if (roleKey) formData.append("roleKey", roleKey);
-
-        try {
-          const result: { error?: string; success?: boolean } =
-            await analyzeCandidateResume(formData);
-          if (result.error) throw new Error(result.error);
-          setFileProgress((prev) =>
-            prev.map((fp, i) =>
-              i === index ? { ...fp, status: "done" as FileStatus } : fp,
-            ),
-          );
-          results[index] = { status: "fulfilled", value: result };
-        } catch (err) {
-          const message = err instanceof Error ? err.message : "Analysis failed";
-          setFileProgress((prev) =>
-            prev.map((fp, i) =>
-              i === index
-                ? { ...fp, status: "error" as FileStatus, errorMessage: message }
-                : fp,
-            ),
-          );
-          results[index] = { status: "rejected", reason: err };
-        }
-      }
-
-      async function runWorker() {
-        while (queue.length > 0) {
-          const entry = queue.shift()!;
-          await processEntry(entry);
-        }
-      }
-
-      await Promise.all(
-        Array.from({ length: Math.min(CONCURRENCY, files.length) }, runWorker),
-      );
-
-      queryClient.invalidateQueries({ queryKey: ["candidates"] });
-
-      const successCount = results.filter((r) => r.status === "fulfilled").length;
-      const failCount = results.filter((r) => r.status === "rejected").length;
+    if (allDone) {
+      const successCount = remoteJobs.filter((j) => j.status === "done").length;
+      const failCount = remoteJobs.filter((j) => j.status === "error").length;
 
       if (successCount > 0) {
         toast.success(
           `Successfully analyzed ${successCount} resume${successCount > 1 ? "s" : ""}!`,
         );
+        queryClient.invalidateQueries({ queryKey: ["candidates"] });
       }
       if (failCount > 0) {
         toast.error(
@@ -201,26 +156,128 @@ export default function UploadResume() {
         );
       }
 
-      uploadTimeoutRef.current = setTimeout(() => {
+      clearRef.current = setTimeout(() => {
         setIsUploading(false);
         setFileProgress([]);
+        setActiveJobIds([]);
       }, 3000);
+    }
+  }, [remoteJobs, queryClient]);
+
+  useEffect(() => {
+    return () => {
+      if (clearRef.current) clearTimeout(clearRef.current);
+    };
+  }, []);
+
+  const handleOpenModal = useCallback(() => setIsModalOpen(true), []);
+  const handleModalClose = useCallback(() => setIsModalOpen(false), []);
+
+  const handleJobSelect = useCallback(
+    async (
+      jobId: string,
+      jobDescription: string,
+      roleKey?: string,
+      files?: File[],
+    ) => {
+      setIsModalOpen(false);
+      if (!files || files.length === 0) return;
+
+      // Show all files as "pending" immediately
+      setFileProgress(files.map((f) => ({ name: f.name, status: "pending" as FileStatus })));
+      setIsUploading(true);
+
+      // Phase 1: Upload all files to Blob + create resume_jobs rows
+      const formData = new FormData();
+      formData.append("jobId", jobId);
+      formData.append("jobDescription", jobDescription);
+      if (roleKey) formData.append("roleKey", roleKey);
+      for (const file of files) {
+        formData.append("resumes", file);
+      }
+
+      let queuedJobs: { id: string; file_name: string; status: string }[];
+      try {
+        const res = await fetch("/api/bulk-upload", {
+          method: "POST",
+          body: formData,
+        });
+        const body = await res.json() as {
+          jobs?: typeof queuedJobs;
+          failedUploads?: string[];
+          error?: string;
+        };
+
+        if (!res.ok || !body.jobs) {
+          throw new Error(body.error ?? "Bulk upload failed");
+        }
+
+        queuedJobs = body.jobs;
+
+        if (body.failedUploads && body.failedUploads.length > 0) {
+          toast.error(`${body.failedUploads.length} file(s) failed to upload.`);
+        }
+      } catch (err) {
+        const message = err instanceof Error ? err.message : "Upload failed";
+        toast.error(message);
+        setIsUploading(false);
+        setFileProgress([]);
+        return;
+      }
+
+      // Attach job IDs to file progress entries, start polling
+      setFileProgress((prev) =>
+        prev.map((fp) => {
+          const matched = queuedJobs.find((j) => j.file_name === fp.name);
+          return matched ? { ...fp, jobId: matched.id, status: "pending" as FileStatus } : fp;
+        }),
+      );
+      setActiveJobIds(queuedJobs.map((j) => j.id));
+
+      // Phase 2: Trigger processing for each job, max 5 concurrent
+      const CONCURRENCY = 5;
+      const queue = [...queuedJobs];
+
+      async function processJob(job: { id: string }) {
+        try {
+          await fetch(`/api/process-resume/${job.id}`, { method: "POST" });
+        } catch {
+          // Errors are surfaced via polling — silent here
+        }
+      }
+
+      async function worker() {
+        while (queue.length > 0) {
+          const job = queue.shift()!;
+          await processJob(job);
+        }
+      }
+
+      // Fire-and-forget — polling drives the UI from here
+      void Promise.all(
+        Array.from({ length: Math.min(CONCURRENCY, queuedJobs.length) }, worker),
+      );
     },
-    [queryClient],
+    [],
   );
 
   const completedCount = fileProgress.filter(
     (f) => f.status === "done" || f.status === "error",
   ).length;
   const totalCount = fileProgress.length;
-  const progressPercent = totalCount > 0 ? (completedCount / totalCount) * 100 : 0;
+  const progressPercent =
+    totalCount > 0 ? (completedCount / totalCount) * 100 : 0;
 
   return (
     <>
       <Button
         variant="contained"
         startIcon={
-          isUploading ? <CircularProgress size={18} color="inherit" /> : <CloudUpload size={18} />
+          isUploading ? (
+            <CircularProgress size={18} color="inherit" />
+          ) : (
+            <CloudUpload size={18} />
+          )
         }
         onClick={handleOpenModal}
         disabled={isUploading || isModalOpen}
@@ -228,7 +285,6 @@ export default function UploadResume() {
         {isUploading ? "Analyzing..." : "Upload Resume"}
       </Button>
 
-      {/* Per-file progress panel */}
       {isUploading && fileProgress.length > 0 && (
         <Paper
           elevation={3}
