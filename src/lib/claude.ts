@@ -273,7 +273,7 @@ export async function analyzeResume(
   const t0 = Date.now();
   try {
     response = await client.messages.create({
-      model: "claude-sonnet-4-6",
+      model: process.env.CLAUDE_MODEL || "claude-haiku-4-5-20251001",
       max_tokens: 4096,
       tools,
       messages,
