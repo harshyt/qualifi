@@ -1,11 +1,9 @@
 "use client";
 import { useState, useMemo, useCallback, useRef, memo } from "react";
 import {
-  Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
-  Button,
   Typography,
   Box,
   IconButton,
@@ -13,6 +11,8 @@ import {
   Grid,
 } from "@mui/material";
 import AppTextField from "@/components/ui/AppTextField";
+import AppButton from "@/components/ui/AppButton";
+import AppDialog from "@/components/ui/AppDialog";
 import { X, FileText, UploadCloud, Cpu } from "lucide-react";
 import { useJobs } from "@/hooks/useJobs";
 import { toast } from "sonner";
@@ -195,15 +195,7 @@ export default function SelectJobModal({
   const canConfirm = !!selectedJob && files.length > 0;
 
   return (
-    <Dialog
-      open={open}
-      onClose={handleClose}
-      maxWidth="sm"
-      fullWidth
-      PaperProps={{
-        sx: { borderRadius: 3, border: "1px solid #E2E8F0" },
-      }}
-    >
+    <AppDialog open={open} onClose={handleClose}>
       {/* Header */}
       <DialogTitle component="div" sx={{ pb: 0.5 }}>
         <Box
@@ -329,22 +321,19 @@ export default function SelectJobModal({
       </DialogContent>
 
       <DialogActions sx={{ px: 3, pb: 3, pt: 1, gap: 1 }}>
-        <Button
-          onClick={handleClose}
-          sx={{ color: "text.secondary", fontWeight: 600 }}
-        >
+        <AppButton onClick={handleClose} sx={{ color: "text.secondary" }}>
           Cancel
-        </Button>
-        <Button
+        </AppButton>
+        <AppButton
           onClick={handleConfirm}
           variant="contained"
           disabled={!canConfirm}
           startIcon={<Cpu size={16} />}
-          sx={{ fontWeight: 600, borderRadius: 2, px: 3 }}
+          sx={{ px: 3 }}
         >
           Analyze All Resumes
-        </Button>
+        </AppButton>
       </DialogActions>
-    </Dialog>
+    </AppDialog>
   );
 }

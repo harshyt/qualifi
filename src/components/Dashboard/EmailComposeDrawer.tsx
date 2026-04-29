@@ -1,14 +1,8 @@
 "use client";
 import * as React from "react";
-import {
-  Drawer,
-  Box,
-  Typography,
-  Button,
-  IconButton,
-  Divider,
-  Snackbar,
-} from "@mui/material";
+import { Box, Typography, IconButton, Divider, Snackbar } from "@mui/material";
+import AppButton from "@/components/ui/AppButton";
+import AppDrawer from "@/components/ui/AppDrawer";
 import AppTextField from "@/components/ui/AppTextField";
 import { X, Copy, Mail } from "lucide-react";
 import { useState } from "react";
@@ -54,20 +48,7 @@ export default function EmailComposeDrawer({
 
   return (
     <>
-      <Drawer
-        anchor="right"
-        open={open}
-        onClose={handleDrawerClose}
-        PaperProps={{
-          sx: {
-            width: { xs: "100%", sm: 520 },
-            p: 3,
-            display: "flex",
-            flexDirection: "column",
-            gap: 2,
-          },
-        }}
-      >
+      <AppDrawer open={open} onClose={handleDrawerClose}>
         <Box
           sx={{
             display: "flex",
@@ -119,7 +100,7 @@ export default function EmailComposeDrawer({
         />
 
         <Box sx={{ display: "flex", gap: 1.5 }}>
-          <Button
+          <AppButton
             variant="outlined"
             startIcon={<Copy size={16} />}
             onClick={() => {
@@ -128,34 +109,23 @@ export default function EmailComposeDrawer({
               );
               setCopied(true);
             }}
-            sx={{
-              borderRadius: 2,
-              fontWeight: 600,
-              flex: 1,
-              borderColor: "#90CAF9",
-              color: "#1565C0",
-            }}
+            sx={{ flex: 1, borderColor: "#90CAF9", color: "#1565C0" }}
           >
             Copy
-          </Button>
-          <Button
+          </AppButton>
+          <AppButton
             variant="contained"
             startIcon={<Mail size={16} />}
             onClick={() => {
               const url = `https://outlook.office.com/mail/deeplink/compose?subject=${encodeURIComponent(currentSubject)}&body=${encodeURIComponent(currentBody)}`;
               window.open(url, "_blank");
             }}
-            sx={{
-              borderRadius: 2,
-              fontWeight: 600,
-              flex: 1,
-              boxShadow: "none",
-            }}
+            sx={{ flex: 1 }}
           >
             Open in Outlook
-          </Button>
+          </AppButton>
         </Box>
-      </Drawer>
+      </AppDrawer>
 
       <Snackbar
         open={copied}

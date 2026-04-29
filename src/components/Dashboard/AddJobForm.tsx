@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import { Box, Button, MenuItem, Typography } from "@mui/material";
+import { Box, MenuItem, Typography } from "@mui/material";
+import AppButton from "@/components/ui/AppButton";
 import AppTextField from "@/components/ui/AppTextField";
 import AppSelect from "@/components/ui/AppSelect";
 import dynamic from "next/dynamic";
@@ -185,14 +186,14 @@ export default function AddJobForm({
           bgcolor: "background.paper",
         }}
       >
-        <Button
+        <AppButton
           type="submit"
           variant="contained"
           disabled={isSubmitting}
           sx={{ px: 4, py: 1, width: "100%" }}
         >
           {isSubmitting ? "Saving..." : initialData ? "Update Job" : "Save Job"}
-        </Button>
+        </AppButton>
       </Box>
     </Box>
   );

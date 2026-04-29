@@ -15,12 +15,10 @@ import {
   MenuItem,
   ListItemIcon,
   ListItemText,
-  Dialog,
   DialogTitle,
   DialogContent,
   DialogContentText,
   DialogActions,
-  Button,
   Checkbox,
   CircularProgress,
   Avatar,
@@ -30,6 +28,8 @@ import { useState, useCallback, memo, useMemo } from "react";
 import { useDeleteCandidate } from "@/hooks/useDeleteCandidate";
 import { useRouter } from "next/navigation";
 import EmailComposeDrawer from "./EmailComposeDrawer";
+import AppButton from "@/components/ui/AppButton";
+import AppDialog from "@/components/ui/AppDialog";
 
 import { StatusChip } from "@/components/shared/StatusChip";
 
@@ -502,31 +502,23 @@ function DashboardTable({ candidates }: { candidates: Candidate[] }) {
               {selectedIds.size} candidate{selectedIds.size !== 1 ? "s" : ""}{" "}
               selected
             </Typography>
-            <Button
+            <AppButton
               variant="contained"
               size="small"
               startIcon={<Mail size={15} />}
               onClick={handleComposeEmail}
-              sx={{
-                borderRadius: 2,
-                fontWeight: 600,
-                whiteSpace: "nowrap",
-              }}
+              sx={{ whiteSpace: "nowrap" }}
             >
               Compose Email
-            </Button>
-            <Button
+            </AppButton>
+            <AppButton
               variant="text"
               size="small"
               onClick={() => setSelectedIdsRaw(new Set())}
-              sx={{
-                color: "text.secondary",
-                fontWeight: 600,
-                whiteSpace: "nowrap",
-              }}
+              sx={{ color: "text.secondary", whiteSpace: "nowrap" }}
             >
               Clear
-            </Button>
+            </AppButton>
           </Paper>
         </Box>
       )}
@@ -571,11 +563,11 @@ function DashboardTable({ candidates }: { candidates: Candidate[] }) {
       </Menu>
 
       {/* Delete confirmation dialog */}
-      <Dialog
+      <AppDialog
         open={isDeleteDialogOpen}
         onClose={handleDialogClose}
         onClick={(e) => e.stopPropagation()}
-        PaperProps={{ sx: { borderRadius: 3, padding: 1 } }}
+        paperSx={{ p: 1 }}
       >
         <DialogTitle sx={{ fontWeight: 700, color: "text.primary" }}>
           Delete Candidate?
@@ -588,19 +580,18 @@ function DashboardTable({ candidates }: { candidates: Candidate[] }) {
           </DialogContentText>
         </DialogContent>
         <DialogActions sx={{ px: 3, pb: 3 }}>
-          <Button
+          <AppButton
             onClick={handleDialogClose}
-            sx={{ color: "text.secondary", fontWeight: 600 }}
+            sx={{ color: "text.secondary" }}
           >
             Cancel
-          </Button>
-          <Button
+          </AppButton>
+          <AppButton
             onClick={handleConfirmDelete}
             color="error"
             variant="contained"
             autoFocus
             disabled={isDeleting}
-            sx={{ borderRadius: 2, fontWeight: 600 }}
           >
             {isDeleting ? (
               <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
@@ -610,9 +601,9 @@ function DashboardTable({ candidates }: { candidates: Candidate[] }) {
             ) : (
               "Delete"
             )}
-          </Button>
+          </AppButton>
         </DialogActions>
-      </Dialog>
+      </AppDialog>
 
       {/* Email compose drawer */}
       <EmailComposeDrawer

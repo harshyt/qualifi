@@ -1,13 +1,13 @@
 "use client";
 import { useRef, useState, useCallback, useEffect } from "react";
 import {
-  Button,
   CircularProgress,
   Box,
   Typography,
   Paper,
   LinearProgress,
 } from "@mui/material";
+import AppButton from "@/components/ui/AppButton";
 import {
   CloudUpload,
   CheckCircle2,
@@ -238,7 +238,7 @@ export default function UploadResume() {
 
   return (
     <>
-      <Button
+      <AppButton
         variant="contained"
         startIcon={
           isUploading ? (
@@ -251,7 +251,7 @@ export default function UploadResume() {
         disabled={isUploading || isModalOpen}
       >
         {isUploading ? "Analyzing..." : "Upload Resume"}
-      </Button>
+      </AppButton>
 
       {/* Per-file progress panel */}
       {isUploading && fileProgress.length > 0 && (

@@ -4,12 +4,12 @@ import {
   Paper,
   Typography,
   Chip,
-  Button,
   Divider,
   Grid,
   CircularProgress,
   Avatar,
 } from "@mui/material";
+import AppButton from "@/components/ui/AppButton";
 import { ArrowLeft, Check, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useUpdateCandidateStatus } from "@/hooks/useUpdateCandidateStatus";
@@ -222,13 +222,13 @@ function CandidateView({ candidate }: CandidateViewProps) {
       >
         {/* Left: back + avatar + info */}
         <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-          <Button
+          <AppButton
             startIcon={<ArrowLeft size={18} />}
             onClick={() => router.back()}
             sx={{ color: "text.secondary", minWidth: "auto" }}
           >
             Back
-          </Button>
+          </AppButton>
 
           <Avatar
             sx={{
@@ -292,7 +292,7 @@ function CandidateView({ candidate }: CandidateViewProps) {
               width: { xs: "100%", sm: "auto" },
             }}
           >
-            <Button
+            <AppButton
               variant="outlined"
               color="error"
               fullWidth
@@ -309,8 +309,8 @@ function CandidateView({ candidate }: CandidateViewProps) {
               }
             >
               {isPending ? "Updating..." : "Reject"}
-            </Button>
-            <Button
+            </AppButton>
+            <AppButton
               variant="contained"
               color="success"
               fullWidth
@@ -327,7 +327,7 @@ function CandidateView({ candidate }: CandidateViewProps) {
               }
             >
               {isPending ? "Updating..." : "Shortlist"}
-            </Button>
+            </AppButton>
           </Box>
         )}
       </Box>
