@@ -17,7 +17,13 @@ function buildPrompt(
   const today = new Date().toISOString().split("T")[0];
 
   return `
-Today's date is ${today}. Use this when evaluating employment dates, tenure durations, and whether any dates are in the future.
+Today's date is ${today}. Use this as the sole reference when evaluating employment dates and tenure durations.
+
+DATE EVALUATION RULES (follow strictly):
+- Any end date on or before ${today} is a past date. Do NOT flag it, speculate about it, or treat it as suspicious in any way.
+- Only flag an end date if it is strictly after ${today} — that is a genuinely future date.
+- Do NOT speculate about when the resume was written. You have no evidence of this.
+- Do NOT raise concerns about an end date simply because it is recent.
 
 You are a ${config.persona} conducting a thorough resume screening for a ${config.title} position.
 
