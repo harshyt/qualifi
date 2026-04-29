@@ -3,8 +3,6 @@ import { useState, useMemo, useCallback } from "react";
 import {
   Box,
   Typography,
-  Button,
-  Drawer,
   IconButton,
   Chip,
   CircularProgress,
@@ -17,7 +15,6 @@ import {
   Paper,
   MenuItem,
   Divider,
-  Dialog,
   DialogTitle,
   DialogContent,
   DialogContentText,
@@ -30,6 +27,9 @@ import {
 } from "@mui/material";
 import SearchField from "@/components/ui/SearchField";
 import AppSelect from "@/components/ui/AppSelect";
+import AppButton from "@/components/ui/AppButton";
+import AppDrawer from "@/components/ui/AppDrawer";
+import AppDialog from "@/components/ui/AppDialog";
 import {
   Plus,
   X,
@@ -50,6 +50,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import DOMPurify from "isomorphic-dompurify";
 import { useDeleteJob } from "@/hooks/useDeleteJob";
 import type { JobHistoryEntry } from "@/types/job";
+import { lightTokens } from "@/theme/tokens";
 
 const JobHistoryDrawer = dynamic(
   () => import("@/components/Dashboard/JobHistoryDrawer"),
@@ -75,7 +76,7 @@ function JobsTableSkeleton() {
       </Box>
       <TableContainer component={Paper} sx={{ borderRadius: 2, boxShadow: 1 }}>
         <Table>
-          <TableHead sx={{ bgcolor: "#F9FAFB" }}>
+          <TableHead sx={{ bgcolor: lightTokens.bgSurfaceAlt }}>
             <TableRow>
               <TableCell sx={{ width: "15%" }}>
                 <Skeleton variant="text" width={70} />
@@ -232,16 +233,14 @@ export default function JobLibraryPage() {
       const clientMatch = job.client?.some((c) =>
         c.toLowerCase().includes(searchLower),
       );
-
       const matchesSearch = titleMatch || descMatch || clientMatch;
-
       const matchesClient =
         selectedClientFilter === "All" ||
         (job.client && job.client.includes(selectedClientFilter));
-
       return matchesSearch && matchesClient;
     });
   }, [jobs, searchTerm, selectedClientFilter]);
+
   return (
     <Box>
       <Box
@@ -268,26 +267,22 @@ export default function JobLibraryPage() {
             Manage open positions and job descriptions.
           </Typography>
         </Box>
-        <Button
+        <AppButton
           variant="contained"
           startIcon={<Plus size={20} />}
           onClick={() => setIsDrawerOpen(true)}
-          sx={{
-            textTransform: "none",
-            borderRadius: 2,
-            px: 3,
-          }}
+          sx={{ px: 3 }}
         >
           Add New Job
-        </Button>
+        </AppButton>
       </Box>
 
       {error ? (
         <Box
           sx={{
             p: 3,
-            bgcolor: "#FFF1F2",
-            border: "1px solid #FECDD3",
+            bgcolor: `${lightTokens.dangerBase}10`,
+            border: `1px solid ${lightTokens.dangerBase}40`,
             borderRadius: 2,
           }}
         >
@@ -306,8 +301,8 @@ export default function JobLibraryPage() {
           sx={{
             textAlign: "center",
             p: 6,
-            bgcolor: "#F9FAFB",
-            border: "1px solid #E2E8F0",
+            bgcolor: lightTokens.bgBase,
+            border: `1px solid ${lightTokens.borderSubtle}`,
             borderRadius: 2,
           }}
         >
@@ -351,7 +346,7 @@ export default function JobLibraryPage() {
             sx={{ borderRadius: 2, boxShadow: 1 }}
           >
             <Table>
-              <TableHead sx={{ bgcolor: "#F9FAFB" }}>
+              <TableHead sx={{ bgcolor: lightTokens.bgSurfaceAlt }}>
                 <TableRow>
                   <TableCell sx={{ fontWeight: 600, width: "15%" }}>
                     Job Title
@@ -393,9 +388,7 @@ export default function JobLibraryPage() {
                         e.stopPropagation();
                         handleViewJob(job);
                       }}
-                      sx={{
-                        cursor: "pointer",
-                      }}
+                      sx={{ cursor: "pointer" }}
                     >
                       <TableCell sx={{ fontWeight: 500 }}>
                         {job.title}
@@ -403,11 +396,7 @@ export default function JobLibraryPage() {
                       <TableCell>
                         {job.client && job.client.length > 0 ? (
                           <Box
-                            sx={{
-                              display: "flex",
-                              flexWrap: "wrap",
-                              gap: 0.5,
-                            }}
+                            sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}
                           >
                             {job.client.map((c: string) => (
                               <Chip
@@ -427,11 +416,7 @@ export default function JobLibraryPage() {
                       <TableCell>
                         {job.tags && job.tags.length > 0 ? (
                           <Box
-                            sx={{
-                              display: "flex",
-                              flexWrap: "wrap",
-                              gap: 0.5,
-                            }}
+                            sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}
                           >
                             {job.tags.map((t: string) => (
                               <Chip
@@ -472,7 +457,10 @@ export default function JobLibraryPage() {
                           size="small"
                           onClick={(e) => handleMenuOpen(e, job)}
                         >
-                          <MoreVertical size={18} color="#78909C" />
+                          <MoreVertical
+                            size={18}
+                            color={lightTokens.textSecondary}
+                          />
                         </IconButton>
                       </TableCell>
                     </TableRow>
@@ -484,6 +472,7 @@ export default function JobLibraryPage() {
         </Box>
       )}
 
+      {/* Row context menu */}
       <Menu
         anchorEl={menuAnchor}
         open={Boolean(menuAnchor)}
@@ -499,7 +488,7 @@ export default function JobLibraryPage() {
           }}
         >
           <ListItemIcon>
-            <Eye size={16} color="#78909C" />
+            <Eye size={16} color={lightTokens.textSecondary} />
           </ListItemIcon>
           <ListItemText>View</ListItemText>
         </MenuItem>
@@ -512,7 +501,7 @@ export default function JobLibraryPage() {
             }}
           >
             <ListItemIcon>
-              <Pencil size={16} color="#78909C" />
+              <Pencil size={16} color={lightTokens.textSecondary} />
             </ListItemIcon>
             <ListItemText>Edit</ListItemText>
           </MenuItem>
@@ -525,7 +514,7 @@ export default function JobLibraryPage() {
             }}
           >
             <ListItemIcon>
-              <History size={16} color="#78909C" />
+              <History size={16} color={lightTokens.textSecondary} />
             </ListItemIcon>
             <ListItemText>Change History</ListItemText>
           </MenuItem>
@@ -536,33 +525,28 @@ export default function JobLibraryPage() {
               handleDeleteClick(e, menuJob!);
               handleMenuClose();
             }}
-            sx={{ color: "#d32f2f" }}
+            sx={{ color: lightTokens.dangerBase }}
           >
             <ListItemIcon>
-              <Trash2 size={16} color="#d32f2f" />
+              <Trash2 size={16} color={lightTokens.dangerBase} />
             </ListItemIcon>
             <ListItemText>Delete</ListItemText>
           </MenuItem>
         )}
       </Menu>
 
-      <Drawer
-        anchor="right"
+      {/* Create / Edit job drawer */}
+      <AppDrawer
         open={isDrawerOpen}
         onClose={() => {
           setIsDrawerOpen(false);
           setEditingJob(null);
         }}
-        PaperProps={{
-          sx: {
-            width: { xs: "100vw", sm: 500 },
-            height: "100vh",
-            display: "flex",
-            flexDirection: "column",
-            p: 0,
-            borderTopLeftRadius: { xs: 16, sm: 0 },
-            borderTopRightRadius: { xs: 16, sm: 0 },
-          },
+        paperSx={{
+          width: { xs: "100vw", sm: 500 },
+          height: "100vh",
+          p: 0,
+          gap: 0,
         }}
       >
         <Box
@@ -572,7 +556,7 @@ export default function JobLibraryPage() {
             alignItems: "center",
             p: { xs: 2, sm: 3 },
             pb: 2,
-            borderBottom: "1px solid #E0E0E0",
+            borderBottom: `1px solid ${lightTokens.borderSubtle}`,
             flexShrink: 0,
           }}
         >
@@ -599,8 +583,8 @@ export default function JobLibraryPage() {
               p: 4,
               m: { xs: 2, sm: 3 },
               mt: 4,
-              bgcolor: "#FFF1F2",
-              border: "1px solid #FECDD3",
+              bgcolor: `${lightTokens.dangerBase}10`,
+              border: `1px solid ${lightTokens.dangerBase}40`,
               borderRadius: 2,
             }}
           >
@@ -623,22 +607,17 @@ export default function JobLibraryPage() {
             initialData={editingJob ?? undefined}
           />
         )}
-      </Drawer>
+      </AppDrawer>
 
-      <Drawer
-        anchor="right"
+      {/* View job drawer */}
+      <AppDrawer
         open={isViewDrawerOpen}
         onClose={() => setIsViewDrawerOpen(false)}
-        PaperProps={{
-          sx: {
-            width: { xs: "100vw", sm: 600 },
-            height: "100vh",
-            display: "flex",
-            flexDirection: "column",
-            p: 0,
-            borderTopLeftRadius: { xs: 16, sm: 0 },
-            borderTopRightRadius: { xs: 16, sm: 0 },
-          },
+        paperSx={{
+          width: { xs: "100vw", sm: 600 },
+          height: "100vh",
+          p: 0,
+          gap: 0,
         }}
       >
         {selectedJob && (
@@ -657,18 +636,14 @@ export default function JobLibraryPage() {
                 alignItems: "flex-start",
                 p: { xs: 2, sm: 3 },
                 pb: 2,
-                borderBottom: "1px solid #E0E0E0",
+                borderBottom: `1px solid ${lightTokens.borderSubtle}`,
                 flexShrink: 0,
               }}
             >
               <Box sx={{ flex: 1, mr: 2 }}>
                 <Typography
                   variant="h6"
-                  sx={{
-                    fontWeight: 700,
-                    color: "text.primary",
-                    mb: 0.5,
-                  }}
+                  sx={{ fontWeight: 700, color: "text.primary", mb: 0.5 }}
                 >
                   {selectedJob.title}
                 </Typography>
@@ -685,11 +660,7 @@ export default function JobLibraryPage() {
                     Created{" "}
                     {new Date(selectedJob.created_at).toLocaleDateString(
                       "en-US",
-                      {
-                        year: "numeric",
-                        month: "long",
-                        day: "numeric",
-                      },
+                      { year: "numeric", month: "long", day: "numeric" },
                     )}
                   </Typography>
                 </Box>
@@ -698,7 +669,7 @@ export default function JobLibraryPage() {
                 {isAdmin && (
                   <Tooltip title="Edit Job">
                     <IconButton onClick={handleEditJob} size="small">
-                      <Pencil size={18} color="#78909C" />
+                      <Pencil size={18} color={lightTokens.textSecondary} />
                     </IconButton>
                   </Tooltip>
                 )}
@@ -718,7 +689,7 @@ export default function JobLibraryPage() {
                     mb: 1.5,
                   }}
                 >
-                  <Users size={16} color="#78909C" />
+                  <Users size={16} color={lightTokens.textSecondary} />
                   <Box
                     sx={{
                       display: "flex",
@@ -731,7 +702,7 @@ export default function JobLibraryPage() {
                       variant="subtitle2"
                       sx={{
                         fontWeight: 600,
-                        color: "#78909C",
+                        color: lightTokens.textSecondary,
                         textTransform: "uppercase",
                         fontSize: 12,
                       }}
@@ -742,7 +713,7 @@ export default function JobLibraryPage() {
                       variant="subtitle2"
                       sx={{
                         fontWeight: 600,
-                        color: "#78909C",
+                        color: lightTokens.textSecondary,
                         textTransform: "uppercase",
                         fontSize: 12,
                       }}
@@ -806,12 +777,12 @@ export default function JobLibraryPage() {
                     mb: 1.5,
                   }}
                 >
-                  <Briefcase size={16} color="#78909C" />
+                  <Briefcase size={16} color={lightTokens.textSecondary} />
                   <Typography
                     variant="subtitle2"
                     sx={{
                       fontWeight: 600,
-                      color: "#78909C",
+                      color: lightTokens.textSecondary,
                       textTransform: "uppercase",
                       fontSize: 12,
                     }}
@@ -844,8 +815,9 @@ export default function JobLibraryPage() {
             </Box>
           </Box>
         )}
-      </Drawer>
+      </AppDrawer>
 
+      {/* Change history drawer */}
       <JobHistoryDrawer
         open={isHistoryDrawerOpen}
         onClose={() => {
@@ -856,12 +828,11 @@ export default function JobLibraryPage() {
         history={(historyJob?.change_history ?? []) as JobHistoryEntry[]}
       />
 
-      <Dialog
+      {/* Delete confirmation dialog */}
+      <AppDialog
         open={isDeleteDialogOpen}
         onClose={handleDeleteDialogClose}
-        PaperProps={{
-          sx: { borderRadius: 3, padding: 1 },
-        }}
+        paperSx={{ p: 1 }}
       >
         <DialogTitle sx={{ fontWeight: 700, color: "text.primary" }}>
           Delete Job?
@@ -873,19 +844,18 @@ export default function JobLibraryPage() {
           </DialogContentText>
         </DialogContent>
         <DialogActions sx={{ px: 3, pb: 3 }}>
-          <Button
+          <AppButton
             onClick={handleDeleteDialogClose}
-            sx={{ color: "#78909C", fontWeight: 600 }}
+            sx={{ color: "text.secondary" }}
           >
             Cancel
-          </Button>
-          <Button
+          </AppButton>
+          <AppButton
             onClick={handleConfirmDelete}
             color="error"
             variant="contained"
             autoFocus
             disabled={isDeleting}
-            sx={{ borderRadius: 2, fontWeight: 600, boxShadow: "none" }}
           >
             {isDeleting ? (
               <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
@@ -895,9 +865,9 @@ export default function JobLibraryPage() {
             ) : (
               "Delete"
             )}
-          </Button>
+          </AppButton>
         </DialogActions>
-      </Dialog>
+      </AppDialog>
     </Box>
   );
 }

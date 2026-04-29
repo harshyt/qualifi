@@ -1,6 +1,5 @@
 "use client";
 import {
-  Drawer,
   Box,
   Typography,
   IconButton,
@@ -11,6 +10,8 @@ import {
 import { X, History } from "lucide-react";
 import DOMPurify from "isomorphic-dompurify";
 import type { JobHistoryEntry, JobFieldDiff } from "@/types/job";
+import AppDrawer from "@/components/ui/AppDrawer";
+import { lightTokens } from "@/theme/tokens";
 
 interface JobHistoryDrawerProps {
   open: boolean;
@@ -38,7 +39,7 @@ function DiffRow({ diff }: { diff: JobFieldDiff }) {
         variant="caption"
         sx={{
           fontWeight: 700,
-          color: "#546E7A",
+          color: lightTokens.textSecondary,
           textTransform: "uppercase",
           letterSpacing: 0.5,
           display: "block",
@@ -51,8 +52,8 @@ function DiffRow({ diff }: { diff: JobFieldDiff }) {
       {/* Removed (before) */}
       <Box
         sx={{
-          bgcolor: "#FFEBEE",
-          border: "1px solid #FFCDD2",
+          bgcolor: `${lightTokens.dangerBase}15`,
+          border: `1px solid ${lightTokens.dangerBase}40`,
           borderRadius: 1,
           px: 1.5,
           py: 1,
@@ -67,7 +68,7 @@ function DiffRow({ diff }: { diff: JobFieldDiff }) {
         <Typography
           component="span"
           sx={{
-            color: "#C62828",
+            color: lightTokens.dangerText,
             fontFamily: "monospace",
             fontWeight: 700,
             fontSize: 14,
@@ -81,7 +82,7 @@ function DiffRow({ diff }: { diff: JobFieldDiff }) {
         {isHtml ? (
           <Box
             sx={{
-              color: "#C62828",
+              color: lightTokens.dangerText,
               fontSize: 13,
               lineHeight: 1.6,
               fontFamily: "monospace",
@@ -95,7 +96,7 @@ function DiffRow({ diff }: { diff: JobFieldDiff }) {
         ) : (
           <Typography
             sx={{
-              color: "#C62828",
+              color: lightTokens.dangerText,
               fontFamily: "monospace",
               fontSize: 13,
               lineHeight: 1.6,
@@ -109,8 +110,8 @@ function DiffRow({ diff }: { diff: JobFieldDiff }) {
       {/* Added (after) */}
       <Box
         sx={{
-          bgcolor: "#E8F5E9",
-          border: "1px solid #C8E6C9",
+          bgcolor: `${lightTokens.successBase}15`,
+          border: `1px solid ${lightTokens.successBase}40`,
           borderRadius: 1,
           px: 1.5,
           py: 1,
@@ -124,7 +125,7 @@ function DiffRow({ diff }: { diff: JobFieldDiff }) {
         <Typography
           component="span"
           sx={{
-            color: "#2E7D32",
+            color: lightTokens.successText,
             fontFamily: "monospace",
             fontWeight: 700,
             fontSize: 14,
@@ -138,7 +139,7 @@ function DiffRow({ diff }: { diff: JobFieldDiff }) {
         {isHtml ? (
           <Box
             sx={{
-              color: "#2E7D32",
+              color: lightTokens.successText,
               fontSize: 13,
               lineHeight: 1.6,
               fontFamily: "monospace",
@@ -150,7 +151,7 @@ function DiffRow({ diff }: { diff: JobFieldDiff }) {
         ) : (
           <Typography
             sx={{
-              color: "#2E7D32",
+              color: lightTokens.successText,
               fontFamily: "monospace",
               fontSize: 13,
               lineHeight: 1.6,
@@ -171,21 +172,14 @@ export default function JobHistoryDrawer({
   history,
 }: JobHistoryDrawerProps) {
   return (
-    <Drawer
-      anchor="right"
+    <AppDrawer
       open={open}
       onClose={onClose}
-      PaperProps={{
-        sx: {
-          width: { xs: "100vw", sm: 1200 },
-          height: "100vh",
-          p: 0,
-          borderTopLeftRadius: { xs: 16, sm: 0 },
-          borderTopRightRadius: { xs: 16, sm: 0 },
-          bgcolor: "#F9FAFB",
-          display: "flex",
-          flexDirection: "column",
-        },
+      paperSx={{
+        width: { xs: "100vw", sm: 1200 },
+        p: 0,
+        bgcolor: lightTokens.bgBase,
+        gap: 0,
       }}
     >
       {/* Header */}
@@ -196,15 +190,18 @@ export default function JobHistoryDrawer({
           alignItems: "flex-start",
           p: 3,
           pb: 2,
-          borderBottom: "1px solid #E0E0E0",
-          bgcolor: "background.paper",
+          borderBottom: `1px solid ${lightTokens.borderSubtle}`,
+          bgcolor: lightTokens.bgSurface,
           flexShrink: 0,
         }}
       >
         <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-          <History size={20} color="#78909C" />
+          <History size={20} color={lightTokens.textSecondary} />
           <Box>
-            <Typography variant="h6" sx={{ fontWeight: 600, color: "#37474F" }}>
+            <Typography
+              variant="h6"
+              sx={{ fontWeight: 600, color: lightTokens.textPrimary }}
+            >
               Change History
             </Typography>
             <Typography
@@ -233,9 +230,9 @@ export default function JobHistoryDrawer({
             sx={{
               textAlign: "center",
               p: 6,
-              bgcolor: "background.paper",
+              bgcolor: lightTokens.bgSurface,
               borderRadius: 2,
-              border: "1px dashed #E0E0E0",
+              border: `1px dashed ${lightTokens.borderSubtle}`,
             }}
           >
             <Typography variant="body1" color="text.secondary">
@@ -251,11 +248,10 @@ export default function JobHistoryDrawer({
                 p: 2.5,
                 mb: 2,
                 borderRadius: 2,
-                bgcolor: "background.paper",
-                borderColor: "#E0E0E0",
+                bgcolor: lightTokens.bgSurface,
+                borderColor: lightTokens.borderSubtle,
               }}
             >
-              {/* Entry header */}
               <Box
                 sx={{
                   display: "flex",
@@ -267,7 +263,7 @@ export default function JobHistoryDrawer({
                 <Box>
                   <Typography
                     variant="subtitle2"
-                    sx={{ fontWeight: 600, color: "#37474F" }}
+                    sx={{ fontWeight: 600, color: lightTokens.textPrimary }}
                   >
                     {entry.changedBy}
                   </Typography>
@@ -278,7 +274,11 @@ export default function JobHistoryDrawer({
                 <Chip
                   label={`${entry.diffs.length} field${entry.diffs.length !== 1 ? "s" : ""} changed`}
                   size="small"
-                  sx={{ bgcolor: "#E3F2FD", color: "#1565C0", fontWeight: 500 }}
+                  sx={{
+                    bgcolor: lightTokens.brandSubtle,
+                    color: lightTokens.brandBase,
+                    fontWeight: 500,
+                  }}
                 />
               </Box>
 
@@ -291,6 +291,6 @@ export default function JobHistoryDrawer({
           ))
         )}
       </Box>
-    </Drawer>
+    </AppDrawer>
   );
 }

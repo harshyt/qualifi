@@ -72,4 +72,18 @@ src/
 
 ### UI Guidelines
 
-Design follows a Light & Airy Material 3 aesthetic. Primary color: Soft Azure `#2196F3`. Background: Cloud White `#F9FAFB`. Avoid heavy shadows; prefer subtle borders and skeleton loaders during async operations.
+Design follows a Light & Airy Material 3 aesthetic. Primary color: Indigo `#3B5BDB` (`brandBase`). Background: Warm Off-White `#FAFAF9` (`bgBase`). Avoid heavy shadows; prefer subtle borders and skeleton loaders during async operations.
+
+**Always use atomic UI components from `src/components/ui/` — never import the raw MUI equivalent directly:**
+
+| Use this       | Instead of                                                   |
+| -------------- | ------------------------------------------------------------ |
+| `AppButton`    | `Button` from `@mui/material`                                |
+| `AppTextField` | `TextField` from `@mui/material`                             |
+| `AppSelect`    | `Select` + `FormControl` + `InputLabel` from `@mui/material` |
+| `AppDialog`    | `Dialog` from `@mui/material`                                |
+| `AppDrawer`    | `Drawer` from `@mui/material`                                |
+
+These wrappers enforce consistent border-radius, font-weight, z-index, and default props. `AppSelect` also auto-wires `labelId`/`id` for accessibility. `AppDialog` and `AppDrawer` ensure drawers and modals always layer above the Toolpad DashboardLayout header.
+
+**Design tokens:** All colors must come from `lightTokens` in `src/theme/tokens.ts`. Never hardcode hex values that correspond to a token.
