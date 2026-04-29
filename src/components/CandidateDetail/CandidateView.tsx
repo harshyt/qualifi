@@ -58,7 +58,7 @@ interface CandidateViewProps {
   };
 }
 
-// Deterministic avatar color from name — same palette as DashboardTable
+// Deterministic avatar color from name — same palette as CandidateTable
 const AVATAR_COLORS = [
   { bg: "#EDE9FE", color: "#7C3AED" },
   { bg: "#FCE7F3", color: "#BE185D" },

@@ -15,7 +15,7 @@ import {
   TableRow,
   Paper,
 } from "@mui/material";
-import DashboardTable from "@/components/Dashboard/DashboardTable";
+import CandidateTable from "@/components/Dashboard/DashboardTable";
 import UploadResume from "@/components/Dashboard/UploadResume";
 
 import { useCandidates } from "@/hooks/useCandidates";
@@ -279,7 +279,7 @@ export default function CandidatesPage() {
             </Typography>
           </Box>
         ) : (
-          <DashboardTable candidates={filteredCandidates} />
+          <CandidateTable candidates={filteredCandidates} />
         )}
       </Box>
     </Box>

@@ -100,7 +100,7 @@ const CandidateAvatar = memo(function CandidateAvatar({
   );
 });
 
-function DashboardTable({ candidates }: { candidates: Candidate[] }) {
+function CandidateTable({ candidates }: { candidates: Candidate[] }) {
   const router = useRouter();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [selectedCandidate, setSelectedCandidate] = useState<Candidate | null>(
@@ -544,4 +544,4 @@ function DashboardTable({ candidates }: { candidates: Candidate[] }) {
   );
 }
 
-export default memo(DashboardTable);
+export default memo(CandidateTable);
