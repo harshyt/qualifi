@@ -11,6 +11,7 @@ import { z } from "zod";
 // ── Server-only variables (never exposed to the browser) ──────────────
 const serverSchema = z.object({
   ANTHROPIC_API_KEY: z.string().min(1, "ANTHROPIC_API_KEY must not be empty"),
+  BLOB_READ_WRITE_TOKEN: z.string().min(1, "BLOB_READ_WRITE_TOKEN must not be empty"),
 });
 
 // ── Public variables (available on client and server) ─────────────────
@@ -40,5 +41,6 @@ export const publicEnv = publicSchema.parse({
 export function getServerEnv() {
   return serverSchema.parse({
     ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY,
+    BLOB_READ_WRITE_TOKEN: process.env.BLOB_READ_WRITE_TOKEN,
   });
 }
