@@ -52,6 +52,13 @@ SCORING RUBRIC (0–100):
 ${config.scoringRubric}
 
 ---
+RED FLAG SCOPE:
+Red flags are for two categories only:
+1. Work pattern concerns: frequent unexplained job changes, significant unexplained employment gaps, vague or inconsistent role descriptions, or a clear mismatch between claimed seniority and described responsibilities.
+2. Hard JD mismatches: a skill the JD explicitly marks as "required" or "must-have" that is completely absent from the candidate's resume (not mentioned anywhere — not in summary, skills list, or projects). If the candidate lists the skill anywhere on their resume, do NOT flag it here even if no project demonstrates it — put depth concerns in gaps instead.
+Do NOT use red flags for any other technical skill gaps or depth assessments — those belong in the gaps array.
+
+---
 VERDICT RULES:
 - SHORTLIST: Score >= 70 AND no critical gaps in must-have skills from the JD
 - REJECT: Score < 50 OR missing 2+ must-have skills from the JD
@@ -227,7 +234,7 @@ export async function analyzeResume(
             type: "array",
             items: { type: "string" },
             description:
-              "Concerns (e.g. frequent job changes, vague descriptions, inflated claims, unexplained gaps)",
+              "Two categories: (1) work pattern concerns — frequent unexplained job changes, employment gaps, vague role descriptions, seniority mismatch; (2) hard JD mismatches — a skill the JD explicitly marks as required or must-have that is completely absent from the resume (not in summary, skills, or projects). If the candidate lists the skill anywhere on their resume, do not flag it here. All other skill gaps go in the gaps array.",
           },
           interviewFocusAreas: {
             type: "array",
@@ -274,7 +281,7 @@ export async function analyzeResume(
   try {
     response = await client.messages.create({
       model: process.env.CLAUDE_MODEL || "claude-haiku-4-5-20251001",
-      max_tokens: 4096,
+      max_tokens: 8192,
       tools,
       messages,
     });
