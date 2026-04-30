@@ -17,6 +17,7 @@ export function useResumeJobs(jobIds: string[]) {
     queryKey: ["resume-jobs", jobIds],
     queryFn: () => fetchResumeJobs(jobIds),
     enabled,
+    retry: 1,
     refetchInterval: (query) => {
       if (!query.state.data) return 10000;
       const allDone = query.state.data.every(

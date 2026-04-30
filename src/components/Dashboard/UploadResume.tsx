@@ -22,6 +22,10 @@ import { memo } from "react";
 import { useResumeJobs } from "@/hooks/useResumeJobs";
 import type { ResumeJobStatus } from "@/types/resumeJob";
 import { lightTokens } from "@/theme/tokens";
+import {
+  UPLOAD_CONCURRENCY,
+  BLOB_UPLOAD_TIMEOUT_MS,
+} from "@/lib/uploadConstants";
 
 type FileStatus = "pending" | "uploading" | "done" | "error";
 
@@ -119,7 +123,8 @@ export default function UploadResume() {
 
   // IDs of queued resume_jobs — drives polling
   const [activeJobIds, setActiveJobIds] = useState<string[]>([]);
-  const { data: remoteJobs } = useResumeJobs(activeJobIds);
+  const { data: remoteJobs, isError: isPollingError } =
+    useResumeJobs(activeJobIds);
 
   // Reconcile remote job status into local progress state
   useEffect(() => {
@@ -166,6 +171,15 @@ export default function UploadResume() {
     }
   }, [remoteJobs, queryClient]);
 
+  // Surface persistent polling failures to the user
+  useEffect(() => {
+    if (isPollingError) {
+      toast.warning(
+        "Unable to fetch processing status — results may be delayed.",
+      );
+    }
+  }, [isPollingError]);
+
   useEffect(() => {
     return () => {
       if (clearRef.current) clearTimeout(clearRef.current);
@@ -202,13 +216,25 @@ export default function UploadResume() {
 
       let queuedJobs: { id: string; file_name: string; status: string }[];
       try {
-        const res = await fetch("/api/bulk-upload", {
-          method: "POST",
-          body: formData,
-        });
+        const controller = new AbortController();
+        const timeoutId = setTimeout(
+          () => controller.abort(),
+          BLOB_UPLOAD_TIMEOUT_MS,
+        );
+        let res: Response;
+        try {
+          res = await fetch("/api/bulk-upload", {
+            method: "POST",
+            body: formData,
+            signal: controller.signal,
+          });
+        } finally {
+          clearTimeout(timeoutId);
+        }
+
         const body = (await res.json()) as {
           jobs?: typeof queuedJobs;
-          failedUploads?: string[];
+          failedUploads?: { name: string; reason: string }[];
           error?: string;
         };
 
@@ -219,11 +245,17 @@ export default function UploadResume() {
         queuedJobs = body.jobs;
 
         if (body.failedUploads && body.failedUploads.length > 0) {
-          toast.error(`${body.failedUploads.length} file(s) failed to upload.`);
+          const names = body.failedUploads.map((f) => f.name).join(", ");
+          toast.error(
+            `${body.failedUploads.length} file(s) could not be uploaded: ${names}`,
+          );
         }
       } catch (err) {
-        const message = err instanceof Error ? err.message : "Upload failed";
-        toast.error(message);
+        if (err instanceof Error && err.name === "AbortError") {
+          toast.error("Upload timed out. Please try again with fewer files.");
+        } else {
+          toast.error(err instanceof Error ? err.message : "Upload failed");
+        }
         setIsUploading(false);
         setFileProgress([]);
         return;
@@ -240,15 +272,22 @@ export default function UploadResume() {
       );
       setActiveJobIds(queuedJobs.map((j) => j.id));
 
-      // Phase 2: Trigger processing for each job, max 5 concurrent
-      const CONCURRENCY = 5;
+      // Phase 2: Trigger processing for each job, max UPLOAD_CONCURRENCY concurrent
       const queue = [...queuedJobs];
 
       async function processJob(job: { id: string }) {
+        const attempt = () =>
+          fetch(`/api/process-resume/${job.id}`, { method: "POST" });
         try {
-          await fetch(`/api/process-resume/${job.id}`, { method: "POST" });
+          const res = await attempt();
+          if (!res.ok) return; // server error — polling will surface it
         } catch {
-          // Errors are surfaced via polling — silent here
+          // Network error — retry once
+          try {
+            await attempt();
+          } catch {
+            // Both attempts failed — polling will eventually surface the stuck job
+          }
         }
       }
 
@@ -262,7 +301,7 @@ export default function UploadResume() {
       // Fire-and-forget — polling drives the UI from here
       void Promise.all(
         Array.from(
-          { length: Math.min(CONCURRENCY, queuedJobs.length) },
+          { length: Math.min(UPLOAD_CONCURRENCY, queuedJobs.length) },
           worker,
         ),
       );

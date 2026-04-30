@@ -16,6 +16,13 @@ import AppDialog from "@/components/ui/AppDialog";
 import { X, FileText, UploadCloud, Cpu } from "lucide-react";
 import { useJobs } from "@/hooks/useJobs";
 import { toast } from "sonner";
+import {
+  MAX_FILES,
+  MAX_FILE_SIZE_BYTES,
+  ALLOWED_EXTENSIONS,
+  ALLOWED_MIME_TYPES,
+} from "@/lib/uploadConstants";
+import { lightTokens } from "@/theme/tokens";
 
 interface SelectJobModalProps {
   open: boolean;
@@ -47,9 +54,9 @@ const FileCard = memo(function FileCard({
         alignItems: "center",
         gap: 1,
         p: 1.5,
-        border: "1px solid #E2E8F0",
+        border: `1px solid ${lightTokens.borderSubtle}`,
         borderRadius: 1.5,
-        bgcolor: "#F8FAFC",
+        bgcolor: lightTokens.bgBase,
         position: "relative",
         minWidth: 0,
       }}
@@ -59,14 +66,14 @@ const FileCard = memo(function FileCard({
           width: 32,
           height: 32,
           borderRadius: 1,
-          bgcolor: "#EFF6FF",
+          bgcolor: lightTokens.brandSubtle,
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
           flexShrink: 0,
         }}
       >
-        <FileText size={16} color="#3B5BDB" />
+        <FileText size={16} color={lightTokens.brandBase} />
       </Box>
       <Box sx={{ flex: 1, minWidth: 0 }}>
         <Typography
@@ -119,12 +126,27 @@ export default function SelectJobModal({
     [jobs, selectedJobId],
   );
 
-  const MAX_FILES = 20;
-
   const addFiles = useCallback((incoming: FileList | File[]) => {
-    const arr = Array.from(incoming).filter(
-      (f) => f.type === "application/pdf" || f.name.endsWith(".docx"),
-    );
+    const oversized: string[] = [];
+    const arr = Array.from(incoming).filter((f) => {
+      const ext = "." + (f.name.split(".").pop()?.toLowerCase() ?? "");
+      const validType =
+        ALLOWED_MIME_TYPES.has(f.type) ||
+        ALLOWED_EXTENSIONS.includes(ext as (typeof ALLOWED_EXTENSIONS)[number]);
+      if (!validType) return false;
+      if (f.size > MAX_FILE_SIZE_BYTES) {
+        oversized.push(f.name);
+        return false;
+      }
+      return true;
+    });
+
+    if (oversized.length > 0) {
+      toast.error(
+        `${oversized.length} file(s) exceed the ${MAX_FILE_SIZE_BYTES / (1024 * 1024)} MB limit and were skipped.`,
+      );
+    }
+
     let skipped = 0;
     setFiles((prev) => {
       const existing = new Set(prev.map((f) => f.name + f.size));
@@ -270,17 +292,17 @@ export default function SelectJobModal({
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
           sx={{
-            border: `2px dashed ${isDragging ? "#3B5BDB" : "#CBD5E1"}`,
+            border: `2px dashed ${isDragging ? lightTokens.brandBase : lightTokens.borderDefault}`,
             borderRadius: 2,
             py: 4,
             px: 3,
             textAlign: "center",
             cursor: "pointer",
-            bgcolor: isDragging ? "#EFF6FF" : "#F8FAFC",
+            bgcolor: isDragging ? lightTokens.brandSubtle : lightTokens.bgBase,
             transition: "all 0.15s ease",
             "&:hover": {
-              borderColor: "#3B5BDB",
-              bgcolor: "#EFF6FF",
+              borderColor: lightTokens.brandBase,
+              bgcolor: lightTokens.brandSubtle,
             },
           }}
         >
@@ -289,7 +311,7 @@ export default function SelectJobModal({
               width: 44,
               height: 44,
               borderRadius: 2,
-              bgcolor: "#EFF6FF",
+              bgcolor: lightTokens.brandSubtle,
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
@@ -297,7 +319,7 @@ export default function SelectJobModal({
               mb: 1.5,
             }}
           >
-            <UploadCloud size={22} color="#3B5BDB" />
+            <UploadCloud size={22} color={lightTokens.brandBase} />
           </Box>
           <Typography variant="body2" fontWeight={600} color="text.primary">
             Drag and drop PDF resumes or click to browse
@@ -307,7 +329,8 @@ export default function SelectJobModal({
             color="text.secondary"
             sx={{ mt: 0.5, display: "block" }}
           >
-            Accepts PDF, DOCX · Up to 20 files
+            Accepts PDF, DOCX · Up to {MAX_FILES} files · Max{" "}
+            {MAX_FILE_SIZE_BYTES / (1024 * 1024)} MB each
           </Typography>
         </Box>
 
