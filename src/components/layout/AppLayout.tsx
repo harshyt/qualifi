@@ -11,6 +11,7 @@ import { createSupabaseBrowserClient } from "@/lib/supabase";
 import { toast } from "sonner";
 import type { Navigation, Session } from "@toolpad/core/AppProvider";
 import theme from "@/theme/theme";
+import ActiveBatchPill from "@/components/BulkUpload/ActiveBatchPill";
 
 const NAVIGATION: Navigation = [
   {
@@ -84,6 +85,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       <DashboardLayout>
         <Box sx={{ p: { xs: 2, sm: 3 }, flexGrow: 1 }}>{children}</Box>
       </DashboardLayout>
+      <ActiveBatchPill />
     </NextAppProvider>
   );
 }
