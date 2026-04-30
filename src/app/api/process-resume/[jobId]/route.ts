@@ -31,7 +31,7 @@ export async function POST(
   // Fetch the resume_job (ownership enforced by RLS)
   const { data: job, error: fetchError } = await supabase
     .from("resume_jobs")
-    .select("*")
+    .select("*, batch_id")
     .eq("id", jobId)
     .eq("user_id", user.id)
     .single();
@@ -136,6 +136,11 @@ export async function POST(
       verdict: analysis.verdict,
     });
 
+    // Flip batch to done if all jobs in this batch are now terminal
+    if (job.batch_id) {
+      void flipBatchIfComplete(supabase, job.batch_id);
+    }
+
     return NextResponse.json({ status: "done", candidateId: candidate.id });
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
@@ -150,6 +155,30 @@ export async function POST(
       })
       .eq("id", jobId);
 
+    // Flip batch to done if all jobs in this batch are now terminal
+    if (job.batch_id) {
+      void flipBatchIfComplete(supabase, job.batch_id);
+    }
+
     return NextResponse.json({ error: message }, { status: 500 });
+  }
+}
+
+async function flipBatchIfComplete(
+  supabase: Awaited<ReturnType<typeof import("@/lib/supabase-server").createSupabaseServerClient>>,
+  batchId: string,
+) {
+  const { count } = await supabase
+    .from("resume_jobs")
+    .select("id", { count: "exact", head: true })
+    .eq("batch_id", batchId)
+    .in("status", ["queued", "processing"]);
+
+  if (count === 0) {
+    await supabase
+      .from("bulk_batches")
+      .update({ status: "done" })
+      .eq("id", batchId);
+    logger.info("Batch marked done", { batchId });
   }
 }

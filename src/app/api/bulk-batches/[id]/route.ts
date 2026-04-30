@@ -1,0 +1,51 @@
+import { NextResponse } from "next/server";
+import { createSupabaseServerClient } from "@/lib/supabase-server";
+import { logger } from "@/lib/logger";
+import type { BulkBatch, BulkBatchCounts } from "@/types/bulkBatch";
+
+export async function GET(
+  _request: Request,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  const { id } = await params;
+
+  const supabase = await createSupabaseServerClient();
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser();
+  if (authError || !user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const { data: batch, error: batchError } = await supabase
+    .from("bulk_batches")
+    .select("*")
+    .eq("id", id)
+    .eq("user_id", user.id)
+    .single();
+
+  if (batchError || !batch) {
+    logger.info("Batch not found or unauthorized", { batchId: id, userId: user.id });
+    return NextResponse.json({ error: "Batch not found" }, { status: 404 });
+  }
+
+  // Aggregate resume_job status counts for this batch
+  const { data: jobs, error: jobsError } = await supabase
+    .from("resume_jobs")
+    .select("status")
+    .eq("batch_id", id);
+
+  if (jobsError) {
+    logger.error("Failed to fetch resume_jobs for batch", { batchId: id, error: jobsError.message });
+  }
+
+  const counts: BulkBatchCounts = { done: 0, error: 0, processing: 0, queued: 0 };
+  for (const job of jobs ?? []) {
+    const s = job.status as keyof BulkBatchCounts;
+    if (s in counts) counts[s]++;
+  }
+
+  logger.info("Batch status fetched", { batchId: id, status: batch.status, counts });
+  return NextResponse.json({ batch: batch as BulkBatch, counts });
+}
