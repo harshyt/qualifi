@@ -21,6 +21,7 @@ import SelectJobModal from "./SelectJobModal";
 import { memo } from "react";
 import { useResumeJobs } from "@/hooks/useResumeJobs";
 import type { ResumeJobStatus } from "@/types/resumeJob";
+import { lightTokens } from "@/theme/tokens";
 
 type FileStatus = "pending" | "uploading" | "done" | "error";
 
@@ -37,10 +38,10 @@ const FileProgressItem = memo(function FileProgressItem({
   file: FileProgress;
 }) {
   const statusIcon = {
-    pending: <Loader2 size={16} color="#94A3B8" />,
+    pending: <Loader2 size={16} color={lightTokens.textMuted} />,
     uploading: <CircularProgress size={16} />,
-    done: <CheckCircle2 size={16} color="#4CAF50" />,
-    error: <AlertCircle size={16} color="#F44336" />,
+    done: <CheckCircle2 size={16} color={lightTokens.successBase} />,
+    error: <AlertCircle size={16} color={lightTokens.dangerBase} />,
   };
   const statusLabel = {
     pending: "Queued",
@@ -49,10 +50,10 @@ const FileProgressItem = memo(function FileProgressItem({
     error: "Failed",
   };
   const statusColor = {
-    pending: "#94A3B8",
-    uploading: "#3B5BDB",
-    done: "#4CAF50",
-    error: "#F44336",
+    pending: lightTokens.textMuted,
+    uploading: lightTokens.brandBase,
+    done: lightTokens.successBase,
+    error: lightTokens.dangerBase,
   };
 
   return (
@@ -64,10 +65,11 @@ const FileProgressItem = memo(function FileProgressItem({
         py: 1,
         px: 1.5,
         borderRadius: 1,
-        bgcolor: file.status === "error" ? "#FFF1F2" : "transparent",
+        bgcolor:
+          file.status === "error" ? lightTokens.dangerSubtle : "transparent",
       }}
     >
-      <FileText size={16} color="#94A3B8" />
+      <FileText size={16} color={lightTokens.textMuted} />
       <Box sx={{ flex: 1, minWidth: 0 }}>
         <Typography
           variant="body2"
@@ -184,7 +186,9 @@ export default function UploadResume() {
       if (!files || files.length === 0) return;
 
       // Show all files as "pending" immediately
-      setFileProgress(files.map((f) => ({ name: f.name, status: "pending" as FileStatus })));
+      setFileProgress(
+        files.map((f) => ({ name: f.name, status: "pending" as FileStatus })),
+      );
       setIsUploading(true);
 
       // Phase 1: Upload all files to Blob + create resume_jobs rows
@@ -202,7 +206,7 @@ export default function UploadResume() {
           method: "POST",
           body: formData,
         });
-        const body = await res.json() as {
+        const body = (await res.json()) as {
           jobs?: typeof queuedJobs;
           failedUploads?: string[];
           error?: string;
@@ -229,7 +233,9 @@ export default function UploadResume() {
       setFileProgress((prev) =>
         prev.map((fp) => {
           const matched = queuedJobs.find((j) => j.file_name === fp.name);
-          return matched ? { ...fp, jobId: matched.id, status: "pending" as FileStatus } : fp;
+          return matched
+            ? { ...fp, jobId: matched.id, status: "pending" as FileStatus }
+            : fp;
         }),
       );
       setActiveJobIds(queuedJobs.map((j) => j.id));
@@ -255,7 +261,10 @@ export default function UploadResume() {
 
       // Fire-and-forget — polling drives the UI from here
       void Promise.all(
-        Array.from({ length: Math.min(CONCURRENCY, queuedJobs.length) }, worker),
+        Array.from(
+          { length: Math.min(CONCURRENCY, queuedJobs.length) },
+          worker,
+        ),
       );
     },
     [],
@@ -302,8 +311,8 @@ export default function UploadResume() {
             sx={{
               px: 2,
               py: 1.5,
-              bgcolor: "#F8FAFC",
-              borderBottom: "1px solid #E2E8F0",
+              bgcolor: lightTokens.bgBase,
+              borderBottom: `1px solid ${lightTokens.borderSubtle}`,
             }}
           >
             <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
