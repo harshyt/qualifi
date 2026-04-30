@@ -35,7 +35,7 @@ export const useUpdateCandidateStatus = () => {
     onSuccess: (_, variables) => {
       toast.success(`Candidate marked as ${variables.status}`);
       queryClient.invalidateQueries({ queryKey: ["candidates"] });
-      router.push("/dashboard");
+      router.push("/candidates");
     },
     onError: (error: Error) => {
       toast.error(error.message);

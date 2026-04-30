@@ -23,19 +23,41 @@ function CandidateDetailSkeleton() {
         }}
       >
         <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-          <Skeleton variant="rounded" width={72} height={32} sx={{ borderRadius: 1 }} />
+          <Skeleton
+            variant="rounded"
+            width={72}
+            height={32}
+            sx={{ borderRadius: 1 }}
+          />
           <Skeleton variant="circular" width={52} height={52} />
           <Box>
-            <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 0.5 }}>
+            <Box
+              sx={{ display: "flex", alignItems: "center", gap: 1, mb: 0.5 }}
+            >
               <Skeleton variant="text" width={160} height={28} />
-              <Skeleton variant="rounded" width={80} height={22} sx={{ borderRadius: 1 }} />
+              <Skeleton
+                variant="rounded"
+                width={80}
+                height={22}
+                sx={{ borderRadius: 1 }}
+              />
             </Box>
             <Skeleton variant="text" width={240} height={18} />
           </Box>
         </Box>
         <Box sx={{ display: "flex", gap: 1.5 }}>
-          <Skeleton variant="rounded" width={90} height={36} sx={{ borderRadius: 1 }} />
-          <Skeleton variant="rounded" width={100} height={36} sx={{ borderRadius: 1 }} />
+          <Skeleton
+            variant="rounded"
+            width={90}
+            height={36}
+            sx={{ borderRadius: 1 }}
+          />
+          <Skeleton
+            variant="rounded"
+            width={100}
+            height={36}
+            sx={{ borderRadius: 1 }}
+          />
         </Box>
       </Box>
 
@@ -53,7 +75,10 @@ function CandidateDetailSkeleton() {
             {/* Experience */}
             <Skeleton variant="text" width={100} height={14} sx={{ mb: 1.5 }} />
             {Array.from({ length: 2 }).map((_, i) => (
-              <Box key={i} sx={{ mb: 2.5, pl: 2, borderLeft: "2px solid #E2E8F0" }}>
+              <Box
+                key={i}
+                sx={{ mb: 2.5, pl: 2, borderLeft: "2px solid #E2E8F0" }}
+              >
                 <Skeleton variant="text" width="55%" height={20} />
                 <Skeleton variant="text" width="40%" height={16} />
                 <Skeleton variant="text" width="85%" height={16} />
@@ -82,12 +107,29 @@ function CandidateDetailSkeleton() {
             {/* Strengths */}
             <Skeleton variant="text" width={80} height={14} sx={{ mb: 1.5 }} />
             {Array.from({ length: 3 }).map((_, i) => (
-              <Skeleton key={i} variant="text" width={`${80 - i * 8}%`} height={18} sx={{ mb: 0.75 }} />
+              <Skeleton
+                key={i}
+                variant="text"
+                width={`${80 - i * 8}%`}
+                height={18}
+                sx={{ mb: 0.75 }}
+              />
             ))}
             <Box sx={{ mt: 2.5, mb: 1.5 }}>
-              <Skeleton variant="text" width={80} height={14} sx={{ mb: 1.5 }} />
+              <Skeleton
+                variant="text"
+                width={80}
+                height={14}
+                sx={{ mb: 1.5 }}
+              />
               {Array.from({ length: 2 }).map((_, i) => (
-                <Skeleton key={i} variant="text" width={`${70 - i * 6}%`} height={18} sx={{ mb: 0.75 }} />
+                <Skeleton
+                  key={i}
+                  variant="text"
+                  width={`${70 - i * 6}%`}
+                  height={18}
+                  sx={{ mb: 0.75 }}
+                />
               ))}
             </Box>
           </Paper>

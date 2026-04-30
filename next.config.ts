@@ -2,9 +2,14 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   experimental: {
+    staleTimes: {
+      dynamic: 60,  // cache RSC payload for dynamic routes for 60s client-side
+      static: 300,  // cache RSC payload for static routes for 5 min
+    },
     serverActions: {
       bodySizeLimit: "4mb",
     },
+    optimizePackageImports: ["@mui/material", "@mui/icons-material"],
   },
   async headers() {
     return [

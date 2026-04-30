@@ -1,18 +1,18 @@
 "use client";
 import { useState, useMemo, useCallback, useRef, memo } from "react";
 import {
-  Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
-  Button,
   Typography,
   Box,
   IconButton,
   Autocomplete,
-  TextField,
   Grid,
 } from "@mui/material";
+import AppTextField from "@/components/ui/AppTextField";
+import AppButton from "@/components/ui/AppButton";
+import AppDialog from "@/components/ui/AppDialog";
 import { X, FileText, UploadCloud, Cpu } from "lucide-react";
 import { useJobs } from "@/hooks/useJobs";
 import { toast } from "sonner";
@@ -66,7 +66,7 @@ const FileCard = memo(function FileCard({
           flexShrink: 0,
         }}
       >
-        <FileText size={16} color="#2196F3" />
+        <FileText size={16} color="#3B5BDB" />
       </Box>
       <Box sx={{ flex: 1, minWidth: 0 }}>
         <Typography
@@ -195,15 +195,7 @@ export default function SelectJobModal({
   const canConfirm = !!selectedJob && files.length > 0;
 
   return (
-    <Dialog
-      open={open}
-      onClose={handleClose}
-      maxWidth="sm"
-      fullWidth
-      PaperProps={{
-        sx: { borderRadius: 3, border: "1px solid #E2E8F0" },
-      }}
-    >
+    <AppDialog open={open} onClose={handleClose}>
       {/* Header */}
       <DialogTitle component="div" sx={{ pb: 0.5 }}>
         <Box
@@ -249,8 +241,11 @@ export default function SelectJobModal({
           value={selectedJob}
           onChange={(_, value) => setSelectedJobId(value?.id ?? null)}
           isOptionEqualToValue={(option, value) => option.id === value.id}
+          slotProps={{
+            popper: { style: { zIndex: 1400 } },
+          }}
           renderInput={(params) => (
-            <TextField
+            <AppTextField
               {...params}
               placeholder="Select a job position..."
               size="small"
@@ -275,7 +270,7 @@ export default function SelectJobModal({
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
           sx={{
-            border: `2px dashed ${isDragging ? "#2196F3" : "#CBD5E1"}`,
+            border: `2px dashed ${isDragging ? "#3B5BDB" : "#CBD5E1"}`,
             borderRadius: 2,
             py: 4,
             px: 3,
@@ -284,7 +279,7 @@ export default function SelectJobModal({
             bgcolor: isDragging ? "#EFF6FF" : "#F8FAFC",
             transition: "all 0.15s ease",
             "&:hover": {
-              borderColor: "#2196F3",
+              borderColor: "#3B5BDB",
               bgcolor: "#EFF6FF",
             },
           }}
@@ -302,7 +297,7 @@ export default function SelectJobModal({
               mb: 1.5,
             }}
           >
-            <UploadCloud size={22} color="#2196F3" />
+            <UploadCloud size={22} color="#3B5BDB" />
           </Box>
           <Typography variant="body2" fontWeight={600} color="text.primary">
             Drag and drop PDF resumes or click to browse
@@ -329,22 +324,19 @@ export default function SelectJobModal({
       </DialogContent>
 
       <DialogActions sx={{ px: 3, pb: 3, pt: 1, gap: 1 }}>
-        <Button
-          onClick={handleClose}
-          sx={{ color: "text.secondary", fontWeight: 600 }}
-        >
+        <AppButton onClick={handleClose} sx={{ color: "text.secondary" }}>
           Cancel
-        </Button>
-        <Button
+        </AppButton>
+        <AppButton
           onClick={handleConfirm}
           variant="contained"
           disabled={!canConfirm}
           startIcon={<Cpu size={16} />}
-          sx={{ fontWeight: 600, borderRadius: 2, px: 3 }}
+          sx={{ px: 3 }}
         >
           Analyze All Resumes
-        </Button>
+        </AppButton>
       </DialogActions>
-    </Dialog>
+    </AppDialog>
   );
 }

@@ -15,12 +15,10 @@ import {
   MenuItem,
   ListItemIcon,
   ListItemText,
-  Dialog,
   DialogTitle,
   DialogContent,
   DialogContentText,
   DialogActions,
-  Button,
   Checkbox,
   CircularProgress,
   Avatar,
@@ -30,27 +28,12 @@ import { useState, useCallback, memo, useMemo } from "react";
 import { useDeleteCandidate } from "@/hooks/useDeleteCandidate";
 import { useRouter } from "next/navigation";
 import EmailComposeDrawer from "./EmailComposeDrawer";
+import AppButton from "@/components/ui/AppButton";
+import AppDialog from "@/components/ui/AppDialog";
 
 import { StatusChip } from "@/components/shared/StatusChip";
+import ScoreRing from "@/components/ui/ScoreRing";
 
-// Define minimal interface matching Supabase
-export interface Candidate {
-  id: string;
-  name: string;
-  role: string;
-  score: number;
-  status: string;
-  created_at: string;
-  email: string;
-  analysis?: {
-    strengths: string[];
-    gaps: string[];
-    experienceLevel: string;
-    summary: string;
-  } | null;
-}
-
-// Define minimal interface matching Supabase
 export interface Candidate {
   id: string;
   name: string;
@@ -95,61 +78,6 @@ function getInitials(name: string) {
   return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
 }
 
-const ScoreGauge = memo(function ScoreGauge({ score }: { score: number }) {
-  let color = "#4CAF50";
-  if (score < 50) color = "#F44336";
-  else if (score < 75) color = "#FF9800";
-
-  return (
-    <Box sx={{ display: "flex", alignItems: "center" }}>
-      <Box
-        sx={{
-          width: 40,
-          height: 40,
-          borderRadius: "50%",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          position: "relative",
-        }}
-      >
-        <Typography
-          variant="caption"
-          sx={{ fontWeight: 700, color, zIndex: 1 }}
-        >
-          {score}
-        </Typography>
-        <svg
-          width="40"
-          height="40"
-          style={{ position: "absolute", transform: "rotate(-90deg)" }}
-          aria-hidden="true"
-        >
-          <circle
-            cx="20"
-            cy="20"
-            r="18"
-            fill="none"
-            stroke="#E2E8F0"
-            strokeWidth="3"
-          />
-          <circle
-            cx="20"
-            cy="20"
-            r="18"
-            fill="none"
-            stroke={color}
-            strokeWidth="3"
-            strokeDasharray="113"
-            strokeDashoffset={113 - (113 * score) / 100}
-            strokeLinecap="round"
-          />
-        </svg>
-      </Box>
-    </Box>
-  );
-});
-
 const CandidateAvatar = memo(function CandidateAvatar({
   name,
 }: {
@@ -172,7 +100,7 @@ const CandidateAvatar = memo(function CandidateAvatar({
   );
 });
 
-function DashboardTable({ candidates }: { candidates: Candidate[] }) {
+function CandidateTable({ candidates }: { candidates: Candidate[] }) {
   const router = useRouter();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [selectedCandidate, setSelectedCandidate] = useState<Candidate | null>(
@@ -275,7 +203,7 @@ function DashboardTable({ candidates }: { candidates: Candidate[] }) {
 
   const handleRowClick = useCallback(
     (id: string) => {
-      router.push(`/dashboard/candidate/${id}`);
+      router.push(`/candidate/${id}`);
     },
     [router],
   );
@@ -288,7 +216,7 @@ function DashboardTable({ candidates }: { candidates: Candidate[] }) {
         sx={{ border: "none", borderRadius: 0 }}
       >
         <Table sx={{ minWidth: 650 }} aria-label="candidate table">
-          <TableHead sx={{ bgcolor: "#F8FAFC" }}>
+          <TableHead sx={{ bgcolor: "#F5F4F2" }}>
             <TableRow>
               <TableCell padding="checkbox">
                 <Checkbox
@@ -388,8 +316,8 @@ function DashboardTable({ candidates }: { candidates: Candidate[] }) {
                   sx={{
                     "&:last-child td, &:last-child th": { border: 0 },
                     cursor: "pointer",
-                    "&:hover": { bgcolor: "#F8FAFC" },
-                    ...(selectedIds.has(row.id) && { bgcolor: "#EFF6FF" }),
+                    "&:hover": { bgcolor: "#F5F4F2" },
+                    ...(selectedIds.has(row.id) && { bgcolor: "#EEF2FF" }),
                     transition: "background-color 0.15s ease",
                   }}
                   onClick={() => handleRowClick(row.id)}
@@ -434,7 +362,7 @@ function DashboardTable({ candidates }: { candidates: Candidate[] }) {
                     {row.role}
                   </TableCell>
                   <TableCell>
-                    <ScoreGauge score={row.score} />
+                    <ScoreRing score={row.score} size={40} animate={false} />
                   </TableCell>
                   <TableCell>
                     <StatusChip
@@ -502,31 +430,23 @@ function DashboardTable({ candidates }: { candidates: Candidate[] }) {
               {selectedIds.size} candidate{selectedIds.size !== 1 ? "s" : ""}{" "}
               selected
             </Typography>
-            <Button
+            <AppButton
               variant="contained"
               size="small"
               startIcon={<Mail size={15} />}
               onClick={handleComposeEmail}
-              sx={{
-                borderRadius: 2,
-                fontWeight: 600,
-                whiteSpace: "nowrap",
-              }}
+              sx={{ whiteSpace: "nowrap" }}
             >
               Compose Email
-            </Button>
-            <Button
+            </AppButton>
+            <AppButton
               variant="text"
               size="small"
               onClick={() => setSelectedIdsRaw(new Set())}
-              sx={{
-                color: "text.secondary",
-                fontWeight: 600,
-                whiteSpace: "nowrap",
-              }}
+              sx={{ color: "text.secondary", whiteSpace: "nowrap" }}
             >
               Clear
-            </Button>
+            </AppButton>
           </Paper>
         </Box>
       )}
@@ -547,7 +467,7 @@ function DashboardTable({ candidates }: { candidates: Candidate[] }) {
         {selectedCandidate?.status !== "PENDING" && (
           <MenuItem onClick={handleSendEmailClick}>
             <ListItemIcon>
-              <Mail size={16} color="#2196F3" />
+              <Mail size={16} color="#3B5BDB" />
             </ListItemIcon>
             <ListItemText
               primary="Send Email"
@@ -571,11 +491,11 @@ function DashboardTable({ candidates }: { candidates: Candidate[] }) {
       </Menu>
 
       {/* Delete confirmation dialog */}
-      <Dialog
+      <AppDialog
         open={isDeleteDialogOpen}
         onClose={handleDialogClose}
         onClick={(e) => e.stopPropagation()}
-        PaperProps={{ sx: { borderRadius: 3, padding: 1 } }}
+        paperSx={{ p: 1 }}
       >
         <DialogTitle sx={{ fontWeight: 700, color: "text.primary" }}>
           Delete Candidate?
@@ -588,19 +508,18 @@ function DashboardTable({ candidates }: { candidates: Candidate[] }) {
           </DialogContentText>
         </DialogContent>
         <DialogActions sx={{ px: 3, pb: 3 }}>
-          <Button
+          <AppButton
             onClick={handleDialogClose}
-            sx={{ color: "text.secondary", fontWeight: 600 }}
+            sx={{ color: "text.secondary" }}
           >
             Cancel
-          </Button>
-          <Button
+          </AppButton>
+          <AppButton
             onClick={handleConfirmDelete}
             color="error"
             variant="contained"
             autoFocus
             disabled={isDeleting}
-            sx={{ borderRadius: 2, fontWeight: 600 }}
           >
             {isDeleting ? (
               <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
@@ -610,9 +529,9 @@ function DashboardTable({ candidates }: { candidates: Candidate[] }) {
             ) : (
               "Delete"
             )}
-          </Button>
+          </AppButton>
         </DialogActions>
-      </Dialog>
+      </AppDialog>
 
       {/* Email compose drawer */}
       <EmailComposeDrawer
@@ -625,4 +544,4 @@ function DashboardTable({ candidates }: { candidates: Candidate[] }) {
   );
 }
 
-export default memo(DashboardTable);
+export default memo(CandidateTable);

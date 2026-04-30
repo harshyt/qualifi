@@ -1,13 +1,13 @@
 "use client";
 import { useRef, useState, useCallback, useEffect } from "react";
 import {
-  Button,
   CircularProgress,
   Box,
   Typography,
   Paper,
   LinearProgress,
 } from "@mui/material";
+import AppButton from "@/components/ui/AppButton";
 import {
   CloudUpload,
   CheckCircle2,
@@ -50,7 +50,7 @@ const FileProgressItem = memo(function FileProgressItem({
   };
   const statusColor = {
     pending: "#94A3B8",
-    uploading: "#2196F3",
+    uploading: "#3B5BDB",
     done: "#4CAF50",
     error: "#F44336",
   };
@@ -270,7 +270,7 @@ export default function UploadResume() {
 
   return (
     <>
-      <Button
+      <AppButton
         variant="contained"
         startIcon={
           isUploading ? (
@@ -283,7 +283,7 @@ export default function UploadResume() {
         disabled={isUploading || isModalOpen}
       >
         {isUploading ? "Analyzing..." : "Upload Resume"}
-      </Button>
+      </AppButton>
 
       {isUploading && fileProgress.length > 0 && (
         <Paper
