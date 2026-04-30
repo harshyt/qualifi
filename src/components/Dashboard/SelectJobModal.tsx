@@ -241,6 +241,9 @@ export default function SelectJobModal({
           value={selectedJob}
           onChange={(_, value) => setSelectedJobId(value?.id ?? null)}
           isOptionEqualToValue={(option, value) => option.id === value.id}
+          slotProps={{
+            popper: { style: { zIndex: 1400 } },
+          }}
           renderInput={(params) => (
             <AppTextField
               {...params}

@@ -54,7 +54,7 @@ export default function LoginPage() {
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        bgcolor: "#F9FAFB",
+        bgcolor: "#FAFAF9",
         position: "relative",
         overflow: "hidden",
       }}

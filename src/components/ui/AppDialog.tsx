@@ -5,6 +5,7 @@ import {
   type SxProps,
   type Theme,
 } from "@mui/material";
+import { lightTokens } from "@/theme/tokens";
 
 interface AppDialogProps extends Omit<DialogProps, "PaperProps"> {
   paperSx?: SxProps<Theme>;
@@ -20,10 +21,11 @@ export default function AppDialog({
     <Dialog
       maxWidth={maxWidth}
       fullWidth={fullWidth}
+      sx={{ zIndex: (theme) => theme.zIndex.modal + 1 }}
       PaperProps={{
         sx: {
           borderRadius: 3,
-          border: "1px solid #E2E8F0",
+          border: `1px solid ${lightTokens.borderSubtle}`,
           ...((paperSx ?? {}) as object),
         },
       }}

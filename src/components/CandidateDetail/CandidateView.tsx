@@ -10,10 +10,13 @@ import {
   Avatar,
 } from "@mui/material";
 import AppButton from "@/components/ui/AppButton";
+import ScoreRing from "@/components/ui/ScoreRing";
+import VerdictBadge from "@/components/ui/VerdictBadge";
 import { ArrowLeft, Check, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useUpdateCandidateStatus } from "@/hooks/useUpdateCandidateStatus";
 import { CandidateStatus } from "@/types/candidate";
+import { lightTokens } from "@/theme/tokens";
 import { memo } from "react";
 
 interface WorkExperience {
@@ -55,7 +58,7 @@ interface CandidateViewProps {
   };
 }
 
-// Deterministic avatar color from name — same palette as DashboardTable
+// Deterministic avatar color from name — same palette as CandidateTable
 const AVATAR_COLORS = [
   { bg: "#EDE9FE", color: "#7C3AED" },
   { bg: "#FCE7F3", color: "#BE185D" },
@@ -83,93 +86,9 @@ function getInitials(name: string) {
   return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
 }
 
-function getStatusStyle(status: CandidateStatus) {
-  switch (status) {
-    case CandidateStatus.SHORTLIST:
-      return { bg: "#F0FDF4", color: "#4CAF50", label: "Shortlisted" };
-    case CandidateStatus.REJECT:
-      return { bg: "#FFF1F2", color: "#F44336", label: "Rejected" };
-    default:
-      return { bg: "#FFF7ED", color: "#FF9800", label: "Pending Review" };
-  }
-}
-
-const ScoreWidget = memo(function ScoreWidget({ score }: { score: number }) {
-  let color = "#4CAF50";
-  if (score < 50) color = "#F44336";
-  else if (score < 75) color = "#FF9800";
-
-  const radius = 36;
-  const circumference = 2 * Math.PI * radius;
-  const offset = circumference - (circumference * score) / 100;
-
-  return (
-    <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-      <Box sx={{ position: "relative", width: 88, height: 88, flexShrink: 0 }}>
-        <svg width="88" height="88" style={{ transform: "rotate(-90deg)" }}>
-          <circle
-            cx="44"
-            cy="44"
-            r={radius}
-            fill="none"
-            stroke="#E2E8F0"
-            strokeWidth="5"
-          />
-          <circle
-            cx="44"
-            cy="44"
-            r={radius}
-            fill="none"
-            stroke={color}
-            strokeWidth="5"
-            strokeDasharray={circumference}
-            strokeDashoffset={offset}
-            strokeLinecap="round"
-          />
-        </svg>
-        <Box
-          sx={{
-            position: "absolute",
-            inset: 0,
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <Typography
-            sx={{ fontWeight: 800, fontSize: 22, color, lineHeight: 1 }}
-          >
-            {score}
-          </Typography>
-          <Typography
-            variant="caption"
-            color="text.secondary"
-            sx={{ fontSize: 10 }}
-          >
-            /100
-          </Typography>
-        </Box>
-      </Box>
-      <Box>
-        <Typography variant="body2" fontWeight={600} color="text.primary">
-          AI Match Score
-        </Typography>
-        <Typography variant="caption" color="text.secondary">
-          {score >= 75
-            ? "Strong fit"
-            : score >= 50
-              ? "Moderate fit"
-              : "Low fit"}
-        </Typography>
-      </Box>
-    </Box>
-  );
-});
-
 const SectionLabel = memo(function SectionLabel({
   children,
-  color = "#64748B",
+  color = "#6B6560",
 }: {
   children: React.ReactNode;
   color?: string;
@@ -199,7 +118,6 @@ function CandidateView({ candidate }: CandidateViewProps) {
   if (!candidate) return <Typography>Candidate not found</Typography>;
 
   const { bg: avatarBg, color: avatarColor } = getAvatarColor(candidate.name);
-  const statusStyle = getStatusStyle(candidate.status);
 
   return (
     <Box
@@ -258,17 +176,7 @@ function CandidateView({ candidate }: CandidateViewProps) {
               >
                 {candidate.name}
               </Typography>
-              <Chip
-                label={statusStyle.label}
-                size="small"
-                sx={{
-                  bgcolor: statusStyle.bg,
-                  color: statusStyle.color,
-                  fontWeight: 700,
-                  fontSize: 11,
-                  border: `1px solid ${statusStyle.color}30`,
-                }}
-              />
+              <VerdictBadge verdict={candidate.status} size="sm" />
             </Box>
             <Typography
               variant="body2"
@@ -377,7 +285,7 @@ function CandidateView({ candidate }: CandidateViewProps) {
                       sx={{
                         mb: 2.5,
                         pl: 2,
-                        borderLeft: "2px solid #E2E8F0",
+                        borderLeft: "2px solid #E8E5E0",
                         "&:last-child": { mb: 0 },
                       }}
                     >
@@ -442,10 +350,10 @@ function CandidateView({ candidate }: CandidateViewProps) {
                   fontFamily: "monospace",
                   fontSize: 11,
                   color: "text.secondary",
-                  bgcolor: "#F8FAFC",
+                  bgcolor: "#F5F4F2",
                   p: 2,
                   borderRadius: 1.5,
-                  border: "1px solid #E2E8F0",
+                  border: "1px solid #E8E5E0",
                   maxHeight: 200,
                   overflow: "auto",
                 }}
@@ -469,15 +377,33 @@ function CandidateView({ candidate }: CandidateViewProps) {
             }}
           >
             {/* Score widget */}
-            <Box sx={{ mb: 3 }}>
-              <ScoreWidget score={candidate.score} />
+            <Box sx={{ mb: 3, display: "flex", alignItems: "center", gap: 2 }}>
+              <ScoreRing score={candidate.score} size={88} />
+              <Box>
+                <Typography
+                  variant="body2"
+                  fontWeight={600}
+                  color="text.primary"
+                >
+                  AI Match Score
+                </Typography>
+                <Typography variant="caption" color="text.secondary">
+                  {candidate.score >= 75
+                    ? "Strong fit"
+                    : candidate.score >= 50
+                      ? "Moderate fit"
+                      : "Low fit"}
+                </Typography>
+              </Box>
             </Box>
 
             <Divider sx={{ mb: 3 }} />
 
             {/* Key Strengths */}
             <Box sx={{ mb: 3 }}>
-              <SectionLabel color="#4CAF50">Strengths</SectionLabel>
+              <SectionLabel color={lightTokens.successBase}>
+                Strengths
+              </SectionLabel>
               <Box component="ul" sx={{ m: 0, pl: 2.5 }}>
                 {candidate.analysis?.strengths &&
                 candidate.analysis.strengths.length > 0 ? (
@@ -501,7 +427,9 @@ function CandidateView({ candidate }: CandidateViewProps) {
             {/* Possible Gaps */}
             {candidate.analysis?.gaps && candidate.analysis.gaps.length > 0 && (
               <Box sx={{ mb: 3 }}>
-                <SectionLabel color="#FF9800">Skill Gaps</SectionLabel>
+                <SectionLabel color={lightTokens.warningBase}>
+                  Skill Gaps
+                </SectionLabel>
                 <Box component="ul" sx={{ m: 0, pl: 2.5 }}>
                   {candidate.analysis.gaps.map((gap, i) => (
                     <Box component="li" key={i} sx={{ mb: 0.75 }}>
@@ -518,11 +446,16 @@ function CandidateView({ candidate }: CandidateViewProps) {
             {candidate.analysis?.redFlags &&
               candidate.analysis.redFlags.length > 0 && (
                 <Box sx={{ mb: 3 }}>
-                  <SectionLabel color="#F44336">Red Flags</SectionLabel>
+                  <SectionLabel color={lightTokens.dangerBase}>
+                    Red Flags
+                  </SectionLabel>
                   <Box component="ul" sx={{ m: 0, pl: 2.5 }}>
                     {candidate.analysis.redFlags.map((flag, i) => (
                       <Box component="li" key={i} sx={{ mb: 0.75 }}>
-                        <Typography variant="body2" sx={{ color: "#F44336" }}>
+                        <Typography
+                          variant="body2"
+                          sx={{ color: lightTokens.dangerBase }}
+                        >
                           {flag}
                         </Typography>
                       </Box>
@@ -554,7 +487,9 @@ function CandidateView({ candidate }: CandidateViewProps) {
             {candidate.analysis?.cultureFitIndicators &&
               candidate.analysis.cultureFitIndicators.length > 0 && (
                 <Box sx={{ mb: 3 }}>
-                  <SectionLabel color="#FF9800">Culture Fit</SectionLabel>
+                  <SectionLabel color={lightTokens.warningBase}>
+                    Culture Fit
+                  </SectionLabel>
                   <Box component="ul" sx={{ m: 0, pl: 2.5 }}>
                     {candidate.analysis.cultureFitIndicators.map(
                       (indicator, i) => (
@@ -601,8 +536,8 @@ function CandidateView({ candidate }: CandidateViewProps) {
                               label={tech}
                               size="small"
                               sx={{
-                                bgcolor: "#EFF6FF",
-                                color: "#1D4ED8",
+                                bgcolor: lightTokens.brandSubtle,
+                                color: lightTokens.brandBase,
                                 fontWeight: 500,
                                 fontSize: 12,
                               }}
@@ -629,8 +564,8 @@ function CandidateView({ candidate }: CandidateViewProps) {
                           label={skill}
                           size="small"
                           sx={{
-                            bgcolor: "#F1F5F9",
-                            color: "#475569",
+                            bgcolor: lightTokens.bgSurfaceAlt,
+                            color: lightTokens.textSecondary,
                             fontWeight: 500,
                           }}
                         />

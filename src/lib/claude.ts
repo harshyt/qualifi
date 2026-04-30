@@ -52,6 +52,17 @@ SCORING RUBRIC (0–100):
 ${config.scoringRubric}
 
 ---
+OUTPUT BREVITY:
+Be concise and signal-focused. For strengths and redFlags return only the most impactful items (up to 7 each) — do not pad with minor or obvious points. For gaps, only list skills or experience that are explicitly required or strongly expected by the JD — do not include general observations or nice-to-haves (up to 7). For interviewFocusAreas and cultureFitIndicators, be thorough as these are used during the actual interview, not for screening.
+
+---
+RED FLAG SCOPE:
+Red flags MUST cover both of the following categories — do not skip either:
+1. MANDATORY — Missing required skills: For every skill or requirement the JD explicitly marks as "required", "must-have", or equivalent, check if it is completely absent from the candidate's resume (not in summary, skills list, or any project). If absent, you MUST raise a red flag explicitly stating the missing requirement and that it is required by the JD. If the candidate lists it anywhere on their resume, do NOT flag it here — put depth concerns in gaps instead.
+2. Work pattern concerns: frequent unexplained job changes, significant unexplained employment gaps, vague or inconsistent role descriptions, or a clear mismatch between claimed seniority and described responsibilities.
+Do NOT use red flags for any other technical skill gaps or depth assessments — those belong in the gaps array.
+
+---
 VERDICT RULES:
 - SHORTLIST: Score >= 70 AND no critical gaps in must-have skills from the JD
 - REJECT: Score < 50 OR missing 2+ must-have skills from the JD
@@ -216,30 +227,35 @@ export async function analyzeResume(
           strengths: {
             type: "array",
             items: { type: "string" },
-            description: "Specific strengths tied to the JD requirements",
+            maxItems: 7,
+            description:
+              "Top strengths most relevant to the JD requirements — prioritise impact over completeness",
           },
           gaps: {
             type: "array",
             items: { type: "string" },
-            description: "Missing skills or experience gaps vs the JD",
+            maxItems: 7,
+            description:
+              "Skills or experience explicitly required or strongly expected by the JD that the candidate lacks. Do NOT include general observations, nice-to-haves, or anything not directly called out in the JD as required.",
           },
           redFlags: {
             type: "array",
             items: { type: "string" },
+            maxItems: 7,
             description:
-              "Concerns (e.g. frequent job changes, vague descriptions, inflated claims, unexplained gaps)",
+              "MUST cover two categories: (1) Missing required skills — for every skill the JD marks as required or must-have, explicitly flag it if completely absent from the resume (not in summary, skills, or projects), stating the skill name and that it is JD-required; (2) work pattern concerns — frequent unexplained job changes, employment gaps, vague role descriptions, seniority mismatch. If a candidate lists a skill anywhere on their resume do not flag it here. All other skill depth concerns go in gaps.",
           },
           interviewFocusAreas: {
             type: "array",
             items: { type: "string" },
             description:
-              "Suggested topics or question areas to probe based on this candidate's profile",
+              "Suggested topics or question areas to probe based on this candidate's profile — be thorough, this is used during the actual interview",
           },
           cultureFitIndicators: {
             type: "array",
             items: { type: "string" },
             description:
-              "Soft skills and collaboration signals observed in the resume",
+              "Soft skills and collaboration signals observed in the resume — be thorough, this is used during the actual interview",
           },
           verdict: {
             type: "string",
@@ -274,7 +290,7 @@ export async function analyzeResume(
   try {
     response = await client.messages.create({
       model: process.env.CLAUDE_MODEL || "claude-haiku-4-5-20251001",
-      max_tokens: 4096,
+      max_tokens: 8192,
       tools,
       messages,
     });
