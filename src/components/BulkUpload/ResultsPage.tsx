@@ -23,6 +23,7 @@ import { useBatch } from "@/hooks/useBatch";
 import { useBatchCandidates } from "@/hooks/useBatchCandidates";
 import { useAuth } from "@/components/Providers/AuthContext";
 import { lightTokens } from "@/theme/tokens";
+import { formatDate } from "@/lib/format";
 import type { Candidate } from "@/components/Dashboard/DashboardTable";
 
 type FilterTab = "ALL" | "PENDING" | "SHORTLIST" | "REJECT";
@@ -33,14 +34,6 @@ const FILTERS: { label: string; value: FilterTab }[] = [
   { label: "Pending", value: "PENDING" },
   { label: "Reject", value: "REJECT" },
 ];
-
-function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
-}
 
 const FilterBar = memo(function FilterBar({
   value,
@@ -56,7 +49,7 @@ const FilterBar = memo(function FilterBar({
       onChange={(_, v: FilterTab | null) => v && onChange(v)}
       size="small"
       sx={{
-        bgcolor: "#F5F4F2",
+        bgcolor: lightTokens.bgSurfaceAlt,
         borderRadius: "20px",
         p: 0.5,
         "& .MuiToggleButtonGroup-grouped": {
@@ -67,12 +60,12 @@ const FilterBar = memo(function FilterBar({
           py: 0.5,
           fontWeight: 600,
           fontSize: 13,
-          color: "#6B6560",
+          color: lightTokens.textSecondary,
           "&.Mui-selected": {
-            bgcolor: "#FFFFFF",
-            color: "#1A1714",
+            bgcolor: lightTokens.bgSurface,
+            color: lightTokens.textPrimary,
             boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
-            "&:hover": { bgcolor: "#FFFFFF" },
+            "&:hover": { bgcolor: lightTokens.bgSurface },
           },
           "&:hover": { bgcolor: "transparent" },
         },
@@ -91,7 +84,7 @@ function TableSkeleton() {
   return (
     <TableContainer component={Paper} elevation={0} sx={{ border: "none", borderRadius: 0 }}>
       <Table sx={{ minWidth: 650 }}>
-        <TableHead sx={{ bgcolor: "#F5F4F2" }}>
+        <TableHead sx={{ bgcolor: lightTokens.bgSurfaceAlt }}>
           <TableRow>
             {["Candidate Name", "Role", "Score", "Verdict", "Date"].map((col) => (
               <TableCell key={col}><Skeleton variant="text" width={80} /></TableCell>
