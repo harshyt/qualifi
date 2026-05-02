@@ -14,6 +14,7 @@ export function useActiveBatch() {
         return r.json() as Promise<ActiveBatchResponse>;
       }),
     staleTime: 10_000,
+    refetchInterval: 30_000,
     retry: 1,
   });
 }
