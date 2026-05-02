@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabase-server";
 import { logger } from "@/lib/logger";
+import { getResumeJobsByIds } from "@/lib/db/resumeJobs";
 import type { ResumeJob } from "@/types/resumeJob";
 
 const UUID_REGEX =
@@ -27,11 +28,7 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { data: jobs, error } = await supabase
-    .from("resume_jobs")
-    .select("id, file_name, status, candidate_id, error_message")
-    .in("id", ids)
-    .eq("user_id", user.id);
+  const { data: jobs, error } = await getResumeJobsByIds(supabase, ids, user.id);
 
   if (error) {
     logger.error("Failed to fetch resume jobs", {

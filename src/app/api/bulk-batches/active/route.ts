@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabase-server";
 import { logger } from "@/lib/logger";
+import { getActiveBatch } from "@/lib/db/batches";
 import type { BulkBatch } from "@/types/bulkBatch";
 
 export async function GET() {
@@ -13,14 +14,7 @@ export async function GET() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { data: batch, error } = await supabase
-    .from("bulk_batches")
-    .select("*")
-    .eq("user_id", user.id)
-    .eq("status", "processing")
-    .order("created_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
+  const { data: batch, error } = await getActiveBatch(supabase, user.id);
 
   if (error) {
     logger.error("Failed to fetch active batch", { userId: user.id, error: error.message });

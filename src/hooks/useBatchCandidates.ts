@@ -2,6 +2,7 @@ import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
 import { useAuth } from "@/components/Providers/AuthContext";
 import type { Candidate } from "@/components/Dashboard/DashboardTable";
+import { CANDIDATE_COLUMNS } from "@/lib/db/candidates";
 
 export function useBatchCandidates(batchId: string) {
   const { user } = useAuth();
@@ -31,9 +32,7 @@ export function useBatchCandidates(batchId: string) {
       // Step 2: fetch those candidates
       const { data, error } = await supabase
         .from("candidates")
-        .select(
-          "id, name, role, score, status, created_at, email, job_id, user_id, analysis",
-        )
+        .select(CANDIDATE_COLUMNS)
         .in("id", candidateIds)
         .eq("user_id", user!.id)
         .order("created_at", { ascending: false });

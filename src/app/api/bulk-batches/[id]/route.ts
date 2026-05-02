@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabase-server";
 import { logger } from "@/lib/logger";
+import { getBatchById } from "@/lib/db/batches";
+import { getJobStatusesByBatch } from "@/lib/db/resumeJobs";
 import type { BulkBatch, BulkBatchCounts } from "@/types/bulkBatch";
 
 const UUID_REGEX =
@@ -25,12 +27,7 @@ export async function GET(
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { data: batch, error: batchError } = await supabase
-    .from("bulk_batches")
-    .select("*")
-    .eq("id", id)
-    .eq("user_id", user.id)
-    .single();
+  const { data: batch, error: batchError } = await getBatchById(supabase, id, user.id);
 
   if (batchError || !batch) {
     logger.info("Batch not found or unauthorized", { batchId: id, userId: user.id });
@@ -38,10 +35,7 @@ export async function GET(
   }
 
   // Aggregate resume_job status counts for this batch
-  const { data: jobs, error: jobsError } = await supabase
-    .from("resume_jobs")
-    .select("status")
-    .eq("batch_id", id);
+  const { data: jobs, error: jobsError } = await getJobStatusesByBatch(supabase, id);
 
   if (jobsError) {
     logger.error("Failed to fetch resume_jobs for batch", { batchId: id, error: jobsError.message });

@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabase-server";
 import { analyzeResume } from "@/lib/claude";
 import { logger } from "@/lib/logger";
+import { getResumeJobById } from "@/lib/db/resumeJobs";
+import { flipBatchIfComplete } from "@/lib/db/batches";
 import type { RoleKey } from "@/constants/roles";
 import { ROLE_CONFIGS } from "@/constants/roles";
 import { del, get as blobGet } from "@vercel/blob";
@@ -29,12 +31,7 @@ export async function POST(
   }
 
   // Fetch the resume_job (ownership enforced by RLS)
-  const { data: job, error: fetchError } = await supabase
-    .from("resume_jobs")
-    .select("*, batch_id")
-    .eq("id", jobId)
-    .eq("user_id", user.id)
-    .single();
+  const { data: job, error: fetchError } = await getResumeJobById(supabase, jobId, user.id);
 
   if (fetchError || !job) {
     return NextResponse.json(
@@ -165,24 +162,5 @@ export async function POST(
     }
 
     return NextResponse.json({ error: message }, { status: 500 });
-  }
-}
-
-async function flipBatchIfComplete(
-  supabase: Awaited<ReturnType<typeof import("@/lib/supabase-server").createSupabaseServerClient>>,
-  batchId: string,
-) {
-  const { count } = await supabase
-    .from("resume_jobs")
-    .select("id", { count: "exact", head: true })
-    .eq("batch_id", batchId)
-    .in("status", ["queued", "processing"]);
-
-  if (count === 0) {
-    await supabase
-      .from("bulk_batches")
-      .update({ status: "done" })
-      .eq("id", batchId);
-    logger.info("Batch marked done", { batchId });
   }
 }
