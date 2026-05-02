@@ -1,5 +1,5 @@
 "use client";
-import { useMemo } from "react";
+import { useMemo, memo } from "react";
 import {
   Box,
   Typography,
@@ -7,25 +7,30 @@ import {
   Chip,
   Skeleton,
 } from "@mui/material";
-import { FileText, CheckCircle2, Loader2, Clock, XCircle } from "lucide-react";
+import { FileText, CheckCircle2, XCircle, Clock } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useQuery } from "@tanstack/react-query";
 import { useBatch } from "@/hooks/useBatch";
-import { useResumeJobs } from "@/hooks/useResumeJobs";
+import { useBatchJobs } from "@/hooks/useBatchJobs";
+import type { BatchJob } from "@/hooks/useBatchJobs";
 import AppButton from "@/components/ui/AppButton";
 import { lightTokens } from "@/theme/tokens";
-import { createSupabaseBrowserClient } from "@/lib/supabase";
+import { formatDate } from "@/lib/format";
 import type { ResumeJobStatus } from "@/types/resumeJob";
 
-function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
-}
+// CSS keyframes injected once via sx on the first element that needs them
+const spinKeyframes = {
+  "@keyframes spin": { from: { transform: "rotate(0deg)" }, to: { transform: "rotate(360deg)" } },
+  "@keyframes fadeInUp": {
+    from: { opacity: 0, transform: "translateY(8px)" },
+    to: { opacity: 1, transform: "translateY(0)" },
+  },
+};
 
-function JobStatusChip({ status }: { status: ResumeJobStatus | undefined }) {
+const JobStatusChip = memo(function JobStatusChip({
+  status,
+}: {
+  status: ResumeJobStatus | undefined;
+}) {
   if (!status || status === "queued") {
     return (
       <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
@@ -38,8 +43,16 @@ function JobStatusChip({ status }: { status: ResumeJobStatus | undefined }) {
   }
   if (status === "processing") {
     return (
-      <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-        <Loader2 size={14} color={lightTokens.brandBase} />
+      <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, ...spinKeyframes }}>
+        <Box
+          component="span"
+          sx={{ display: "inline-flex", animation: "spin 1s linear infinite" }}
+        >
+          {/* Inline SVG avoids importing Loader2 which triggers re-renders */}
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={lightTokens.brandBase} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+          </svg>
+        </Box>
         <Typography variant="caption" sx={{ color: lightTokens.brandBase, fontWeight: 600 }}>
           Analyzing
         </Typography>
@@ -64,7 +77,46 @@ function JobStatusChip({ status }: { status: ResumeJobStatus | undefined }) {
       </Typography>
     </Box>
   );
-}
+});
+
+const JobRow = memo(function JobRow({ job }: { job: BatchJob }) {
+  return (
+    <Box
+      sx={{
+        display: "flex",
+        alignItems: "center",
+        gap: 1.5,
+        px: 2,
+        py: 1.25,
+        borderBottom: `1px solid ${lightTokens.borderSubtle}`,
+        "&:last-child": { borderBottom: "none" },
+        bgcolor: job.status === "error" ? lightTokens.dangerSubtle : "transparent",
+        transition: "background-color 0.3s ease",
+      }}
+    >
+      <FileText size={16} color={lightTokens.textMuted} style={{ flexShrink: 0 }} />
+      <Box sx={{ flex: 1, minWidth: 0 }}>
+        <Typography
+          variant="body2"
+          sx={{
+            fontWeight: 500,
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap",
+          }}
+        >
+          {job.file_name}
+        </Typography>
+        {job.error_message && (
+          <Typography variant="caption" color="error">
+            {job.error_message}
+          </Typography>
+        )}
+      </Box>
+      <JobStatusChip status={job.status} />
+    </Box>
+  );
+});
 
 interface ProcessingPageProps {
   batchId: string;
@@ -72,53 +124,33 @@ interface ProcessingPageProps {
 
 export default function ProcessingPage({ batchId }: ProcessingPageProps) {
   const router = useRouter();
-  const { data, isLoading, isError } = useBatch(batchId);
+  const { data: batchData, isLoading, isError } = useBatch(batchId);
+  const { data: jobs = [] } = useBatchJobs(batchId);
 
-  const batch = data?.batch;
-  const counts = data?.counts;
+  const batch = batchData?.batch;
 
-  // Fetch per-file statuses by querying resume_jobs for this batch
-  // We pass job IDs from the batch counts — but we need the actual IDs.
-  // Use a separate query keyed on the batchId to get job ids.
-  const { data: jobListData } = useJobIdsByBatch(batchId);
-  const jobIds = jobListData ?? [];
+  // Derive counts from live job data — single source of truth
+  const counts = useMemo(() => {
+    const c = { done: 0, error: 0, processing: 0, queued: 0 };
+    for (const j of jobs) {
+      if (j.status in c) c[j.status as keyof typeof c]++;
+    }
+    return c;
+  }, [jobs]);
 
-  const { data: remoteJobs } = useResumeJobs(jobIds);
-
-  const done = (counts?.done ?? 0) + (counts?.error ?? 0);
-  const total = batch?.total_files ?? 0;
-  const pct = total > 0 ? (done / total) * 100 : 0;
+  const completed = counts.done + counts.error;
+  const total = batch?.total_files ?? jobs.length;
+  const pct = total > 0 ? (completed / total) * 100 : 0;
 
   const isDone = batch?.status === "done";
-  const allErrored =
-    isDone && counts?.done === 0 && (counts?.error ?? 0) > 0;
+  const allErrored = isDone && counts.done === 0 && counts.error > 0;
 
   const statChips = useMemo(
     () => [
-      {
-        label: "Shortlisted",
-        count: counts?.done ?? 0,
-        bg: lightTokens.successSubtle,
-        color: lightTokens.successText,
-      },
-      {
-        label: "Queued",
-        count: counts?.queued ?? 0,
-        bg: lightTokens.brandSubtle,
-        color: lightTokens.brandBase,
-      },
-      {
-        label: "Processing",
-        count: counts?.processing ?? 0,
-        bg: "#EFF6FF",
-        color: "#1D4ED8",
-      },
-      {
-        label: "Errors",
-        count: counts?.error ?? 0,
-        bg: lightTokens.dangerSubtle,
-        color: lightTokens.dangerText,
-      },
+      { label: "Shortlisted", count: counts.done, bg: lightTokens.successSubtle, color: lightTokens.successText },
+      { label: "Queued", count: counts.queued, bg: lightTokens.brandSubtle, color: lightTokens.brandBase },
+      { label: "Processing", count: counts.processing, bg: lightTokens.brandSubtle, color: lightTokens.brandBase },
+      { label: "Errors", count: counts.error, bg: lightTokens.dangerSubtle, color: lightTokens.dangerText },
     ],
     [counts],
   );
@@ -173,7 +205,7 @@ export default function ProcessingPage({ batchId }: ProcessingPageProps) {
       <Box sx={{ mb: 2 }}>
         <Box sx={{ display: "flex", justifyContent: "space-between", mb: 0.75 }}>
           <Typography variant="caption" color="text.secondary">
-            {done} of {total} complete
+            {completed} of {total} complete
           </Typography>
           <Typography variant="caption" sx={{ fontWeight: 600, color: lightTokens.brandBase }}>
             {Math.round(pct)}%
@@ -182,7 +214,12 @@ export default function ProcessingPage({ batchId }: ProcessingPageProps) {
         <LinearProgress
           variant="determinate"
           value={pct}
-          sx={{ borderRadius: 2, height: 8, bgcolor: lightTokens.bgSurfaceAlt }}
+          sx={{
+            borderRadius: 2,
+            height: 8,
+            bgcolor: lightTokens.bgSurfaceAlt,
+            "& .MuiLinearProgress-bar": { transition: "transform 0.5s ease" },
+          }}
         />
       </Box>
 
@@ -193,13 +230,7 @@ export default function ProcessingPage({ batchId }: ProcessingPageProps) {
             key={chip.label}
             label={`${chip.label}: ${chip.count}`}
             size="small"
-            sx={{
-              bgcolor: chip.bg,
-              color: chip.color,
-              fontWeight: 600,
-              fontSize: 12,
-              borderRadius: "12px",
-            }}
+            sx={{ bgcolor: chip.bg, color: chip.color, fontWeight: 600, fontSize: 12, borderRadius: "12px" }}
           />
         ))}
       </Box>
@@ -217,6 +248,11 @@ export default function ProcessingPage({ batchId }: ProcessingPageProps) {
             alignItems: "center",
             justifyContent: "space-between",
             gap: 2,
+            "@keyframes fadeInUp": {
+              from: { opacity: 0, transform: "translateY(8px)" },
+              to: { opacity: 1, transform: "translateY(0)" },
+            },
+            animation: "fadeInUp 0.35s ease",
           }}
         >
           <Box>
@@ -229,7 +265,7 @@ export default function ProcessingPage({ batchId }: ProcessingPageProps) {
             <Typography variant="caption" color="text.secondary">
               {allErrored
                 ? "All resumes encountered errors during analysis."
-                : `${counts?.done ?? 0} resume${(counts?.done ?? 0) !== 1 ? "s" : ""} analyzed successfully.`}
+                : `${counts.done} resume${counts.done !== 1 ? "s" : ""} analyzed successfully.`}
             </Typography>
           </Box>
           {!allErrored && (
@@ -261,79 +297,30 @@ export default function ProcessingPage({ batchId }: ProcessingPageProps) {
             bgcolor: lightTokens.bgBase,
           }}
         >
-          <Typography variant="caption" sx={{ fontWeight: 700, color: lightTokens.textSecondary, textTransform: "uppercase", letterSpacing: 0.5 }}>
+          <Typography
+            variant="caption"
+            sx={{
+              fontWeight: 700,
+              color: lightTokens.textSecondary,
+              textTransform: "uppercase",
+              letterSpacing: 0.5,
+            }}
+          >
             Files ({total})
           </Typography>
         </Box>
         <Box sx={{ maxHeight: 400, overflow: "auto" }}>
-          {jobIds.length === 0 ? (
+          {jobs.length === 0 ? (
             <Box sx={{ py: 4, textAlign: "center" }}>
               <Typography variant="body2" color="text.secondary">
                 Loading files…
               </Typography>
             </Box>
           ) : (
-            jobIds.map((jobId) => {
-              const job = remoteJobs?.find((j) => j.id === jobId);
-              return (
-                <Box
-                  key={jobId}
-                  sx={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 1.5,
-                    px: 2,
-                    py: 1.25,
-                    borderBottom: `1px solid ${lightTokens.borderSubtle}`,
-                    "&:last-child": { borderBottom: "none" },
-                    bgcolor:
-                      job?.status === "error" ? lightTokens.dangerSubtle : "transparent",
-                  }}
-                >
-                  <FileText size={16} color={lightTokens.textMuted} style={{ flexShrink: 0 }} />
-                  <Box sx={{ flex: 1, minWidth: 0 }}>
-                    <Typography
-                      variant="body2"
-                      sx={{
-                        fontWeight: 500,
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                        whiteSpace: "nowrap",
-                      }}
-                    >
-                      {job?.file_name ?? jobId}
-                    </Typography>
-                    {job?.error_message && (
-                      <Typography variant="caption" color="error">
-                        {job.error_message}
-                      </Typography>
-                    )}
-                  </Box>
-                  <JobStatusChip status={job?.status as ResumeJobStatus | undefined} />
-                </Box>
-              );
-            })
+            jobs.map((job) => <JobRow key={job.id} job={job} />)
           )}
         </Box>
       </Box>
     </Box>
   );
-}
-
-// Fetches job IDs for a batch — separate from useBatch so we can
-// pass them to the existing useResumeJobs polling hook.
-function useJobIdsByBatch(batchId: string) {
-  return useQuery<string[]>({
-    queryKey: ["batch-job-ids", batchId],
-    queryFn: async () => {
-      const supabase = createSupabaseBrowserClient();
-      const { data } = await supabase
-        .from("resume_jobs")
-        .select("id")
-        .eq("batch_id", batchId)
-        .order("created_at", { ascending: true });
-      return (data ?? []).map((r: { id: string }) => r.id);
-    },
-    staleTime: Infinity,
-  });
 }
