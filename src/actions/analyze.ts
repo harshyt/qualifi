@@ -1,5 +1,5 @@
 "use server";
-import { analyzeResume } from "@/lib/claude";
+import { getLLMProvider } from "@/lib/llm";
 import { createSupabaseServerClient } from "@/lib/supabase-server";
 import { RoleKey, ROLE_CONFIGS } from "@/constants/roles";
 import { ZodError } from "zod";
@@ -34,7 +34,8 @@ export async function analyzeCandidateResume(formData: FormData) {
       ? (rawRoleKey as RoleKey)
       : "generic";
 
-    const analysis = await analyzeResume(
+    const llm = getLLMProvider();
+    const analysis = await llm.analyzeResume(
       buffer,
       file.type,
       file.name,
