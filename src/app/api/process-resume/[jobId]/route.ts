@@ -138,7 +138,9 @@ export async function POST(
 
     // Flip batch to done if all jobs in this batch are now terminal
     if (job.batch_id) {
-      void flipBatchIfComplete(supabase, job.batch_id);
+      flipBatchIfComplete(supabase, job.batch_id).catch((err) =>
+        logger.error("flipBatch failed", { batchId: job.batch_id, error: String(err) }),
+      );
     }
 
     return NextResponse.json({ status: "done", candidateId: candidate.id });
@@ -157,7 +159,9 @@ export async function POST(
 
     // Flip batch to done if all jobs in this batch are now terminal
     if (job.batch_id) {
-      void flipBatchIfComplete(supabase, job.batch_id);
+      flipBatchIfComplete(supabase, job.batch_id).catch((err) =>
+        logger.error("flipBatch failed", { batchId: job.batch_id, error: String(err) }),
+      );
     }
 
     return NextResponse.json({ error: message }, { status: 500 });

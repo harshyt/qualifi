@@ -3,11 +3,18 @@ import { createSupabaseServerClient } from "@/lib/supabase-server";
 import { logger } from "@/lib/logger";
 import type { BulkBatch, BulkBatchCounts } from "@/types/bulkBatch";
 
+const UUID_REGEX =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 export async function GET(
   _request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params;
+
+  if (!UUID_REGEX.test(id)) {
+    return NextResponse.json({ error: "Invalid batch ID" }, { status: 400 });
+  }
 
   const supabase = await createSupabaseServerClient();
   const {
