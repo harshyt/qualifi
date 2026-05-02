@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabase-server";
 import { analyzeResume } from "@/lib/claude";
 import { logger } from "@/lib/logger";
+import { getResumeJobById } from "@/lib/db/resumeJobs";
+import { flipBatchIfComplete } from "@/lib/db/batches";
 import type { RoleKey } from "@/constants/roles";
 import { ROLE_CONFIGS } from "@/constants/roles";
 import { del, get as blobGet } from "@vercel/blob";
@@ -29,12 +31,7 @@ export async function POST(
   }
 
   // Fetch the resume_job (ownership enforced by RLS)
-  const { data: job, error: fetchError } = await supabase
-    .from("resume_jobs")
-    .select("*")
-    .eq("id", jobId)
-    .eq("user_id", user.id)
-    .single();
+  const { data: job, error: fetchError } = await getResumeJobById(supabase, jobId, user.id);
 
   if (fetchError || !job) {
     return NextResponse.json(
@@ -136,6 +133,13 @@ export async function POST(
       verdict: analysis.verdict,
     });
 
+    // Flip batch to done if all jobs in this batch are now terminal
+    if (job.batch_id) {
+      flipBatchIfComplete(supabase, job.batch_id).catch((err) =>
+        logger.error("flipBatch failed", { batchId: job.batch_id, error: String(err) }),
+      );
+    }
+
     return NextResponse.json({ status: "done", candidateId: candidate.id });
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
@@ -149,6 +153,13 @@ export async function POST(
         updated_at: new Date().toISOString(),
       })
       .eq("id", jobId);
+
+    // Flip batch to done if all jobs in this batch are now terminal
+    if (job.batch_id) {
+      flipBatchIfComplete(supabase, job.batch_id).catch((err) =>
+        logger.error("flipBatch failed", { batchId: job.batch_id, error: String(err) }),
+      );
+    }
 
     return NextResponse.json({ error: message }, { status: 500 });
   }

@@ -32,6 +32,7 @@ interface SelectJobModalProps {
     jobDescription: string,
     roleKey?: string,
     files?: File[],
+    jobTitle?: string,
   ) => void;
 }
 
@@ -209,6 +210,7 @@ export default function SelectJobModal({
       selectedJob.description,
       selectedJob.tags?.[0],
       files,
+      selectedJob.title,
     );
     setSelectedJobId(null);
     setFiles([]);

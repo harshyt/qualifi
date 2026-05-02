@@ -6,6 +6,7 @@ import {
 import { createSupabaseBrowserClient } from "@/lib/supabase";
 import { useAuth } from "@/components/Providers/AuthContext";
 import type { Candidate } from "@/components/Dashboard/DashboardTable";
+import { CANDIDATE_COLUMNS } from "@/lib/db/candidates";
 import { useEffect } from "react";
 
 export const useCandidates = () => {
@@ -20,9 +21,7 @@ export const useCandidates = () => {
       const supabase = createSupabaseBrowserClient();
       const { data, error } = await supabase
         .from("candidates")
-        .select(
-          "id, name, role, score, status, created_at, email, job_id, user_id, analysis",
-        )
+        .select(CANDIDATE_COLUMNS)
         .eq("user_id", user!.id)
         .order("created_at", { ascending: false });
 

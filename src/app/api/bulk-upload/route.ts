@@ -41,6 +41,7 @@ export async function POST(request: Request) {
   }
 
   const jobId = formData.get("jobId");
+  const jobTitle = formData.get("jobTitle") as string | null;
   const jobDescription = formData.get("jobDescription");
   const rawRoleKey = (formData.get("roleKey") as string | null) ?? "generic";
   const roleKey = Object.keys(ROLE_CONFIGS).includes(rawRoleKey)
@@ -107,6 +108,32 @@ export async function POST(request: Request) {
     );
   }
 
+  // Create a bulk_batches row before uploading blobs
+  const resolvedJobTitle = jobTitle?.trim() || "Untitled Job";
+  const { data: batch, error: batchError } = await supabase
+    .from("bulk_batches")
+    .insert({
+      user_id: user.id,
+      job_id: jobId,
+      job_title: resolvedJobTitle,
+      total_files: validFiles.length,
+    })
+    .select("id")
+    .single();
+
+  if (batchError || !batch) {
+    logger.error("Failed to create bulk_batch", {
+      userId: user.id,
+      error: batchError?.message,
+    });
+    return NextResponse.json(
+      { error: "Failed to create batch" },
+      { status: 500 },
+    );
+  }
+
+  const batchId: string = batch.id;
+
   // Upload valid files to Vercel Blob in parallel
   const uploadResults = await Promise.allSettled(
     validFiles.map(async (file) => {
@@ -142,13 +169,15 @@ export async function POST(request: Request) {
   ];
 
   if (succeeded.length === 0) {
+    // No blobs succeeded — delete the orphaned batch row
+    void supabase.from("bulk_batches").delete().eq("id", batchId);
     return NextResponse.json(
       { error: "All file uploads failed", failedUploads },
       { status: 500 },
     );
   }
 
-  // Insert resume_jobs rows
+  // Insert resume_jobs rows, stamped with batch_id
   const rows = succeeded.map(({ fileName, blobUrl }) => ({
     user_id: user.id,
     job_id: jobId,
@@ -157,6 +186,7 @@ export async function POST(request: Request) {
     file_name: fileName,
     blob_url: blobUrl,
     status: "queued" as const,
+    batch_id: batchId,
   }));
 
   const { data: jobs, error: dbError } = await supabase
@@ -169,8 +199,9 @@ export async function POST(request: Request) {
       userId: user.id,
       error: dbError.message,
     });
-    // Clean up blobs that were successfully uploaded to avoid orphans
+    // Clean up blobs and orphaned batch row
     void Promise.allSettled(succeeded.map(({ blobUrl }) => del(blobUrl)));
+    void supabase.from("bulk_batches").delete().eq("id", batchId);
     return NextResponse.json(
       { error: "Failed to queue resume jobs" },
       { status: 500 },
@@ -184,9 +215,14 @@ export async function POST(request: Request) {
       rejected: failedUploads.length,
     });
   }
-  logger.info("Bulk upload queued", { userId: user.id, count: jobs.length });
+  logger.info("Bulk upload queued", {
+    userId: user.id,
+    count: jobs.length,
+    batchId,
+  });
 
   return NextResponse.json({
+    batchId,
     jobs: jobs as Pick<ResumeJob, "id" | "file_name" | "status">[],
     failedUploads,
   });
