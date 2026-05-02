@@ -1,4 +1,4 @@
-import { put, del } from "@vercel/blob";
+import { getStorageProvider } from "@/lib/storage";
 import { NextResponse } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabase-server";
 import { logger } from "@/lib/logger";
@@ -107,16 +107,18 @@ export async function POST(request: Request) {
     );
   }
 
-  // Upload valid files to Vercel Blob in parallel
+  // Upload valid files in parallel
+  const storage = getStorageProvider();
   const uploadResults = await Promise.allSettled(
     validFiles.map(async (file) => {
       const safeName = sanitizeFileName(file.name);
-      const blob = await put(
+      const fileBuffer = Buffer.from(await file.arrayBuffer());
+      const blobUrl = await storage.upload(
         `resumes/${user.id}/${Date.now()}-${safeName}`,
-        file,
-        { access: "private" },
+        fileBuffer,
+        file.type,
       );
-      return { fileName: file.name, blobUrl: blob.url };
+      return { fileName: file.name, blobUrl };
     }),
   );
 
@@ -169,8 +171,8 @@ export async function POST(request: Request) {
       userId: user.id,
       error: dbError.message,
     });
-    // Clean up blobs that were successfully uploaded to avoid orphans
-    void Promise.allSettled(succeeded.map(({ blobUrl }) => del(blobUrl)));
+    // Clean up files that were successfully uploaded to avoid orphans
+    void Promise.allSettled(succeeded.map(({ blobUrl }) => storage.delete(blobUrl)));
     return NextResponse.json(
       { error: "Failed to queue resume jobs" },
       { status: 500 },

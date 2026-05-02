@@ -4,7 +4,7 @@ import { getLLMProvider } from "@/lib/llm";
 import { logger } from "@/lib/logger";
 import type { RoleKey } from "@/constants/roles";
 import { ROLE_CONFIGS } from "@/constants/roles";
-import { del, get as blobGet } from "@vercel/blob";
+import { getStorageProvider } from "@/lib/storage";
 
 const UUID_REGEX =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -58,15 +58,8 @@ export async function POST(
     .eq("id", jobId);
 
   try {
-    // Download PDF from Vercel Blob (private access requires SDK — plain fetch returns 403)
-    const blobResult = await blobGet(job.blob_url, { access: "private" });
-    if (!blobResult || blobResult.statusCode !== 200) {
-      throw new Error(
-        `Failed to fetch blob: ${blobResult?.statusCode ?? "not found"}`,
-      );
-    }
-    const arrayBuffer = await new Response(blobResult.stream).arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
+    const storage = getStorageProvider();
+    const buffer = await storage.download(job.blob_url);
 
     // Determine mime type from file extension
     const ext = job.file_name.split(".").pop()?.toLowerCase() ?? "pdf";
@@ -121,8 +114,7 @@ export async function POST(
       })
       .eq("id", jobId);
 
-    // Clean up blob (fire-and-forget, don't await)
-    del(job.blob_url).catch((err) =>
+    storage.delete(job.blob_url).catch((err: unknown) =>
       logger.error("Blob delete failed", {
         blobUrl: job.blob_url,
         error: String(err),
