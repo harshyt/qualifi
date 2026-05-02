@@ -1,7 +1,11 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { logger } from "@/lib/logger";
 
-export function getBatchById(supabase: SupabaseClient, id: string, userId: string) {
+export function getBatchById(
+  supabase: SupabaseClient,
+  id: string,
+  userId: string,
+) {
   return supabase
     .from("bulk_batches")
     .select("*")
@@ -32,7 +36,10 @@ export async function flipBatchIfComplete(
     .in("status", ["queued", "processing"]);
 
   if (count === 0) {
-    await supabase.from("bulk_batches").update({ status: "done" }).eq("id", batchId);
+    await supabase
+      .from("bulk_batches")
+      .update({ status: "done" })
+      .eq("id", batchId);
     logger.info("Batch marked done", { batchId });
   }
 }

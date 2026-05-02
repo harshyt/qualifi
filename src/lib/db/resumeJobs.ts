@@ -1,6 +1,10 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
-export function getResumeJobById(supabase: SupabaseClient, jobId: string, userId: string) {
+export function getResumeJobById(
+  supabase: SupabaseClient,
+  jobId: string,
+  userId: string,
+) {
   return supabase
     .from("resume_jobs")
     .select("*, batch_id")
@@ -9,11 +13,17 @@ export function getResumeJobById(supabase: SupabaseClient, jobId: string, userId
     .single();
 }
 
-export function getJobStatusesByBatch(supabase: SupabaseClient, batchId: string) {
+export function getJobStatusesByBatch(
+  supabase: SupabaseClient,
+  batchId: string,
+) {
   return supabase.from("resume_jobs").select("status").eq("batch_id", batchId);
 }
 
-export function countPendingJobsInBatch(supabase: SupabaseClient, batchId: string) {
+export function countPendingJobsInBatch(
+  supabase: SupabaseClient,
+  batchId: string,
+) {
   return supabase
     .from("resume_jobs")
     .select("id", { count: "exact", head: true })
