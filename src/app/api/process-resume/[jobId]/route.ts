@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabase-server";
-import { analyzeResume } from "@/lib/claude";
+import { getLLMProvider } from "@/lib/llm";
 import { logger } from "@/lib/logger";
 import type { RoleKey } from "@/constants/roles";
 import { ROLE_CONFIGS } from "@/constants/roles";
@@ -80,8 +80,8 @@ export async function POST(
       ? (job.role_key as RoleKey)
       : "generic";
 
-    // Run Claude analysis
-    const analysis = await analyzeResume(
+    const llm = getLLMProvider();
+    const analysis = await llm.analyzeResume(
       buffer,
       mimeType,
       job.file_name,
