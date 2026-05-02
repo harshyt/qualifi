@@ -1,10 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import type { BulkBatch, BulkBatchCounts } from "@/types/bulkBatch";
-
-interface BatchResponse {
-  batch: BulkBatch;
-  counts: BulkBatchCounts;
-}
+import type { BatchResponse } from "@/types/bulkBatch";
 
 export function useBatch(batchId: string) {
   return useQuery<BatchResponse>({

@@ -16,3 +16,8 @@ export interface BulkBatchCounts {
   processing: number;
   queued: number;
 }
+
+export interface BatchResponse {
+  batch: BulkBatch;
+  counts: BulkBatchCounts;
+}
