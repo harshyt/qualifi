@@ -5,7 +5,7 @@ CREATE TABLE IF NOT EXISTS jobs (
   description text NOT NULL,
   client text[] NOT NULL DEFAULT '{}',
   tags text[] NOT NULL DEFAULT '{}',
-  user_id uuid REFERENCES auth.users(id) ON DELETE CASCADE,
+  user_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   change_history jsonb NOT NULL DEFAULT '[]',
   created_at timestamptz DEFAULT now(),
   updated_at timestamptz DEFAULT now()
@@ -30,11 +30,12 @@ CREATE TABLE IF NOT EXISTS candidates (
   resume_text text NOT NULL DEFAULT '',
   analysis jsonb,
   user_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-  job_id uuid NOT NULL,
+  job_id uuid NOT NULL REFERENCES jobs(id) ON DELETE CASCADE,
   created_at timestamptz DEFAULT now()
 );
 
 CREATE INDEX IF NOT EXISTS candidates_user_id_idx ON candidates(user_id);
+CREATE INDEX IF NOT EXISTS jobs_user_id_idx ON jobs(user_id);
 ALTER TABLE candidates ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "candidates_all" ON candidates FOR ALL TO authenticated USING (auth.uid() = user_id);
 
@@ -42,7 +43,7 @@ CREATE POLICY "candidates_all" ON candidates FOR ALL TO authenticated USING (aut
 CREATE TABLE IF NOT EXISTS bulk_batches (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-  job_id uuid NOT NULL,
+  job_id uuid NOT NULL REFERENCES jobs(id) ON DELETE CASCADE,
   job_title text NOT NULL DEFAULT 'Untitled Job',
   total_files integer NOT NULL DEFAULT 0,
   status text NOT NULL DEFAULT 'processing'
@@ -50,6 +51,7 @@ CREATE TABLE IF NOT EXISTS bulk_batches (
   created_at timestamptz DEFAULT now()
 );
 
+CREATE INDEX IF NOT EXISTS bulk_batches_user_id_idx ON bulk_batches(user_id);
 ALTER TABLE bulk_batches ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "bulk_batches_all" ON bulk_batches FOR ALL TO authenticated USING (auth.uid() = user_id);
 
@@ -72,5 +74,7 @@ CREATE TABLE IF NOT EXISTS resume_jobs (
 );
 
 CREATE INDEX IF NOT EXISTS resume_jobs_user_id_idx ON resume_jobs(user_id);
+CREATE INDEX IF NOT EXISTS resume_jobs_batch_id_idx ON resume_jobs(batch_id);
+CREATE INDEX IF NOT EXISTS resume_jobs_user_status_idx ON resume_jobs(user_id, status);
 ALTER TABLE resume_jobs ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "resume_jobs_all" ON resume_jobs FOR ALL TO authenticated USING (auth.uid() = user_id);
