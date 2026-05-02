@@ -1,11 +1,21 @@
 "use client";
+import { memo } from "react";
 import { Box, Typography } from "@mui/material";
 import { useRouter, usePathname } from "next/navigation";
 import { useActiveBatch } from "@/hooks/useActiveBatch";
 import { useBatch } from "@/hooks/useBatch";
 import { lightTokens } from "@/theme/tokens";
 
-function PulsingDot() {
+// Intentionally dark/inverse — these are not in lightTokens
+const PILL = {
+  bg: "#1e1e2e",
+  bgHover: "#2a2a3e",
+  text: "#fff",
+  textMuted: "rgba(255,255,255,0.5)",
+  track: "rgba(255,255,255,0.15)",
+} as const;
+
+const PulsingDot = memo(function PulsingDot() {
   return (
     <Box
       sx={{
@@ -16,13 +26,13 @@ function PulsingDot() {
         flexShrink: 0,
         "@keyframes pulse": {
           "0%, 100%": { opacity: 1 },
-          "50%": { opacity: 0.4 },
+          "50%": { opacity: 0.35 },
         },
         animation: "pulse 1.5s ease-in-out infinite",
       }}
     />
   );
-}
+});
 
 function ActivePill({ batchId }: { batchId: string }) {
   const router = useRouter();
@@ -48,20 +58,23 @@ function ActivePill({ batchId }: { batchId: string }) {
         display: "flex",
         alignItems: "center",
         gap: 1,
-        bgcolor: "#1e1e2e",
+        bgcolor: PILL.bg,
         borderRadius: "24px",
         px: 1.5,
         py: 0.75,
         cursor: "pointer",
-        boxShadow: "0 4px 12px rgba(0,0,0,0.3)",
-        "&:hover": { bgcolor: "#2a2a3e" },
+        boxShadow: "0 4px 16px rgba(0,0,0,0.35)",
+        "&:hover": { bgcolor: PILL.bgHover },
         transition: "background-color 0.15s",
+        "@keyframes slideUp": {
+          from: { opacity: 0, transform: "translateY(16px)" },
+          to: { opacity: 1, transform: "translateY(0)" },
+        },
+        animation: "slideUp 0.25s ease",
       }}
     >
       <PulsingDot />
-      <Typography
-        sx={{ fontSize: 12, fontWeight: 600, color: "#fff", whiteSpace: "nowrap" }}
-      >
+      <Typography sx={{ fontSize: 12, fontWeight: 600, color: PILL.text, whiteSpace: "nowrap" }}>
         Analyzing · {done}/{total}
       </Typography>
       <Box
@@ -69,7 +82,7 @@ function ActivePill({ batchId }: { batchId: string }) {
           width: 48,
           height: 4,
           borderRadius: 2,
-          bgcolor: "rgba(255,255,255,0.15)",
+          bgcolor: PILL.track,
           overflow: "hidden",
         }}
       >
@@ -83,7 +96,7 @@ function ActivePill({ batchId }: { batchId: string }) {
           }}
         />
       </Box>
-      <Typography sx={{ fontSize: 11, color: "rgba(255,255,255,0.5)" }}>↑</Typography>
+      <Typography sx={{ fontSize: 11, color: PILL.textMuted }}>↑</Typography>
     </Box>
   );
 }
