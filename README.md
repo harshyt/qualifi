@@ -172,6 +172,54 @@ npm run lint     # Run ESLint
 
 ---
 
+## Local Development (Zero Cost)
+
+Run the full stack locally without a paid Supabase project or Anthropic API key. Uses the **Supabase CLI** for a local Postgres + Auth instance and **Gemini 2.0 Flash** (1,500 free requests/day) instead of Claude.
+
+### Prerequisites
+
+- [Docker](https://docs.docker.com/get-docker/) — required by Supabase CLI
+- [Supabase CLI](https://supabase.com/docs/guides/cli/getting-started) — `brew install supabase/tap/supabase`
+- [Gemini API key](https://aistudio.google.com/apikey) — free, no billing required
+
+### Setup
+
+```bash
+# 1. Start the local Supabase stack (Postgres + Auth + Studio)
+supabase start
+# Copy the "API URL" and "anon key" printed by this command
+
+# 2. Configure environment
+cp .env.local.example .env.local
+# Edit .env.local — set NEXT_PUBLIC_SUPABASE_ANON_KEY and GEMINI_API_KEY
+
+# 3. Apply the database schema
+supabase db reset
+
+# 4. Start the app
+npm install
+npm run dev
+```
+
+Open [http://localhost:3000](http://localhost:3000). Sign up, create a job, and upload a PDF — the resume will be analysed by Gemini and stored in the local database.
+
+### How It Works
+
+| Setting in `.env.local`             | Effect                                           |
+| ----------------------------------- | ------------------------------------------------ |
+| `LLM_PROVIDER=gemini`               | Routes analysis through Gemini 2.0 Flash         |
+| `STORAGE_PROVIDER=local`            | Saves uploaded files to `/tmp/screener-uploads/` |
+| `ANTHROPIC_API_KEY=sk-placeholder`  | Satisfies the SDK init; never called             |
+| `BLOB_READ_WRITE_TOKEN=placeholder` | Satisfies env validation; never called           |
+
+Leaving `LLM_PROVIDER` and `STORAGE_PROVIDER` unset (or pointing at a real Supabase project in `.env.local`) restores the production code path — no code changes required.
+
+### Supabase Studio
+
+The local Studio UI is available at [http://localhost:54323](http://localhost:54323). Use it to inspect tables, run queries, and manage Auth users.
+
+---
+
 ## Architecture
 
 ### Data Flow
