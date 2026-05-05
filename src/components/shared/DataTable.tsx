@@ -19,6 +19,7 @@ export interface ColumnDef<T> {
   label: string;
   width?: string | number;
   align?: "left" | "right" | "center";
+  cellSx?: object;
   render: (row: T) => ReactNode;
 }
 
@@ -71,13 +72,13 @@ export default function DataTable<T extends { id: string }>({
   ariaLabel,
 }: DataTableProps<T>) {
   return (
-    <Box sx={{ display: "flex", flexDirection: "column", height: "100%" }}>
+    <Box sx={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0 }}>
       <TableContainer
         component={Paper}
         elevation={0}
-        sx={{ border: "none", borderRadius: 0, flexGrow: 1, overflowY: "auto" }}
+        sx={{ border: "none", borderRadius: 0, flex: 1, overflow: "auto" }}
       >
-        <Table sx={{ minWidth: 650 }} aria-label={ariaLabel}>
+        <Table sx={{ minWidth: 500 }} aria-label={ariaLabel}>
           <TableHead sx={{ bgcolor: "#F5F4F2" }}>
             <TableRow>
               {leadingCell !== undefined && (
@@ -88,7 +89,7 @@ export default function DataTable<T extends { id: string }>({
                   key={col.id}
                   align={col.align}
                   width={col.width}
-                  sx={HEADER_SX}
+                  sx={{ ...HEADER_SX, ...col.cellSx }}
                 >
                   {col.label}
                 </TableCell>
@@ -134,7 +135,7 @@ export default function DataTable<T extends { id: string }>({
                       </TableCell>
                     )}
                     {columns.map((col) => (
-                      <TableCell key={col.id} align={col.align}>
+                      <TableCell key={col.id} align={col.align} sx={col.cellSx}>
                         {col.render(row)}
                       </TableCell>
                     ))}
@@ -161,8 +162,17 @@ export default function DataTable<T extends { id: string }>({
         }
         rowsPerPageOptions={[10, 20, 50]}
         sx={{
+          flexShrink: 0,
           borderTop: "1px solid #E2E8F0",
-          ".MuiTablePagination-toolbar": { minHeight: 48 },
+          ".MuiTablePagination-toolbar": {
+            minHeight: { xs: 52, sm: 60 },
+            px: { xs: 1, sm: 3 },
+            flexWrap: { xs: "wrap", sm: "nowrap" },
+            gap: { xs: 0.5, sm: 0 },
+          },
+          ".MuiTablePagination-selectLabel, .MuiTablePagination-displayedRows": {
+            fontSize: { xs: 12, sm: 13 },
+          },
         }}
       />
     </Box>

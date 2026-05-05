@@ -8,6 +8,10 @@ function formatDate(date: Date): string {
   });
 }
 
+function padEnd(str: string, len: number): string {
+  return str.length >= len ? str.slice(0, len) : str + " ".repeat(len - str.length);
+}
+
 export function generateBulkEmail(candidates: Candidate[]): {
   subject: string;
   body: string;
@@ -15,7 +19,6 @@ export function generateBulkEmail(candidates: Candidate[]): {
   const shortlisted = candidates.filter((c) => c.status === "SHORTLIST");
   const rejected = candidates.filter((c) => c.status === "REJECT");
 
-  // Pick most common role for subject line
   const roleCount = candidates.reduce<Record<string, number>>((acc, c) => {
     acc[c.role] = (acc[c.role] ?? 0) + 1;
     return acc;
@@ -29,41 +32,62 @@ export function generateBulkEmail(candidates: Candidate[]): {
   const lines: string[] = [];
   lines.push("Hi Team,");
   lines.push("");
-  lines.push(
-    `Please find below the screening summary for the ${topRole} position.`,
-  );
+  lines.push(`Please find below the screening summary for the ${topRole} position.`);
   lines.push("");
 
   if (shortlisted.length > 0) {
-    lines.push(
-      `── SCREEN SELECTED (${shortlisted.length}) ──────────────────────`,
-    );
+    lines.push(`SCREEN SELECTED (${shortlisted.length})`);
     lines.push("");
+
+    // Column widths
+    const nameW = Math.min(30, Math.max(20, ...shortlisted.map((c) => c.name.length)));
+    const scoreW = 8;
+    const levelW = 16;
+    const strengthW = 40;
+
+    const sep = `+${"-".repeat(nameW + 2)}+${"-".repeat(scoreW + 2)}+${"-".repeat(levelW + 2)}+${"-".repeat(strengthW + 2)}+`;
+    const header = `| ${padEnd("Name", nameW)} | ${padEnd("Score", scoreW)} | ${padEnd("Level", levelW)} | ${padEnd("Key Strengths", strengthW)} |`;
+
+    lines.push(sep);
+    lines.push(header);
+    lines.push(sep);
+
     for (const c of shortlisted) {
-      const level = c.analysis?.experienceLevel ?? "Unknown";
-      lines.push(`• ${c.name}  |  Score: ${c.score}/100  |  ${level}`);
-      const strengths = c.analysis?.strengths?.slice(0, 2) ?? [];
-      if (strengths.length > 0) {
-        lines.push(`  Strengths: ${strengths.join("; ")}`);
-      }
-      lines.push("");
+      const level = c.analysis?.experienceLevel ?? "—";
+      const strengths = (c.analysis?.strengths ?? []).slice(0, 2).join("; ") || "—";
+      lines.push(
+        `| ${padEnd(c.name, nameW)} | ${padEnd(`${c.score}/100`, scoreW)} | ${padEnd(level, levelW)} | ${padEnd(strengths, strengthW)} |`,
+      );
     }
+    lines.push(sep);
+    lines.push("");
   }
 
   if (rejected.length > 0) {
-    lines.push(
-      `── SCREEN REJECTED (${rejected.length}) ──────────────────────`,
-    );
+    lines.push(`SCREEN REJECTED (${rejected.length})`);
     lines.push("");
+
+    const nameW = Math.min(30, Math.max(20, ...rejected.map((c) => c.name.length)));
+    const scoreW = 8;
+    const levelW = 16;
+    const gapW = 40;
+
+    const sep = `+${"-".repeat(nameW + 2)}+${"-".repeat(scoreW + 2)}+${"-".repeat(levelW + 2)}+${"-".repeat(gapW + 2)}+`;
+    const header = `| ${padEnd("Name", nameW)} | ${padEnd("Score", scoreW)} | ${padEnd("Level", levelW)} | ${padEnd("Key Gaps", gapW)} |`;
+
+    lines.push(sep);
+    lines.push(header);
+    lines.push(sep);
+
     for (const c of rejected) {
-      const level = c.analysis?.experienceLevel ?? "Unknown";
-      lines.push(`• ${c.name}  |  Score: ${c.score}/100  |  ${level}`);
-      const gaps = c.analysis?.gaps?.slice(0, 2) ?? [];
-      if (gaps.length > 0) {
-        lines.push(`  Gaps: ${gaps.join("; ")}`);
-      }
-      lines.push("");
+      const level = c.analysis?.experienceLevel ?? "—";
+      const gaps = (c.analysis?.gaps ?? []).slice(0, 2).join("; ") || "—";
+      lines.push(
+        `| ${padEnd(c.name, nameW)} | ${padEnd(`${c.score}/100`, scoreW)} | ${padEnd(level, levelW)} | ${padEnd(gaps, gapW)} |`,
+      );
     }
+    lines.push(sep);
+    lines.push("");
   }
 
   lines.push("Best regards,");

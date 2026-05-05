@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Box, Typography, Chip } from "@mui/material";
 import CandidateTable from "@/components/candidates/CandidateTable";
 import CandidateFilterBar from "@/components/candidates/CandidateFilterBar";
@@ -22,13 +22,24 @@ const EMPTY_MESSAGES: Record<FilterTab, string> = {
 };
 
 export default function CandidatesPage() {
-  const { loading: authLoading } = useAuth();
+  const { user, loading: authLoading } = useAuth();
 
   const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(20);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
   const [filters, setFilters] = useState<CandidateFilters>(
     DEFAULT_CANDIDATE_FILTERS,
   );
+
+  // Pre-select logged-in user once auth resolves
+  useEffect(() => {
+    if (user) {
+      setFilters((prev) =>
+        prev.uploaderIds.length === 0
+          ? { ...prev, uploaderIds: [user.id] }
+          : prev,
+      );
+    }
+  }, [user]);
 
   const { data, isLoading, isFetching, error } = useCandidates({
     page,
@@ -80,7 +91,7 @@ export default function CandidatesPage() {
           flexShrink: 0,
         }}
       >
-        <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
           <Typography
             variant="h5"
             sx={{
@@ -124,10 +135,11 @@ export default function CandidatesPage() {
         {/* Filter bar */}
         <Box
           sx={{
-            px: 2,
+            px: { xs: 1.5, sm: 2 },
             py: 1.5,
             borderBottom: "1px solid #E2E8F0",
             flexShrink: 0,
+            overflowX: "auto",
           }}
         >
           <CandidateFilterBar

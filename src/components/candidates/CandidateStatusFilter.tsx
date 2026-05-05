@@ -34,10 +34,10 @@ export default memo(function CandidateStatusFilter({
           border: "none",
           borderRadius: "16px !important",
           mx: 0.25,
-          px: 2,
+          px: { xs: 1, sm: 2 },
           py: 0.5,
           fontWeight: 600,
-          fontSize: 13,
+          fontSize: { xs: 12, sm: 13 },
           color: "#6B6560",
           "&.Mui-selected": {
             bgcolor: "#FFFFFF",

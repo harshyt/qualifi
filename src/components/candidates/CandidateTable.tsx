@@ -17,9 +17,11 @@ import {
   Avatar,
   Paper,
 } from "@mui/material";
-import { MoreHorizontal, Trash2, Mail } from "lucide-react";
+import { MoreHorizontal, Trash2, Mail, CheckCircle, XCircle } from "lucide-react";
 import { useState, useCallback, memo, useMemo } from "react";
 import { useDeleteCandidate } from "@/hooks/useDeleteCandidate";
+import { useUpdateCandidateStatus } from "@/hooks/useUpdateCandidateStatus";
+import { CandidateStatus } from "@/types/candidate";
 import { useRouter } from "next/navigation";
 import EmailComposeDrawer from "@/components/Dashboard/EmailComposeDrawer";
 import AppButton from "@/components/ui/AppButton";
@@ -196,8 +198,8 @@ function CandidateTableInner({
     null,
   );
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const { mutate: deleteCandidate, isPending: isDeleting } =
-    useDeleteCandidate();
+  const { mutate: deleteCandidate, isPending: isDeleting } = useDeleteCandidate();
+  const { mutate: updateStatus } = useUpdateCandidateStatus();
   const menuOpen = Boolean(anchorEl);
 
   const [selectedIdsRaw, setSelectedIdsRaw] = useState<Set<string>>(new Set());
@@ -214,20 +216,18 @@ function CandidateTableInner({
   const [emailMode, setEmailMode] = useState<"bulk" | "individual">("bulk");
   const [emailCandidates, setEmailCandidates] = useState<Candidate[]>([]);
 
-  const selectableCandidates = candidates.filter((c) => c.status !== "PENDING");
   const allSelected =
-    selectableCandidates.length > 0 &&
-    selectableCandidates.every((c) => selectedIds.has(c.id));
+    candidates.length > 0 && candidates.every((c) => selectedIds.has(c.id));
   const someSelected =
-    selectableCandidates.some((c) => selectedIds.has(c.id)) && !allSelected;
+    candidates.some((c) => selectedIds.has(c.id)) && !allSelected;
 
   const handleSelectAll = useCallback(
     (checked: boolean) => {
       setSelectedIdsRaw(
-        checked ? new Set(selectableCandidates.map((c) => c.id)) : new Set(),
+        checked ? new Set(candidates.map((c) => c.id)) : new Set(),
       );
     },
-    [selectableCandidates],
+    [candidates],
   );
 
   const handleToggleRow = useCallback((id: string, checked: boolean) => {
@@ -263,6 +263,16 @@ function CandidateTableInner({
       setEmailDrawerOpen(true);
     }
   }, [selectedCandidate]);
+
+  const handleShortlist = useCallback(() => {
+    setAnchorEl(null);
+    if (selectedCandidate) updateStatus({ id: selectedCandidate.id, status: CandidateStatus.SHORTLIST });
+  }, [selectedCandidate, updateStatus]);
+
+  const handleReject = useCallback(() => {
+    setAnchorEl(null);
+    if (selectedCandidate) updateStatus({ id: selectedCandidate.id, status: CandidateStatus.REJECT });
+  }, [selectedCandidate, updateStatus]);
 
   const handleComposeEmail = useCallback(() => {
     setEmailCandidates(candidates.filter((c) => selectedIds.has(c.id)));
@@ -306,7 +316,7 @@ function CandidateTableInner({
   );
 
   return (
-    <Box sx={{ display: "flex", flexDirection: "column", height: "100%", minHeight: 0 }}>
+    <Box sx={{ display: "flex", flexDirection: "column", flexGrow: 1, minHeight: 0 }}>
       <DataTable<Candidate>
         columns={columns}
         rows={candidates}
@@ -324,7 +334,7 @@ function CandidateTableInner({
             indeterminate={someSelected}
             checked={allSelected}
             onChange={(e) => handleSelectAll(e.target.checked)}
-            disabled={selectableCandidates.length === 0}
+            disabled={candidates.length === 0}
           />
         }
         leadingRowCell={(row) => (
@@ -332,9 +342,7 @@ function CandidateTableInner({
             <Checkbox
               size="small"
               checked={selectedIds.has(row.id)}
-              disabled={row.status === "PENDING"}
               onChange={(e) => handleToggleRow(row.id, e.target.checked)}
-              sx={{ opacity: row.status === "PENDING" ? 0.3 : 1 }}
             />
           </Box>
         )}
@@ -406,6 +414,28 @@ function CandidateTableInner({
           paper: { elevation: 3, sx: { borderRadius: 2, minWidth: 160 } },
         }}
       >
+        {selectedCandidate?.status === "PENDING" && (
+          <MenuItem onClick={handleShortlist}>
+            <ListItemIcon>
+              <CheckCircle size={16} color="#059669" />
+            </ListItemIcon>
+            <ListItemText
+              primary="Shortlist"
+              slotProps={{ primary: { variant: "body2", fontWeight: 500 } }}
+            />
+          </MenuItem>
+        )}
+        {selectedCandidate?.status === "PENDING" && (
+          <MenuItem onClick={handleReject}>
+            <ListItemIcon>
+              <XCircle size={16} color="#F44336" />
+            </ListItemIcon>
+            <ListItemText
+              primary="Reject"
+              slotProps={{ primary: { variant: "body2", fontWeight: 500 } }}
+            />
+          </MenuItem>
+        )}
         {selectedCandidate?.status !== "PENDING" && (
           <MenuItem onClick={handleSendEmailClick}>
             <ListItemIcon>

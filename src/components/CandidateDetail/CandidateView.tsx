@@ -113,7 +113,7 @@ const SectionLabel = memo(function SectionLabel({
 
 function CandidateView({ candidate }: CandidateViewProps) {
   const router = useRouter();
-  const { mutate, isPending } = useUpdateCandidateStatus();
+  const { mutate, isPending } = useUpdateCandidateStatus(() => router.push("/candidates"));
 
   if (!candidate) return <Typography>Candidate not found</Typography>;
 

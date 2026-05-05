@@ -3,15 +3,13 @@ import {
   Box,
   Select,
   MenuItem,
-  InputLabel,
   FormControl,
-  OutlinedInput,
-  Chip,
-  TextField,
   IconButton,
   Tooltip,
+  Typography,
 } from "@mui/material";
 import { X } from "lucide-react";
+import DateRangePickerField from "@/components/shared/DateRangePickerField";
 import CandidateStatusFilter from "./CandidateStatusFilter";
 import type { CandidateFilters } from "@/hooks/useCandidates";
 import type { UserOption } from "@/hooks/useUsers";
@@ -64,78 +62,64 @@ export default function CandidateFilterBar({
 
       {/* Job title multiselect */}
       <FormControl size="small" sx={SELECT_SX}>
-        <InputLabel>Job Title</InputLabel>
         <Select
           multiple
+          displayEmpty
           value={filters.jobIds}
           onChange={(e) => set({ jobIds: e.target.value as string[] })}
-          input={<OutlinedInput label="Job Title" />}
-          renderValue={(selected) => (
-            <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
-              {(selected as string[]).map((id) => {
-                const j = jobOptions.find((j) => j.id === id);
-                return <Chip key={id} label={j?.title ?? id} size="small" />;
-              })}
-            </Box>
-          )}
+          renderValue={(selected) =>
+            selected.length === 0 ? (
+              <Typography variant="body2" color="text.disabled" sx={{ lineHeight: "inherit" }}>
+                Job Title
+              </Typography>
+            ) : (
+              <Typography variant="body2" sx={{ lineHeight: "inherit" }}>
+                {selected.length === 1
+                  ? (jobOptions.find((j) => j.id === (selected as string[])[0])?.title ?? "1 selected")
+                  : `${selected.length} selected`}
+              </Typography>
+            )
+          }
           MenuProps={MenuProps}
         >
           {jobOptions.map((j) => (
-            <MenuItem key={j.id} value={j.id}>
-              {j.title}
-            </MenuItem>
+            <MenuItem key={j.id} value={j.id}>{j.title}</MenuItem>
           ))}
         </Select>
       </FormControl>
 
       {/* Uploaded by multiselect */}
       <FormControl size="small" sx={SELECT_SX}>
-        <InputLabel>Uploaded by</InputLabel>
         <Select
           multiple
+          displayEmpty
           value={filters.uploaderIds}
           onChange={(e) => set({ uploaderIds: e.target.value as string[] })}
-          input={<OutlinedInput label="Uploaded by" />}
-          renderValue={(selected) => (
-            <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
-              {(selected as string[]).map((id) => {
-                const u = userOptions.find((u) => u.id === id);
-                return (
-                  <Chip key={id} label={u?.full_name ?? id} size="small" />
-                );
-              })}
-            </Box>
-          )}
+          renderValue={(selected) =>
+            selected.length === 0 ? (
+              <Typography variant="body2" color="text.disabled" sx={{ lineHeight: "inherit" }}>
+                Uploaded by
+              </Typography>
+            ) : (
+              <Typography variant="body2" sx={{ lineHeight: "inherit" }}>
+                {selected.length === 1
+                  ? (userOptions.find((u) => u.id === (selected as string[])[0])?.full_name ?? "1 selected")
+                  : `${selected.length} selected`}
+              </Typography>
+            )
+          }
           MenuProps={MenuProps}
         >
           {userOptions.map((u) => (
-            <MenuItem key={u.id} value={u.id}>
-              {u.full_name}
-            </MenuItem>
+            <MenuItem key={u.id} value={u.id}>{u.full_name}</MenuItem>
           ))}
         </Select>
       </FormControl>
 
-      {/* Date from */}
-      <TextField
-        label="From"
-        type="date"
-        size="small"
-        value={filters.dateFrom ?? ""}
-        onChange={(e) => set({ dateFrom: e.target.value || null })}
-        slotProps={{ inputLabel: { shrink: true } }}
-        sx={{ width: 150 }}
-      />
-
-      {/* Date to */}
-      <TextField
-        label="To"
-        type="date"
-        size="small"
-        value={filters.dateTo ?? ""}
-        onChange={(e) => set({ dateTo: e.target.value || null })}
-        slotProps={{ inputLabel: { shrink: true } }}
-        sx={{ width: 150 }}
+      <DateRangePickerField
+        dateFrom={filters.dateFrom}
+        dateTo={filters.dateTo}
+        onChange={(from, to) => set({ dateFrom: from, dateTo: to })}
       />
 
       {hasActiveFilters(filters) && (
