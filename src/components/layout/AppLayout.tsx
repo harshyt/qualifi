@@ -81,8 +81,23 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       session={session}
       authentication={authentication}
     >
-      <DashboardLayout>
-        <Box sx={{ p: { xs: 2, sm: 3 }, flexGrow: 1 }}>{children}</Box>
+      <DashboardLayout
+        sidebarExpandedWidth={220}
+        sx={{
+          "& main": { overflow: "hidden" },
+        }}
+      >
+        <Box
+          sx={{
+            p: { xs: 2, sm: 3 },
+            height: "100%",
+            display: "flex",
+            flexDirection: "column",
+            overflow: "hidden",
+          }}
+        >
+          {children}
+        </Box>
       </DashboardLayout>
     </NextAppProvider>
   );

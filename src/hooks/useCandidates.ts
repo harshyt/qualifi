@@ -1,43 +1,69 @@
-import {
-  useQuery,
-  useQueryClient,
-  keepPreviousData,
-} from "@tanstack/react-query";
-import { createSupabaseBrowserClient } from "@/lib/supabase";
+import { useQuery, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { useAuth } from "@/components/Providers/AuthContext";
-import type { Candidate } from "@/components/Dashboard/DashboardTable";
+import type { Candidate } from "@/components/candidates/CandidateTable";
 import { useEffect } from "react";
+import type { FilterTab } from "@/components/candidates/CandidateStatusFilter";
 
-export const useCandidates = () => {
+export interface CandidateFilters {
+  status: FilterTab;
+  roles: string[];
+  uploaderIds: string[];
+  jobIds: string[];
+  dateFrom: string | null;
+  dateTo: string | null;
+}
+
+export const DEFAULT_CANDIDATE_FILTERS: CandidateFilters = {
+  status: "ALL",
+  roles: [],
+  uploaderIds: [],
+  jobIds: [],
+  dateFrom: null,
+  dateTo: null,
+};
+
+interface UseCandidatesParams {
+  page: number;
+  rowsPerPage: number;
+  filters?: CandidateFilters;
+}
+
+export const useCandidates = ({
+  page,
+  rowsPerPage,
+  filters = DEFAULT_CANDIDATE_FILTERS,
+}: UseCandidatesParams) => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
 
-  const query = useQuery<Candidate[]>({
-    queryKey: ["candidates", user?.id],
+  const query = useQuery<{ candidates: Candidate[]; total: number }>({
+    queryKey: ["candidates", page, rowsPerPage, filters],
     enabled: !!user,
     placeholderData: keepPreviousData,
     queryFn: async () => {
-      const supabase = createSupabaseBrowserClient();
-      const { data, error } = await supabase
-        .from("candidates")
-        .select(
-          "id, name, role, score, status, created_at, email, job_id, user_id, analysis",
-        )
-        .eq("user_id", user!.id)
-        .order("created_at", { ascending: false });
+      const params = new URLSearchParams();
+      params.set("page", String(page));
+      params.set("rowsPerPage", String(rowsPerPage));
+      params.set("status", filters.status);
+      filters.roles.forEach((r) => params.append("roles", r));
+      filters.uploaderIds.forEach((id) => params.append("uploaderIds", id));
+      filters.jobIds.forEach((id) => params.append("jobIds", id));
+      if (filters.dateFrom) params.set("dateFrom", filters.dateFrom);
+      if (filters.dateTo) params.set("dateTo", filters.dateTo);
 
-      if (error) {
-        throw new Error(error.message);
+      const res = await fetch(`/api/candidates?${params.toString()}`);
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.error ?? "Failed to fetch candidates");
       }
-
-      return (data ?? []) as Candidate[];
+      return res.json() as Promise<{ candidates: Candidate[]; total: number }>;
     },
   });
 
-  // Seed individual candidate cache entries from list data
+  // Seed individual candidate cache entries
   useEffect(() => {
     if (query.data) {
-      for (const candidate of query.data) {
+      for (const candidate of query.data.candidates) {
         queryClient.setQueryData(["candidate", candidate.id], candidate);
       }
     }

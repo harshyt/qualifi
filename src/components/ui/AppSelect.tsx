@@ -28,7 +28,14 @@ export default function AppSelect({
   return (
     <FormControl fullWidth={fullWidth} size={size} sx={formControlSx}>
       <InputLabel id={labelId}>{label}</InputLabel>
-      <Select labelId={labelId} id={id} label={label} size={size} {...props}>
+      <Select
+        labelId={labelId}
+        id={id}
+        label={label}
+        size={size}
+        MenuProps={{ sx: { zIndex: (theme) => theme.zIndex.modal + 2 } }}
+        {...props}
+      >
         {children}
       </Select>
     </FormControl>

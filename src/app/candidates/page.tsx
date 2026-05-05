@@ -1,199 +1,67 @@
 "use client";
-import { useMemo, useState, memo } from "react";
-import {
-  Box,
-  Typography,
-  Chip,
-  ToggleButton,
-  ToggleButtonGroup,
-  Skeleton,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
-} from "@mui/material";
-import CandidateTable from "@/components/Dashboard/DashboardTable";
+import { useState, useEffect } from "react";
+import { Box, Typography, Chip } from "@mui/material";
+import CandidateTable from "@/components/candidates/CandidateTable";
+import CandidateFilterBar from "@/components/candidates/CandidateFilterBar";
+import type { FilterTab } from "@/components/candidates/CandidateStatusFilter";
 import UploadResume from "@/components/Dashboard/UploadResume";
-
-import { useCandidates } from "@/hooks/useCandidates";
+import {
+  useCandidates,
+  DEFAULT_CANDIDATE_FILTERS,
+  type CandidateFilters,
+} from "@/hooks/useCandidates";
+import { useUsers } from "@/hooks/useUsers";
+import { useJobOptions } from "@/hooks/useJobOptions";
 import { useAuth } from "@/components/Providers/AuthContext";
-import type { Candidate } from "@/components/Dashboard/DashboardTable";
 
-type FilterTab = "ALL" | "PENDING" | "SHORTLIST" | "REJECT";
-
-const FILTERS: { label: string; value: FilterTab }[] = [
-  { label: "All", value: "ALL" },
-  { label: "Shortlist", value: "SHORTLIST" },
-  { label: "Pending", value: "PENDING" },
-  { label: "Reject", value: "REJECT" },
-];
-
-const FilterBar = memo(function FilterBar({
-  value,
-  onChange,
-}: {
-  value: FilterTab;
-  onChange: (v: FilterTab) => void;
-}) {
-  return (
-    <ToggleButtonGroup
-      value={value}
-      exclusive
-      onChange={(_, v: FilterTab | null) => v && onChange(v)}
-      size="small"
-      sx={{
-        bgcolor: "#F5F4F2",
-        borderRadius: "20px",
-        p: 0.5,
-        "& .MuiToggleButtonGroup-grouped": {
-          border: "none",
-          borderRadius: "16px !important",
-          mx: 0.25,
-          px: 2,
-          py: 0.5,
-          fontWeight: 600,
-          fontSize: 13,
-          color: "#6B6560",
-          "&.Mui-selected": {
-            bgcolor: "#FFFFFF",
-            color: "#1A1714",
-            boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
-            "&:hover": {
-              bgcolor: "#FFFFFF",
-            },
-          },
-          "&:hover": {
-            bgcolor: "transparent",
-          },
-        },
-      }}
-    >
-      {FILTERS.map((f) => (
-        <ToggleButton key={f.value} value={f.value} disableRipple>
-          {f.label}
-        </ToggleButton>
-      ))}
-    </ToggleButtonGroup>
-  );
-});
-
-function DashboardTableSkeleton() {
-  return (
-    <TableContainer
-      component={Paper}
-      elevation={0}
-      sx={{ border: "none", borderRadius: 0 }}
-    >
-      <Table sx={{ minWidth: 650 }}>
-        <TableHead sx={{ bgcolor: "#F5F4F2" }}>
-          <TableRow>
-            <TableCell padding="checkbox">
-              <Skeleton
-                variant="rectangular"
-                width={18}
-                height={18}
-                sx={{ borderRadius: 0.5 }}
-              />
-            </TableCell>
-            {[
-              "Candidate Name",
-              "Role",
-              "Score",
-              "Verdict",
-              "Experience",
-              "Date",
-            ].map((col) => (
-              <TableCell key={col}>
-                <Skeleton variant="text" width={80} />
-              </TableCell>
-            ))}
-            <TableCell />
-          </TableRow>
-        </TableHead>
-        <TableBody>
-          {Array.from({ length: 6 }).map((_, i) => (
-            <TableRow key={i}>
-              <TableCell padding="checkbox">
-                <Skeleton
-                  variant="rectangular"
-                  width={18}
-                  height={18}
-                  sx={{ borderRadius: 0.5 }}
-                />
-              </TableCell>
-              <TableCell>
-                <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-                  <Skeleton variant="circular" width={36} height={36} />
-                  <Box>
-                    <Skeleton variant="text" width={120} height={16} />
-                    <Skeleton
-                      variant="text"
-                      width={80}
-                      height={13}
-                      sx={{ mt: 0.5 }}
-                    />
-                  </Box>
-                </Box>
-              </TableCell>
-              <TableCell>
-                <Skeleton variant="text" width={90} />
-              </TableCell>
-              <TableCell>
-                <Skeleton variant="circular" width={40} height={40} />
-              </TableCell>
-              <TableCell>
-                <Skeleton
-                  variant="rounded"
-                  width={72}
-                  height={24}
-                  sx={{ borderRadius: 3 }}
-                />
-              </TableCell>
-              <TableCell>
-                <Skeleton variant="text" width={70} />
-              </TableCell>
-              <TableCell>
-                <Skeleton variant="text" width={80} />
-              </TableCell>
-              <TableCell>
-                <Skeleton
-                  variant="circular"
-                  width={28}
-                  height={28}
-                  sx={{ ml: "auto" }}
-                />
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </TableContainer>
-  );
-}
+const EMPTY_MESSAGES: Record<FilterTab, string> = {
+  ALL: "No candidates yet.",
+  SHORTLIST: "No shortlisted candidates.",
+  PENDING: "No pending candidates.",
+  REJECT: "No rejected candidates.",
+};
 
 export default function CandidatesPage() {
-  const { loading: authLoading } = useAuth();
-  const { data, isLoading, error } = useCandidates();
+  const { user, loading: authLoading } = useAuth();
+
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [filters, setFilters] = useState<CandidateFilters>(
+    DEFAULT_CANDIDATE_FILTERS,
+  );
+
+  // Pre-select logged-in user once auth resolves
+  useEffect(() => {
+    if (user) {
+      setFilters((prev) =>
+        prev.uploaderIds.length === 0
+          ? { ...prev, uploaderIds: [user.id] }
+          : prev,
+      );
+    }
+  }, [user]);
+
+  const { data, isLoading, isFetching, error } = useCandidates({
+    page,
+    rowsPerPage,
+    filters,
+  });
+  const { data: users = [] } = useUsers();
+  const { data: jobOptions = [] } = useJobOptions();
+
   const loading = authLoading || isLoading;
-  const candidates: Candidate[] = useMemo(
-    () => (Array.isArray(data) ? data : []),
-    [data],
-  );
+  const candidates = data?.candidates ?? [];
+  const total = data?.total ?? 0;
 
-  const [activeTab, setActiveTab] = useState<FilterTab>("ALL");
+  const handleFiltersChange = (next: CandidateFilters) => {
+    setFilters(next);
+    setPage(0);
+  };
 
-  const total = candidates.length;
-
-  const filteredCandidates = useMemo(
-    () =>
-      activeTab === "ALL"
-        ? candidates
-        : candidates.filter((c: Candidate) => c.status === activeTab),
-    [candidates, activeTab],
-  );
+  const handleRowsPerPageChange = (rpp: number) => {
+    setRowsPerPage(rpp);
+    setPage(0);
+  };
 
   if (error)
     return (
@@ -203,7 +71,15 @@ export default function CandidatesPage() {
     );
 
   return (
-    <Box>
+    <Box
+      sx={{
+        display: "flex",
+        flexDirection: "column",
+        height: "100%",
+        minHeight: 0,
+      }}
+    >
+      {/* Header */}
       <Box
         sx={{
           display: "flex",
@@ -212,9 +88,10 @@ export default function CandidatesPage() {
           alignItems: { xs: "flex-start", sm: "center" },
           gap: { xs: 2, sm: 0 },
           mb: 3,
+          flexShrink: 0,
         }}
       >
-        <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
           <Typography
             variant="h5"
             sx={{
@@ -242,45 +119,48 @@ export default function CandidatesPage() {
         <UploadResume />
       </Box>
 
+      {/* Table card — grows to fill remaining height */}
       <Box
         sx={{
           border: "1px solid #E2E8F0",
           borderRadius: 2,
           bgcolor: "#FFFFFF",
+          display: "flex",
+          flexDirection: "column",
+          flexGrow: 1,
+          minHeight: 0,
           overflow: "hidden",
         }}
       >
+        {/* Filter bar */}
         <Box
           sx={{
-            px: 2,
+            px: { xs: 1.5, sm: 2 },
             py: 1.5,
             borderBottom: "1px solid #E2E8F0",
-            display: "flex",
-            alignItems: "center",
+            flexShrink: 0,
+            overflowX: "auto",
           }}
         >
-          <FilterBar value={activeTab} onChange={setActiveTab} />
+          <CandidateFilterBar
+            filters={filters}
+            onChange={handleFiltersChange}
+            userOptions={users}
+            jobOptions={jobOptions}
+          />
         </Box>
 
-        {loading ? (
-          <DashboardTableSkeleton />
-        ) : filteredCandidates.length === 0 ? (
-          <Box sx={{ textAlign: "center", py: 8, color: "text.secondary" }}>
-            <Typography variant="body2">
-              No{" "}
-              {activeTab === "ALL"
-                ? ""
-                : activeTab === "PENDING"
-                  ? "pending"
-                  : activeTab === "SHORTLIST"
-                    ? "shortlisted"
-                    : "rejected"}{" "}
-              candidates yet.
-            </Typography>
-          </Box>
-        ) : (
-          <CandidateTable candidates={filteredCandidates} />
-        )}
+        {/* Table + pagination — DataTable handles internal scroll */}
+        <CandidateTable
+          candidates={candidates}
+          total={total}
+          page={page}
+          rowsPerPage={rowsPerPage}
+          onPageChange={setPage}
+          onRowsPerPageChange={handleRowsPerPageChange}
+          loading={loading || isFetching}
+          emptyMessage={EMPTY_MESSAGES[filters.status]}
+        />
       </Box>
     </Box>
   );

@@ -13,18 +13,14 @@ import { ROLE_CONFIGS } from "@/constants/roles";
 
 const ReactQuill = dynamic(() => import("./QuillEditor"), { ssr: false });
 
-const ITEM_HEIGHT = 48;
-const ITEM_PADDING_TOP = 8;
-const MenuProps = {
-  PaperProps: {
-    style: {
-      maxHeight: ITEM_HEIGHT * 4.5 + ITEM_PADDING_TOP,
-      width: 250,
-    },
-  },
-};
-
-const CLIENTS = ["StoneX"];
+const CLIENTS = [
+  "StoneX",
+  "JP Morgan",
+  "Goldman Sachs",
+  "Morgan Stanley",
+  "Citibank",
+  "Wissen",
+];
 
 /** Strips HTML tags and checks if the remaining text content is empty. */
 function isEmptyRichText(html: string): boolean {
@@ -130,7 +126,6 @@ export default function AddJobForm({
           label="Client"
           value={selectedClient}
           onChange={(e) => setSelectedClient(e.target.value as string)}
-          MenuProps={MenuProps}
           formControlSx={{ mb: 3 }}
         >
           {CLIENTS.map((client) => (
