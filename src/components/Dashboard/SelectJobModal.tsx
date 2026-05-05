@@ -115,7 +115,11 @@ export default function SelectJobModal({
   onClose,
   onConfirm,
 }: SelectJobModalProps) {
-  const { data: jobs = [], isLoading: jobsLoading } = useJobs();
+  const { data: jobsData, isLoading: jobsLoading } = useJobs({
+    page: 0,
+    rowsPerPage: 200,
+  });
+  const jobs = useMemo(() => jobsData?.jobs ?? [], [jobsData]);
   const [selectedJobId, setSelectedJobId] = useState<string | null>(null);
   const [files, setFiles] = useState<File[]>([]);
   const [isDragging, setIsDragging] = useState(false);

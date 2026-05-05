@@ -6,7 +6,7 @@ import AppDrawer from "@/components/ui/AppDrawer";
 import AppTextField from "@/components/ui/AppTextField";
 import { X, Copy, Mail } from "lucide-react";
 import { useState } from "react";
-import type { Candidate } from "./DashboardTable";
+import type { Candidate } from "@/components/candidates/CandidateTable";
 import { generateBulkEmail, generateCandidateEmail } from "@/lib/emailUtils";
 
 interface EmailComposeDrawerProps {

@@ -12,6 +12,7 @@ import {
   TableContainer,
   TableHead,
   TableRow,
+  TablePagination,
   Paper,
   MenuItem,
   Divider,
@@ -143,9 +144,19 @@ export default function JobLibraryPage() {
   const [isViewDrawerOpen, setIsViewDrawerOpen] = useState(false);
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
 
+  const [jobsPage, setJobsPage] = useState(0);
+  const [jobsRowsPerPage, setJobsRowsPerPage] = useState(25);
+
   const { user, loading: authLoading } = useAuth();
   const queryClient = useQueryClient();
-  const { data: jobs = [], isLoading, error: queryError } = useJobs();
+  const {
+    data: jobsData,
+    isLoading,
+    isFetching,
+    error: queryError,
+  } = useJobs({ page: jobsPage, rowsPerPage: jobsRowsPerPage });
+  const jobs = useMemo(() => jobsData?.jobs ?? [], [jobsData]);
+  const jobsTotal = jobsData?.total ?? 0;
   const loading = authLoading || isLoading;
   const error = queryError?.message || null;
 
@@ -345,7 +356,7 @@ export default function JobLibraryPage() {
             component={Paper}
             sx={{ borderRadius: 2, boxShadow: 1 }}
           >
-            <Table>
+            <Table aria-label="jobs table">
               <TableHead sx={{ bgcolor: lightTokens.bgSurfaceAlt }}>
                 <TableRow>
                   <TableCell sx={{ fontWeight: 600, width: "15%" }}>
@@ -468,6 +479,22 @@ export default function JobLibraryPage() {
                 )}
               </TableBody>
             </Table>
+            <TablePagination
+              component="div"
+              count={jobsTotal}
+              page={jobsPage}
+              rowsPerPage={jobsRowsPerPage}
+              onPageChange={(_, p) => setJobsPage(p)}
+              onRowsPerPageChange={(e) => {
+                setJobsRowsPerPage(parseInt(e.target.value, 10));
+                setJobsPage(0);
+              }}
+              rowsPerPageOptions={[10, 25, 50]}
+              sx={{
+                borderTop: "1px solid #E2E8F0",
+                opacity: isFetching ? 0.6 : 1,
+              }}
+            />
           </TableContainer>
         </Box>
       )}

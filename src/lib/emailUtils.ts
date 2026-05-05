@@ -1,4 +1,4 @@
-import type { Candidate } from "@/components/Dashboard/DashboardTable";
+import type { Candidate } from "@/components/candidates/CandidateTable";
 
 function formatDate(date: Date): string {
   return date.toLocaleDateString("en-US", {
